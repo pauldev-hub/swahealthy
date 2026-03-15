@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container results-page">
+    
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-state">
+        <div class="spinner"></div>
+        <p>Analyzing symptoms...</p>
+    </div>
+
+    <!-- Results Container (Hidden until JS populates) -->
+    <div id="results-container" class="results-container" style="display: none;">
+        
+        <div class="card result-card">
+            <div class="result-header">
+                <div>
+                    <span class="pre-title">DIAGNOSIS RESULT</span>
+                    <h1 id="res-condition" class="condition-title">Condition Name</h1>
+                </div>
+                <div id="res-severity" class="severity-badge low">LOW<br>SEVERITY</div>
+            </div>
+
+            <p class="result-description" id="res-desc">
+                Your symptoms suggest a possible match for this condition. Please read the recommended first aid steps carefully.
+            </p>
+
+            <div id="res-see-doctor" class="alert-box doctor-alert" style="display: none;">
+                <div class="alert-icon">ℹ️</div>
+                <div class="alert-content">
+                    <strong>Recommended: See a doctor</strong>
+                    <p>If symptoms persist for more than a few days, or if they worsen, please seek medical attention.</p>
+                </div>
+            </div>
+
+            <div id="res-emergency" class="alert-box emergency-alert" style="display: none;">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <strong>EMERGENCY</strong>
+                    <p id="emergency-text"></p>
+                </div>
+            </div>
+
+            <div class="first-aid-section">
+                <h3>First Aid Steps</h3>
+                <div class="list-wrapper">
+                    <ul id="res-first-aid" class="first-aid-list step-list">
+                        <!-- steps injected via JS -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="alternates-section" class="alternates-section" style="display: none;">
+                <h3>Alternative Possibilities</h3>
+                <div id="res-alternates" class="alternates-list">
+                    <!-- alternate cards injected -->
+                </div>
+            </div>
+        </div>
+
+        <div class="card facilities-card">
+            <div class="facilities-header">
+                <span class="loc-icon">📍</span>
+                <h3>Nearby Facilities</h3>
+                <span id="loc-status" class="loc-status">Detecting...</span>
+            </div>
+            
+            <div id="map" class="map-container"></div>
+            
+            <div class="facility-list-wrapper">
+                <ul id="facilities-list" class="facility-list">
+                    <!-- facility items injected -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="disclaimer-block">
+            <p class="disclaimer-title">MEDICAL DISCLAIMER</p>
+            <p class="disclaimer-text">
+                This result is based on an automated assessment of symptoms provided by the user. It is for informational purposes only and does not constitute professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+            </p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/history" class="btn btn-secondary btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="/" class="btn btn-primary btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Check Again
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

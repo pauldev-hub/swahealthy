@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="{{ lang if lang else 'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwaHealthy</title>
+    
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#1D6A96">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span class="logo-icon">🌿</span>
+                SwaHealthy
+            </a>
+            
+            <div class="nav-controls">
+                <div class="lang-toggle">
+                    <button class="lang-btn {% if lang == 'en' %}active{% endif %}" onclick="setLang('en')">EN</button>
+                    <span class="divider">|</span>
+                    <button class="lang-btn {% if lang == 'bn' %}active{% endif %}" onclick="setLang('bn')">বাংলা</button>
+                    <span class="divider">|</span>
+                    <button class="lang-btn {% if lang == 'hi' %}active{% endif %}" onclick="setLang('hi')">हिंदी</button>
+                </div>
+                <a href="/history" class="history-link">
+                    <span class="history-icon" aria-label="History">&#128338;</span> History
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- App JS -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
