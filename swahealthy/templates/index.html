@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Select Symptoms</h1>
+        <p class="subtitle">Please check the symptoms you are currently experiencing.</p>
+    </div>
+
+    <form id="symptom-form" class="symptom-form" onsubmit="submitSymptoms(event)">
+        <div class="symptom-groups">
+            
+            {% set icons = {'head': '🙂', 'chest': '🫁', 'stomach': '🦠', 'general': '⚡', 'skin': '🖐️'} %}
+            {% set labels = {'head': 'Head & Face', 'chest': 'Chest & Breathing', 'stomach': 'Stomach & Abdomen', 'general': 'General Body', 'skin': 'Skin'} %}
+
+            {% for area in ['head', 'chest', 'stomach', 'general', 'skin'] %}
+            <div class="group-card">
+                <button type="button" class="group-header" onclick="toggleGroup('{{ area }}')" aria-expanded="true">
+                    <div class="group-title">
+                        <span class="group-icon">{{ icons[area] }}</span>
+                        <h2>{{ labels[area] }}</h2>
+                    </div>
+                    <span class="chevron" id="icon-{{ area }}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </span>
+                </button>
+                
+                <div class="group-content expanded" id="group-{{ area }}">
+                    <div class="symptom-list">
+                        {% for item in symptoms_group[area] %}
+                        <label class="symptom-item">
+                            <input type="checkbox" name="symptoms" value="{{ item.symptom_id }}" class="custom-checkbox">
+                            <div class="checkbox-box"></div>
+                            <span class="symptom-name">{{ item.display }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <div class="sticky-footer">
+            <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+                Check Symptoms 
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

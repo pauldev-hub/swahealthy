@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="appt-page">
+
+    <!-- Hero Header -->
+    <div class="appt-hero">
+        <div class="appt-hero-icon">🏥</div>
+        <div>
+            <h1 id="page-title" class="appt-hero-title">Doctor Appointments</h1>
+            <p id="appt-hero-sub" class="appt-hero-sub">Book a consultation with a specialist near you</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="appt-tabs">
+        <button class="appt-tab-btn active" data-tab="book" id="tab-book-btn">📋 Book Appointment</button>
+        <button class="appt-tab-btn" data-tab="my" id="tab-my-btn">📂 My Appointments</button>
+    </div>
+
+    <!-- Book Tab -->
+    <div class="appt-tab-pane active" id="book-tab">
+
+        <!-- Step 1: Doctor Selection -->
+        <div class="appt-section">
+            <h2 class="appt-section-title" id="select-doctor-label">Select a Specialist</h2>
+            <div class="appt-doctor-grid" id="doctor-list">
+                {% for doc in doctors %}
+                <div class="appt-doc-card" data-id="{{ doc.doctor_id }}" onclick="selectDoctor(this)">
+                    <div class="appt-doc-avatar">{{ doc.name[3] }}</div>
+                    <div class="appt-doc-info">
+                        <strong class="appt-doc-name">{{ doc.name }}</strong>
+                        <span class="appt-doc-spec">{{ doc.specialisation }}</span>
+                        <div class="appt-days">
+                            {% for day in doc.available_days_json|from_json %}
+                            <span class="appt-day-chip">{{ day }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="appt-select-indicator">›</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Step 2: Date & Slot -->
+        <div id="booking-step-2" class="appt-section step-hidden">
+            <h2 class="appt-section-title" id="select-date-label">Choose Date & Time</h2>
+            <input type="date" id="appointment-date" class="appt-date-input" onchange="fetchSlots()">
+            <div class="appt-slots-grid" id="slots-list">
+                <p class="appt-hint" id="no-slots-msg">Select a date above to see available slots.</p>
+            </div>
+        </div>
+
+        <!-- Step 3: Patient Details -->
+        <div id="booking-step-3" class="appt-section step-hidden">
+            <h2 class="appt-section-title" id="patient-info-label">Your Details</h2>
+            <form id="booking-form" onsubmit="submitBooking(event)" class="appt-form">
+                <div class="appt-form-group">
+                    <label for="patient-name" id="lbl-name">Full Name</label>
+                    <input type="text" id="patient-name" class="appt-input" required autocomplete="name">
+                </div>
+                <div class="appt-form-group">
+                    <label for="patient-phone" id="lbl-phone">Mobile Number</label>
+                    <input type="tel" id="patient-phone" class="appt-input" required pattern="[0-9]{10}" inputmode="numeric">
+                </div>
+                <div class="appt-form-group">
+                    <label for="patient-reason" id="lbl-reason">Reason for Visit</label>
+                    <textarea id="patient-reason" class="appt-input appt-textarea" rows="3"></textarea>
+                </div>
+                <button type="submit" class="appt-submit-btn" id="btn-submit">✅ Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- My Appointments Tab -->
+    <div class="appt-tab-pane" id="my-tab">
+        <div class="appt-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #f1f5f9;">
+                <h2 style="margin:0; font-size:1.05rem;" id="lookup-heading">All Appointments</h2>
+                <button onclick="loadAllAppointments()" style="background:none; border:none; color:var(--primary); font-size:0.85rem; font-weight:600; cursor:pointer;">🔄 Refresh</button>
+            </div>
+            <div id="my-apps-loader" class="appt-hint" style="padding:20px 0; text-align:center;">Loading appointments…</div>
+            <div id="my-apps-list"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============ SUCCESS MODAL ============ -->
+<div id="appt-modal-bg" class="appt-modal-bg" style="display:none;" onclick="handleModalBgClick(event)">
+    <div class="appt-modal-card" role="dialog" aria-modal="true" aria-labelledby="appt-modal-title">
+        <div class="appt-modal-icon">✅</div>
+        <h2 id="appt-modal-title" class="appt-modal-title">Request Submitted</h2>
+        <p id="appt-modal-msg" class="appt-modal-msg">Doctor's office will confirm by phone.</p>
+        <button id="btn-close-modal" class="appt-modal-done-btn" onclick="closeSuccessModal()">Done</button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='appointments.js') }}"></script>
+{% endblock %}
