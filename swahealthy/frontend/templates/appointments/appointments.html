@@ -1,0 +1,987 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="appt-page">
+
+    <!-- Hero Header -->
+    <div class="appt-hero">
+        <div class="appt-hero-icon">🏥</div>
+        <div>
+            <h1 id="page-title" class="appt-hero-title" data-i18n="appointments_title">Doctor Appointments</h1>
+            <p id="appt-hero-sub" class="appt-hero-sub" data-i18n="appointments_subtitle">Book new consultations or view your upcoming medical appointments.</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="appt-tabs">
+        <button class="appt-tab-btn active" data-tab="book" id="tab-book-btn" data-i18n="book_appointment">📋 Book Appointment</button>
+        <button class="appt-tab-btn" data-tab="my" id="tab-my-btn" data-i18n="my_appointments">📂 My Appointments <span id="my-apps-badge" style="background:var(--primary);color:#fff;border-radius:50px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:5px;display:none;">0</span></button>
+    </div>
+
+    <!-- Book Tab -->
+    <div class="appt-tab-pane active" id="book-tab">
+        <div class="category-filter-wrap">
+          <div class="category-filter" id="categoryFilter">
+            <button class="cat-pill active" data-cat="All">All</button>
+            <button class="cat-pill" data-cat="General Physician">🩺 General</button>
+            <button class="cat-pill" data-cat="Cardiologist">❤️ Cardio</button>
+            <button class="cat-pill" data-cat="Neurologist">🧠 Neuro</button>
+            <button class="cat-pill" data-cat="Pulmonologist">🫁 Pulmo</button>
+            <button class="cat-pill" data-cat="Orthopedist">🦴 Ortho</button>
+            <button class="cat-pill" data-cat="Dermatologist">✨ Derma</button>
+            <button class="cat-pill" data-cat="Gynecologist">👩‍⚕️ Gynae</button>
+            <button class="cat-pill" data-cat="Pediatrician">👶 Pedia</button>
+            <button class="cat-pill" data-cat="ENT Specialist">👂 ENT</button>
+          </div>
+        </div>
+        <div class="doc-grid" id="docGrid"></div>
+    </div>
+
+    <!-- My Appointments Tab -->
+    <div class="appt-tab-pane" id="my-tab">
+        <div class="appt-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 data-i18n="my_appointments">All Appointments</h2>
+                <button id="clear-apps-btn" class="btn btn-secondary btn-sm" onclick="clearMyAppointments()" style="display:none;font-size:0.75rem;padding:0.4rem 0.8rem;">Clear All</button>
+            </div>
+            <div id="my-apps-loader" class="appt-hint" data-i18n="loading" style="display:none;">Loading appointments…</div>
+            <div id="my-apps-list"></div>
+            <div id="my-apps-empty" style="display:none; text-align:center; padding: 3rem 1rem;">
+                <div style="font-size:3rem; margin-bottom:1rem;">📅</div>
+                <h3 style="color:var(--text); margin-bottom:0.5rem;">No appointments yet</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">You haven't booked any consultations.</p>
+                <button class="btn btn-primary" onclick="document.getElementById('tab-book-btn').click()">Book an Appointment</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============ SUCCESS MODAL ============ -->
+<div id="appt-modal-bg" class="sos-overlay" style="display:none; justify-content: center; align-items: center;" onclick="handleModalBgClick(event)">
+    <div class="card" style="max-width: 400px; width: 90%; text-align: center; padding: 30px;">
+        <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+        <h2 id="appt-modal-title" data-i18n="success_title">Request Submitted</h2>
+        <p id="appt-modal-msg" style="margin: 15px 0; color: var(--text-muted);" data-i18n="success_msg">Doctor's office will confirm by phone.</p>
+        <button id="btn-close-modal" class="btn btn-primary btn-block" onclick="closeSuccessModal()" data-i18n="done">Done</button>
+    </div>
+</div>
+
+<script>
+// Assign male/female avatar based on doctor name
+const FEMALE_NAMES = [
+  'shampa','ananya','priya','sunita','rekha','kavita','meena','rita',
+  'sita','lata','gita','mita','puja','rima','tina','nina','rina',
+  'sneha','sudha','usha','asha','nisha','disha','swati','preeti',
+  'shilpa','rupa','soma','mala','bela','hela','sima','dipa','riya',
+  'tara','sara','maya','lila','kamla','ratna','shanta','aparna',
+  'barnali','chandrima','debjani','esha','farida','gargi','hema',
+  'indira','jayanti','kalyani','laboni','mamata','namita','oishi'
+];
+
+const MALE_SVG = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="32" cy="22" r="13" fill="rgba(255,255,255,0.9)"/>
+  <ellipse cx="32" cy="54" rx="20" ry="13" fill="rgba(255,255,255,0.9)"/>
+</svg>`;
+
+const FEMALE_SVG = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="32" cy="20" r="13" fill="rgba(255,255,255,0.9)"/>
+  <path d="M12 58 Q12 38 32 38 Q52 38 52 58" fill="rgba(255,255,255,0.9)"/>
+  <path d="M22 44 Q20 50 18 56 Q25 54 32 54 Q39 54 46 56 Q44 50 42 44" fill="rgba(255,255,255,0.85)"/>
+</svg>`;
+
+document.querySelectorAll('.appt-doc-avatar[data-name]').forEach(el => {
+  const name = el.getAttribute('data-name').toLowerCase();
+  const firstName = name.split(' ')[1] || name.split(' ')[0]; // skip "Dr."
+  const isFemale = FEMALE_NAMES.some(fn => firstName.includes(fn));
+  el.innerHTML = isFemale ? FEMALE_SVG : MALE_SVG;
+
+  // Alternate gradient colors per card for visual variety
+  const idx = [...document.querySelectorAll('.appt-doc-avatar')].indexOf(el);
+  const gradients = [
+    'linear-gradient(135deg, #0D9488, #2DD4BF)',
+    'linear-gradient(135deg, #0F766E, #14B8A6)',
+    'linear-gradient(135deg, #115E59, #0D9488)',
+    'linear-gradient(135deg, #134E4A, #0F766E)',
+    'linear-gradient(135deg, #0D9488, #06B6D4)',
+  ];
+  el.style.background = gradients[idx % gradients.length];
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/appointments.js') }}"></script>
+
+
+
+<div class="sos-overlay" id="docModal" style="display:none; justify-content:center; align-items:flex-end;">
+  <div class="doc-modal-card" id="docModalCard">
+    <div class="doc-modal-header">
+      <div class="doc-modal-avatar" id="modalAvatar"></div>
+      <div class="doc-modal-meta">
+        <div class="doc-modal-specialty" id="modalSpecialty"></div>
+        <h2 class="doc-modal-name" id="modalName"></h2>
+        <p class="doc-modal-creds" id="modalCreds"></p>
+      </div>
+      <button class="doc-modal-close" onclick="closeDocModal()">✕</button>
+    </div>
+
+    <div class="doc-stats-row" id="modalStats"></div>
+
+    <div class="doc-modal-tabs">
+      <button class="doc-mtab active" data-tab="about">About</button>
+      <button class="doc-mtab" data-tab="availability">Availability</button>
+      <button class="doc-mtab" data-tab="fees">Fees</button>
+      <button class="doc-mtab" data-tab="reviews">Reviews</button>
+    </div>
+
+    <div class="doc-mtab-content" id="modalTabContent"></div>
+
+    <div class="doc-modal-footer">
+      <button class="btn btn-primary btn-block" onclick="requestAppointment()">
+        Request Appointment
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DOCTORS = [
+  {
+    id: 1,
+    name: "Dr. Arjun Sharma",
+    initials: "AS",
+    specialty: "General Physician",
+    category: "General Physician",
+    credentials: "MBBS, MD (Internal Medicine)",
+    rating: 4.7,
+    reviewCount: 98,
+    patients: "1800+",
+    experience: "8 yrs",
+    slots: 7,
+    bio: "Dr. Arjun Sharma is a dedicated general physician with 8 years of experience treating a wide range of acute and chronic conditions. He is known for his thorough approach and patient-first attitude. He has worked extensively in rural health camps across West Bengal. Fluent in Bengali, Hindi and English.",
+    sessionFee: 300,
+    followUpFee: 150,
+    avgSession: "15 mins",
+    timeSlots: ["9:00 AM", "10:00 AM", "11:30 AM", "2:00 PM", "4:00 PM", "5:30 PM"],
+    reviews: [
+      { reviewer: "Sumon Das", rating: 5, comment: "Very thorough and explained everything clearly. Highly recommend." },
+      { reviewer: "Priti Ghosh", rating: 4, comment: "Good doctor, minimal wait time. Will visit again." },
+      { reviewer: "Rajan Sen", rating: 5, comment: "Excellent care, very patient and understanding." }
+    ]
+  },
+  {
+    id: 2,
+    name: "Dr. Priya Chatterjee",
+    initials: "PC",
+    specialty: "General Physician",
+    category: "General Physician",
+    credentials: "MBBS, DNB (Family Medicine)",
+    rating: 4.5,
+    reviewCount: 74,
+    patients: "1200+",
+    experience: "5 yrs",
+    slots: 5,
+    bio: "Dr. Priya Chatterjee specialises in preventive care and chronic disease management. She has a special interest in women's health and lifestyle medicine. She completed her training at NRS Medical College, Kolkata. Her approachable manner makes patients feel at ease.",
+    sessionFee: 250,
+    followUpFee: 120,
+    avgSession: "12 mins",
+    timeSlots: ["9:30 AM", "11:00 AM", "1:30 PM", "3:30 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Anita Roy", rating: 5, comment: "She listens patiently and gives very practical advice." },
+      { reviewer: "Bikash Pal", rating: 4, comment: "Good experience overall, knowledgeable doctor." }
+    ]
+  },
+  {
+    id: 3,
+    name: "Dr. Rohan Mehta",
+    initials: "RM",
+    specialty: "Cardiologist",
+    category: "Cardiologist",
+    credentials: "MBBS, MD, DM (Cardiology), FACC",
+    rating: 4.9,
+    reviewCount: 215,
+    patients: "3200+",
+    experience: "12 yrs",
+    slots: 4,
+    bio: "Dr. Rohan Mehta is a senior interventional cardiologist with expertise in coronary artery disease, heart failure and arrhythmia management. He has performed over 2000 successful angioplasty procedures. He trained at AIIMS Delhi and has published research in leading cardiac journals.",
+    sessionFee: 700,
+    followUpFee: 350,
+    avgSession: "25 mins",
+    timeSlots: ["10:00 AM", "12:00 PM", "3:00 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Tapas Biswas", rating: 5, comment: "Saved my father's life. Extremely skilled and compassionate." },
+      { reviewer: "Mala Dutta", rating: 5, comment: "Best cardiologist in the city. Very detailed consultation." },
+      { reviewer: "Subir Nandi", rating: 5, comment: "Outstanding doctor. Clear explanations and excellent follow-up care." }
+    ]
+  },
+  {
+    id: 4,
+    name: "Dr. Sunita Das",
+    initials: "SD",
+    specialty: "Cardiologist",
+    category: "Cardiologist",
+    credentials: "MBBS, MD, DM (Cardiology)",
+    rating: 4.8,
+    reviewCount: 162,
+    patients: "2600+",
+    experience: "9 yrs",
+    slots: 6,
+    bio: "Dr. Sunita Das is a non-invasive cardiologist specialising in echocardiography and preventive cardiology. She has a strong focus on managing hypertension and lipid disorders. She completed her DM from IPGMER Kolkata and regularly conducts cardiac awareness camps.",
+    sessionFee: 650,
+    followUpFee: 300,
+    avgSession: "20 mins",
+    timeSlots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM", "5:30 PM"],
+    reviews: [
+      { reviewer: "Kartik Sen", rating: 5, comment: "Very knowledgeable and kind. Explained my ECG in simple terms." },
+      { reviewer: "Rekha Mondal", rating: 4, comment: "Professional and efficient. Short waiting time." }
+    ]
+  },
+  {
+    id: 5,
+    name: "Dr. Vikram Bose",
+    initials: "VB",
+    specialty: "Neurologist",
+    category: "Neurologist",
+    credentials: "MBBS, MD, DM (Neurology), FIAN",
+    rating: 4.9,
+    reviewCount: 189,
+    patients: "2900+",
+    experience: "15 yrs",
+    slots: 3,
+    bio: "Dr. Vikram Bose is a highly experienced neurologist specialising in stroke, epilepsy, and movement disorders including Parkinson's disease. He trained at NIMHANS Bangalore and has been awarded for excellence in stroke rehabilitation. He is fluent in Bengali, Hindi and English.",
+    sessionFee: 800,
+    followUpFee: 400,
+    avgSession: "30 mins",
+    timeSlots: ["10:30 AM", "1:00 PM", "4:30 PM"],
+    reviews: [
+      { reviewer: "Amitava Ghosh", rating: 5, comment: "Exceptional neurologist. Correctly diagnosed my father after years of misdiagnosis." },
+      { reviewer: "Soma Roy", rating: 5, comment: "Very thorough. Takes time to explain everything patiently." },
+      { reviewer: "Deepak Pal", rating: 5, comment: "Highly skilled and empathetic. Best in West Bengal." }
+    ]
+  },
+  {
+    id: 6,
+    name: "Dr. Ananya Roy",
+    initials: "AR",
+    specialty: "Neurologist",
+    category: "Neurologist",
+    credentials: "MBBS, MD, DM (Neurology)",
+    rating: 4.6,
+    reviewCount: 113,
+    patients: "1700+",
+    experience: "7 yrs",
+    slots: 5,
+    bio: "Dr. Ananya Roy specialises in headache disorders, multiple sclerosis and neuromuscular diseases. She completed her DM from KPC Medical College and has a special interest in neuroimmunology. She is known for her compassionate approach towards patients with chronic neurological conditions.",
+    sessionFee: 750,
+    followUpFee: 375,
+    avgSession: "25 mins",
+    timeSlots: ["9:00 AM", "11:30 AM", "2:30 PM", "4:00 PM", "5:30 PM"],
+    reviews: [
+      { reviewer: "Nilufar Begum", rating: 5, comment: "Excellent doctor. Diagnosed my migraine correctly and treatment worked." },
+      { reviewer: "Prosenjit Das", rating: 4, comment: "Good consultation, took time to listen to all symptoms." }
+    ]
+  },
+  {
+    id: 7,
+    name: "Dr. Siddharth Pal",
+    initials: "SP",
+    specialty: "Pulmonologist",
+    category: "Pulmonologist",
+    credentials: "MBBS, MD (Pulmonary Medicine), FCCP",
+    rating: 4.7,
+    reviewCount: 141,
+    patients: "2100+",
+    experience: "10 yrs",
+    slots: 6,
+    bio: "Dr. Siddharth Pal is a chest physician with expertise in asthma, COPD, tuberculosis and sleep disorders. He trained at IPGMER and has conducted extensive research on TB management in rural Bengal. He leads a free pulmonology clinic for underprivileged patients every Sunday.",
+    sessionFee: 600,
+    followUpFee: 300,
+    avgSession: "20 mins",
+    timeSlots: ["9:00 AM", "10:30 AM", "12:00 PM", "2:30 PM", "4:00 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Supriya Hazra", rating: 5, comment: "Cured my chronic asthma issue. Very detail-oriented doctor." },
+      { reviewer: "Manas Sarkar", rating: 4, comment: "Good experience. Clear prescription and follow-up plan." }
+    ]
+  },
+  {
+    id: 8,
+    name: "Dr. Meera Ghosh",
+    initials: "MG",
+    specialty: "Pulmonologist",
+    category: "Pulmonologist",
+    credentials: "MBBS, MD (Respiratory Medicine)",
+    rating: 4.5,
+    reviewCount: 87,
+    patients: "1400+",
+    experience: "6 yrs",
+    slots: 7,
+    bio: "Dr. Meera Ghosh focuses on interstitial lung diseases, bronchiectasis and post-COVID pulmonary rehabilitation. She has special training in pulmonary function testing and bronchoscopy. She completed her residency at SSKM Hospital Kolkata and actively participates in health awareness drives.",
+    sessionFee: 550,
+    followUpFee: 275,
+    avgSession: "18 mins",
+    timeSlots: ["9:30 AM", "11:00 AM", "1:00 PM", "3:00 PM", "4:30 PM"],
+    reviews: [
+      { reviewer: "Tushar Banerjee", rating: 5, comment: "Very helpful for my post-COVID breathing issues. Highly recommended." },
+      { reviewer: "Rupa Sen", rating: 4, comment: "Good doctor, explains everything in simple Bengali too." }
+    ]
+  },
+  {
+    id: 9,
+    name: "Dr. Tanmoy Sen",
+    initials: "TS",
+    specialty: "Orthopedist",
+    category: "Orthopedist",
+    credentials: "MBBS, MS (Orthopedics), DNB",
+    rating: 4.8,
+    reviewCount: 176,
+    patients: "2400+",
+    experience: "11 yrs",
+    slots: 5,
+    bio: "Dr. Tanmoy Sen is a skilled orthopedic surgeon specialising in joint replacement, sports injuries and spine disorders. He has performed over 1500 knee and hip replacement surgeries with excellent outcomes. He trained at RG Kar Medical College and is affiliated with multiple leading hospitals in Kolkata.",
+    sessionFee: 650,
+    followUpFee: 325,
+    avgSession: "20 mins",
+    timeSlots: ["10:00 AM", "12:00 PM", "2:00 PM", "4:00 PM", "5:30 PM"],
+    reviews: [
+      { reviewer: "Bijoy Chakraborty", rating: 5, comment: "My knee replacement was a great success. Best ortho in Kolkata." },
+      { reviewer: "Kamala Devi", rating: 5, comment: "Highly skilled. My mother walks properly again after his treatment." }
+    ]
+  },
+  {
+    id: 10,
+    name: "Dr. Ritu Banerjee",
+    initials: "RB",
+    specialty: "Orthopedist",
+    category: "Orthopedist",
+    credentials: "MBBS, MS (Orthopedics)",
+    rating: 4.6,
+    reviewCount: 104,
+    patients: "1600+",
+    experience: "8 yrs",
+    slots: 6,
+    bio: "Dr. Ritu Banerjee specialises in paediatric orthopaedics, fracture management and physiotherapy-integrated rehabilitation. She has a special interest in treating sports injuries in young athletes. She completed her MS from Calcutta National Medical College.",
+    sessionFee: 600,
+    followUpFee: 300,
+    avgSession: "18 mins",
+    timeSlots: ["9:00 AM", "10:30 AM", "1:30 PM", "3:30 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Sudip Das", rating: 5, comment: "Excellent doctor. My son's fracture healed perfectly." },
+      { reviewer: "Anita Mitra", rating: 4, comment: "Very professional and thorough. Good post-treatment care." }
+    ]
+  },
+  {
+    id: 11,
+    name: "Dr. Debashis Mukherjee",
+    initials: "DM",
+    specialty: "Dermatologist",
+    category: "Dermatologist",
+    credentials: "MBBS, MD (Dermatology), DVD",
+    rating: 4.7,
+    reviewCount: 132,
+    patients: "2000+",
+    experience: "9 yrs",
+    slots: 8,
+    bio: "Dr. Debashis Mukherjee is a consultant dermatologist with expertise in acne, eczema, psoriasis and cosmetic dermatology. He uses the latest evidence-based treatments and is known for his meticulous diagnosis. He trained at Calcutta Medical College and regularly presents at national dermatology conferences.",
+    sessionFee: 500,
+    followUpFee: 250,
+    avgSession: "15 mins",
+    timeSlots: ["9:00 AM", "10:00 AM", "11:30 AM", "1:00 PM", "2:30 PM", "4:00 PM", "5:30 PM"],
+    reviews: [
+      { reviewer: "Payal Saha", rating: 5, comment: "My acne cleared up completely in 3 months. Life changing!" },
+      { reviewer: "Arif Khan", rating: 4, comment: "Good doctor. Gave clear instructions and the medicine worked." }
+    ]
+  },
+  {
+    id: 12,
+    name: "Dr. Poulami Dutta",
+    initials: "PD",
+    specialty: "Dermatologist",
+    category: "Dermatologist",
+    credentials: "MBBS, MD (Dermatology)",
+    rating: 4.4,
+    reviewCount: 79,
+    patients: "1100+",
+    experience: "5 yrs",
+    slots: 7,
+    bio: "Dr. Poulami Dutta focuses on paediatric skin conditions, hair loss disorders and allergic skin diseases. She has a gentle approach particularly appreciated by younger patients. She completed her MD from IPGMER and is passionate about skin health education in rural communities.",
+    sessionFee: 450,
+    followUpFee: 225,
+    avgSession: "12 mins",
+    timeSlots: ["9:30 AM", "11:00 AM", "12:30 PM", "2:00 PM", "3:30 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Moushumi Roy", rating: 4, comment: "Very kind with my child. Explained everything to us clearly." },
+      { reviewer: "Tarun Ghosh", rating: 5, comment: "Diagnosed my hair loss correctly. Treatment is working well." }
+    ]
+  },
+  {
+    id: 13,
+    name: "Dr. Subhajit Nandi",
+    initials: "SN",
+    specialty: "Gynecologist",
+    category: "Gynecologist",
+    credentials: "MBBS, MS (OBG), FMAS",
+    rating: 4.9,
+    reviewCount: 247,
+    patients: "3500+",
+    experience: "13 yrs",
+    slots: 4,
+    bio: "Dr. Subhajit Nandi is a senior obstetrician and gynaecologist with expertise in high-risk pregnancies, laparoscopic surgeries and infertility treatment. He has delivered over 3000 babies and specialises in minimally invasive gynaecological procedures. He is an alumnus of SSKM Hospital Kolkata.",
+    sessionFee: 700,
+    followUpFee: 350,
+    avgSession: "25 mins",
+    timeSlots: ["10:00 AM", "12:00 PM", "3:00 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Sanchita Das", rating: 5, comment: "Delivered my baby safely after a complicated pregnancy. Forever grateful." },
+      { reviewer: "Rupali Sen", rating: 5, comment: "Best gynaecologist. Very knowledgeable and calm in emergencies." },
+      { reviewer: "Kaberi Pal", rating: 5, comment: "Highly recommended for high risk pregnancy cases." }
+    ]
+  },
+  {
+    id: 14,
+    name: "Dr. Keya Mondal",
+    initials: "KM",
+    specialty: "Gynecologist",
+    category: "Gynecologist",
+    credentials: "MBBS, DGO, MD (OBG)",
+    rating: 4.6,
+    reviewCount: 118,
+    patients: "1900+",
+    experience: "7 yrs",
+    slots: 6,
+    bio: "Dr. Keya Mondal specialises in menstrual disorders, PCOD, menopause management and antenatal care. She has a warm and empathetic approach and is particularly sensitive to the healthcare needs of adolescent girls and rural women. She conducts free health camps in South 24 Parganas regularly.",
+    sessionFee: 600,
+    followUpFee: 300,
+    avgSession: "20 mins",
+    timeSlots: ["9:00 AM", "11:00 AM", "1:30 PM", "3:00 PM", "4:30 PM"],
+    reviews: [
+      { reviewer: "Parna Biswas", rating: 5, comment: "Very understanding and helpful. Best doctor for PCOD treatment." },
+      { reviewer: "Nilima Sarkar", rating: 4, comment: "Good consultation. She explains everything patiently." }
+    ]
+  },
+  {
+    id: 15,
+    name: "Dr. Arnab Hazra",
+    initials: "AH",
+    specialty: "Pediatrician",
+    category: "Pediatrician",
+    credentials: "MBBS, MD (Pediatrics), DCH",
+    rating: 4.8,
+    reviewCount: 198,
+    patients: "2800+",
+    experience: "10 yrs",
+    slots: 7,
+    bio: "Dr. Arnab Hazra is a consultant paediatrician with expertise in neonatal care, childhood infections and developmental disorders. He has managed complex cases in the NICU at SSKM and NRS hospitals. He is known for his gentle manner with children and his ability to put anxious parents at ease.",
+    sessionFee: 400,
+    followUpFee: 200,
+    avgSession: "15 mins",
+    timeSlots: ["9:00 AM", "10:30 AM", "12:00 PM", "2:00 PM", "3:30 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Ratna Chakraborty", rating: 5, comment: "My children love him. He is so gentle and thorough." },
+      { reviewer: "Dipankar Mitra", rating: 5, comment: "Excellent paediatrician. Correct diagnosis every time." }
+    ]
+  },
+  {
+    id: 16,
+    name: "Dr. Shreya Bhattacharya",
+    initials: "SB",
+    specialty: "Pediatrician",
+    category: "Pediatrician",
+    credentials: "MBBS, DCH, DNB (Pediatrics)",
+    rating: 4.5,
+    reviewCount: 93,
+    patients: "1500+",
+    experience: "6 yrs",
+    slots: 8,
+    bio: "Dr. Shreya Bhattacharya specialises in childhood nutrition, immunisation schedules and respiratory infections in children. She completed her DNB from Calcutta Medical College and runs a dedicated adolescent health clinic on Saturdays. Parents particularly appreciate her ability to explain diagnoses in simple terms.",
+    sessionFee: 350,
+    followUpFee: 175,
+    avgSession: "12 mins",
+    timeSlots: ["9:30 AM", "10:30 AM", "12:00 PM", "1:30 PM", "3:00 PM", "4:30 PM"],
+    reviews: [
+      { reviewer: "Anupam Roy", rating: 5, comment: "Very patient with my toddler. Excellent doctor." },
+      { reviewer: "Smita Dey", rating: 4, comment: "Good experience. Helpful and knowledgeable about child nutrition." }
+    ]
+  },
+  {
+    id: 17,
+    name: "Dr. Tuhin Sarkar",
+    initials: "TS",
+    specialty: "ENT Specialist",
+    category: "ENT Specialist",
+    credentials: "MBBS, MS (ENT), DORL",
+    rating: 4.7,
+    reviewCount: 127,
+    patients: "1800+",
+    experience: "9 yrs",
+    slots: 6,
+    bio: "Dr. Tuhin Sarkar is an ENT surgeon with expertise in sinus disorders, hearing loss, tonsillectomy and nasal polyp management. He has performed over 1200 endoscopic sinus surgeries. He trained at Calcutta National Medical College and is actively involved in free hearing screening camps across West Bengal.",
+    sessionFee: 500,
+    followUpFee: 250,
+    avgSession: "18 mins",
+    timeSlots: ["9:00 AM", "10:30 AM", "12:00 PM", "2:30 PM", "4:00 PM", "5:30 PM"],
+    reviews: [
+      { reviewer: "Asim Bose", rating: 5, comment: "Cured my chronic sinusitis. Exceptional doctor." },
+      { reviewer: "Jayanti Das", rating: 4, comment: "Very thorough. Diagnosed my son's ear issue correctly." }
+    ]
+  },
+  {
+    id: 18,
+    name: "Dr. Nilanjana Chakraborty",
+    initials: "NC",
+    specialty: "ENT Specialist",
+    category: "ENT Specialist",
+    credentials: "MBBS, MS (ENT), Fellowship (Head & Neck Surgery)",
+    rating: 4.8,
+    reviewCount: 154,
+    patients: "2200+",
+    experience: "11 yrs",
+    slots: 5,
+    bio: "Dr. Nilanjana Chakraborty is a head and neck surgeon with specialisation in thyroid surgeries, salivary gland disorders and voice disorders. She completed her fellowship from Tata Memorial Hospital Mumbai. She is one of the few ENT specialists in Bengal trained in microlaryngoscopy for voice rehabilitation.",
+    sessionFee: 550,
+    followUpFee: 275,
+    avgSession: "20 mins",
+    timeSlots: ["10:00 AM", "11:30 AM", "1:00 PM", "3:30 PM", "5:00 PM"],
+    reviews: [
+      { reviewer: "Manab Mukherjee", rating: 5, comment: "My thyroid surgery went perfectly. Highly skilled surgeon." },
+      { reviewer: "Susmita Pal", rating: 5, comment: "Excellent voice therapy outcome. Truly exceptional specialist." },
+      { reviewer: "Hirak Sen", rating: 4, comment: "Very experienced. Explained the procedure clearly before surgery." }
+    ]
+  }
+];
+
+const DOCTOR_GRADIENTS = [
+  'linear-gradient(135deg, #0D9488, #2DD4BF)', // teal to cyan
+  'linear-gradient(135deg, #4F46E5, #9333EA)', // indigo to purple
+  'linear-gradient(135deg, #D97706, #DC2626)', // amber to red
+  'linear-gradient(135deg, #2563EB, #06B6D4)', // blue to cyan
+  'linear-gradient(135deg, #DB2777, #EA580C)'  // pink to orange
+];
+
+function getUpcomingDates() {
+    const today = new Date();
+    const dates = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = -3; i <= 17; i++) {
+        let d = new Date(today);
+        d.setDate(today.getDate() + i);
+        dates.push({
+            name: days[d.getDay()],
+            date: d.getDate(),
+            fullDate: d,
+            isPast: i < 0,
+            isToday: i === 0,
+            dateStr: d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})
+        });
+    }
+    return dates;
+}
+
+function buildDateStripHtml() {
+    const dates = getUpcomingDates();
+    let html = '';
+    dates.forEach((d) => {
+        let classes = 'date-circle';
+        if (d.isToday) classes += ' today';
+        if (d.isPast) classes += ' past';
+        let clickHandler = !d.isPast ? `onclick="selectDate(this, '${d.dateStr}')"` : '';
+        html += `
+        <div class="date-col" ${d.isToday ? 'data-today="true"' : ''}>
+          <span class="day-name">${d.name}</span>
+          <div class="${classes}" ${clickHandler}>${d.date}</div>
+        </div>`;
+    });
+    return html;
+}
+
+function filterDoctors(cat) {
+    const cards = document.querySelectorAll('.doc-card');
+    cards.forEach(card => {
+        if (cat === 'All' || card.dataset.category === cat) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function selectDate(el, dateStr) {
+    if (el.classList.contains('past')) return;
+    const strip = el.closest('.doc-date-strip');
+    strip.querySelectorAll('.date-circle').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+    if (strip.id === 'modalDateStrip') {
+        selectedBookingDate = dateStr;
+        const err = document.getElementById('bookingErrorMsg');
+        if (err) err.style.display = 'none';
+    }
+}
+
+function selectSlot(el, timeStr) {
+    document.querySelectorAll('#modalSlotGrid .slot-pill').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    selectedBookingTime = timeStr;
+    const err = document.getElementById('bookingErrorMsg');
+    if (err) err.style.display = 'none';
+}
+
+function renderTabContent(doc, tab) {
+    const container = document.getElementById('modalTabContent');
+    if (tab === 'about') {
+        container.innerHTML = `<div class="mtab-about"><p class="about-bio">${doc.bio}</p></div>`;
+    } else if (tab === 'availability') {
+        let slotsHtml = doc.timeSlots.map(t => `<div class="slot-pill" onclick="selectSlot(this, '${t}')">${t}</div>`).join('');
+        container.innerHTML = `
+          <div class="mtab-avail">
+            <p class="avail-pick-label">Select a date</p>
+            <div class="doc-date-strip modal-date-strip" id="modalDateStrip">
+              ${buildDateStripHtml()}
+            </div>
+            <p class="avail-pick-label" style="margin-top:0.85rem">Select a time slot</p>
+            <div class="slot-grid" id="modalSlotGrid">
+              ${slotsHtml}
+            </div>
+            <div id="bookingErrorMsg" style="color:#DC2626; font-size:0.85rem; font-weight:600; margin-top:0.75rem; display:none; text-align:center;">Please select a date and time slot.</div>
+          </div>
+        `;
+        setTimeout(() => {
+            const strip = document.getElementById('modalDateStrip');
+            if (strip) {
+                const todayCol = strip.querySelector('[data-today="true"]');
+                if (todayCol) strip.scrollLeft = todayCol.offsetLeft - (strip.offsetWidth / 2) + (todayCol.offsetWidth / 2);
+            }
+        }, 10);
+    } else if (tab === 'fees') {
+        container.innerHTML = `
+          <div class="mtab-fees">
+            <div class="fee-boxes-row">
+              <div class="fee-box">
+                <div class="fee-icon">💳</div>
+                <div class="fee-label">Session Fee</div>
+                <div class="fee-amount">₹${doc.sessionFee}</div>
+              </div>
+              <div class="fee-box">
+                <div class="fee-icon">🔄</div>
+                <div class="fee-label">Follow-Up Fee</div>
+                <div class="fee-amount">₹${doc.followUpFee}</div>
+                <div class="fee-note">Within 30 days</div>
+              </div>
+            </div>
+            <div class="fee-extras-row">
+              <div class="fee-extra-pill">⏱️ Avg. Session: ${doc.avgSession}</div>
+              <div class="fee-extra-pill">👥 Patients: ${doc.patients}</div>
+            </div>
+          </div>
+        `;
+    } else if (tab === 'reviews') {
+        let revsHtml = doc.reviews.map(r => `
+          <div class="review-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="review-name">${r.reviewer}</span>
+              <span class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+            </div>
+            <div class="review-comment">${r.comment}</div>
+          </div>
+        `).join('');
+        container.innerHTML = `<div class="mtab-reviews">${revsHtml}</div>`;
+    }
+}
+
+function switchModalTab(tab) {
+    document.querySelectorAll('.doc-mtab').forEach(t => {
+        t.classList.remove('active');
+        if (t.dataset.tab === tab) t.classList.add('active');
+    });
+    if (currentDoc) renderTabContent(currentDoc, tab);
+}
+
+document.querySelectorAll('.doc-mtab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        switchModalTab(btn.dataset.tab);
+    });
+});
+
+let currentDoc = null;
+let selectedBookingDate = null;
+let selectedBookingTime = null;
+
+function openDoctorModal(id) {
+    const doc = DOCTORS.find(d => d.id === parseInt(id, 10));
+    if (!doc) return;
+    currentDoc = doc;
+    selectedBookingDate = null;
+    selectedBookingTime = null;
+
+    const bgStr = DOCTOR_GRADIENTS[doc.id % 5];
+    const avatar = document.getElementById('modalAvatar');
+    avatar.style.background = bgStr;
+    avatar.textContent = doc.initials;
+    
+    document.getElementById('modalSpecialty').textContent = doc.specialty;
+    document.getElementById('modalName').textContent = doc.name;
+    document.getElementById('modalCreds').textContent = doc.credentials;
+
+    document.getElementById('modalStats').innerHTML = `
+      <div class="doc-stat-pill"><div class="doc-stat-val">🗓️ ${doc.experience}</div><div class="doc-stat-label">Experience</div></div>
+      <div class="doc-stat-pill"><div class="doc-stat-val">⭐ ${doc.rating}</div><div class="doc-stat-label">Rating</div></div>
+      <div class="doc-stat-pill"><div class="doc-stat-val">👥 ${doc.patients}</div><div class="doc-stat-label">Patients</div></div>
+    `;
+
+    document.querySelectorAll('.doc-mtab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.doc-mtab[data-tab="about"]').classList.add('active');
+    renderTabContent(doc, 'about');
+
+    const modal = document.getElementById('docModal');
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+}
+
+function closeDocModal() {
+    const modal = document.getElementById('docModal');
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+    selectedBookingDate = null;
+    selectedBookingTime = null;
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'appt-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => { 
+    t.classList.remove('show'); 
+    setTimeout(() => t.remove(), 300); 
+  }, 2500);
+}
+
+function getAppointmentsData() {
+    const stored = localStorage.getItem('swahealthy_my_appointments');
+    return stored ? JSON.parse(stored) : [];
+}
+
+function saveAppointmentsData(data) {
+    localStorage.setItem('swahealthy_my_appointments', JSON.stringify(data));
+}
+
+function cancelAppointment(id) {
+    let data = getAppointmentsData();
+    const appt = data.find(a => a.id === id);
+    if (appt) {
+        appt.status = 'Cancelled';
+        saveAppointmentsData(data);
+        renderMyAppointments();
+    }
+}
+
+function clearMyAppointments() {
+    localStorage.removeItem('swahealthy_my_appointments');
+    renderMyAppointments();
+}
+
+function switchToBookTab() {
+    const tabBtn = document.getElementById('tab-book-btn');
+    if (tabBtn) tabBtn.click();
+}
+
+function renderMyAppointments() {
+    const data = getAppointmentsData();
+    const list = document.getElementById('my-apps-list');
+    const emptyState = document.getElementById('my-apps-empty');
+    const clearBtn = document.getElementById('clear-apps-btn');
+    const badge = document.getElementById('my-apps-badge');
+    
+    list.innerHTML = '';
+    
+    if (!data || data.length === 0) {
+        list.style.display = 'none';
+        emptyState.style.display = 'block';
+        clearBtn.style.display = 'none';
+        if(badge) badge.style.display = 'none';
+        return;
+    }
+    
+    list.style.display = 'block';
+    emptyState.style.display = 'none';
+    clearBtn.style.display = 'block';
+    if(badge) {
+        badge.style.display = 'inline-block';
+        badge.textContent = data.length;
+    }
+    
+    let html = '';
+    [...data].reverse().forEach(app => {
+        const bg = DOCTOR_GRADIENTS[app.doctorId % 5] || '#0D9488';
+        
+        let statusColor = '#000';
+        let statusBg = '#eee';
+        if (app.status === 'Pending') { statusColor = '#D97706'; statusBg = '#FEF3C7'; }
+        else if (app.status === 'Confirmed') { statusColor = '#16A34A'; statusBg = '#DCFCE7'; }
+        else if (app.status === 'Cancelled') { statusColor = '#DC2626'; statusBg = '#FEE2E2'; }
+
+        let probHtml = app.problem ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>Problem:</strong> ${app.problem}</div>` : '';
+        let sympHtml = app.symptoms ? `<div style="font-size:0.75rem; color:var(--text-muted);"><strong>Symptoms:</strong> ${app.symptoms}</div>` : '';
+        
+        let actionHtml = '';
+        if (app.status !== 'Cancelled') {
+            actionHtml = `<button class="btn btn-secondary btn-sm" onclick="cancelAppointment(${app.id})" style="padding:0.25rem 0.75rem; font-size:0.75rem;">Cancel</button>`;
+        } else {
+            actionHtml = `<span style="font-size:0.7rem; color:var(--text-muted); font-style:italic;">This appointment was cancelled</span>`;
+        }
+        
+        html += `
+        <div class="my-appt-card" style="background:var(--surface); border:1px solid var(--border); border-radius:15px; padding:1.25rem; margin-bottom:1rem; box-shadow:var(--sh-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <div style="width:45px; height:45px; border-radius:50%; background:${bg}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1rem;">
+                        ${app.doctorInitials}
+                    </div>
+                    <div>
+                        <div style="font-weight:700; color:var(--text); font-size:0.95rem;">${app.doctorName}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted);">${app.doctorSpecialty}</div>
+                    </div>
+                </div>
+                <div style="background:${statusBg}; color:${statusColor}; font-size:0.7rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:50px;">
+                    ${app.status}
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:1.5rem; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border);">
+                <div>
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:0.15rem;">Date</div>
+                    <div style="font-weight:600; font-size:0.85rem; color:var(--text);">${app.date}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:0.15rem;">Time</div>
+                    <div style="font-weight:600; font-size:0.85rem; color:var(--text);">${app.time}</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:1rem;">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>Patient:</strong> ${app.patientName} (Age: ${app.patientAge}) - ${app.patientPhone}</div>
+                ${probHtml}
+                ${sympHtml}
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end;">
+                ${actionHtml}
+            </div>
+        </div>`;
+    });
+    list.innerHTML = html;
+}
+
+function requestAppointment() {
+    if (!selectedBookingDate || !selectedBookingTime) {
+        switchModalTab('availability');
+        setTimeout(() => {
+            const err = document.getElementById('bookingErrorMsg');
+            if (err) err.style.display = 'block';
+        }, 50);
+        return;
+    }
+
+    const data = getAppointmentsData();
+    const newAppt = {
+        id: Date.now(),
+        doctorId: currentDoc.id,
+        doctorName: currentDoc.name,
+        doctorInitials: currentDoc.initials,
+        doctorSpecialty: currentDoc.specialty,
+        date: selectedBookingDate,
+        time: selectedBookingTime,
+        patientName: "{{ session['user']['name'] if session.get('user') else 'Guest User' }}",
+        patientAge: localStorage.getItem('swahealthy_age') || 28,
+        patientPhone: localStorage.getItem('swahealthy_phone') || "+91 9876543210",
+        problem: "General consultation via app",
+        symptoms: "Reported via symptom checker before booking",
+        status: "Pending",
+        bookedAt: new Date().toISOString()
+    };
+
+    data.push(newAppt);
+    saveAppointmentsData(data);
+    
+    showToast('Appointment Requested Successfully!');
+    renderMyAppointments();
+    
+    setTimeout(() => {
+        closeDocModal();
+        switchToBookTab();
+        const tabBtnMy = document.getElementById('tab-my-btn');
+        if (tabBtnMy) tabBtnMy.click();
+    }, 1500);
+}
+
+function initDoctors() {
+    const grid = document.getElementById('docGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    DOCTORS.forEach((doc) => {
+        const bg = DOCTOR_GRADIENTS[doc.id % 5];
+        const card = document.createElement('div');
+        card.className = 'doc-card';
+        card.dataset.id = doc.id;
+        card.dataset.category = doc.category;
+        
+        card.innerHTML = `
+          <div class="doc-card-top">
+            <div class="doc-avatar-wrap">
+              <div class="doc-avatar" style="background: ${bg}">
+                ${doc.initials}
+              </div>
+              <div class="doc-online-dot"></div>
+            </div>
+            <div class="doc-info">
+              <div class="doc-specialty-pill">${doc.specialty}</div>
+              <div class="doc-name">${doc.name}</div>
+              <div class="doc-rating">
+                <span class="star">★</span>
+                <span class="rating-val">${doc.rating}</span>
+                <span class="rating-count">(${doc.reviewCount} reviews)</span>
+              </div>
+            </div>
+          </div>
+          <div class="doc-divider"></div>
+          <div class="doc-avail-row">
+            <span class="avail-label">Availability</span>
+            <span class="avail-slots">● ${doc.slots} slots</span>
+          </div>
+          <div class="doc-date-strip scrollable-strip" data-docid="${doc.id}">
+            ${buildDateStripHtml()}
+          </div>
+          <button class="doc-book-btn" onclick="openDoctorModal(${doc.id})">
+            Book Appointment →
+          </button>
+        `;
+        grid.appendChild(card);
+    });
+
+    document.querySelectorAll('.doc-date-strip').forEach(strip => {
+        const todayCol = strip.querySelector('[data-today="true"]');
+        if (todayCol) {
+            strip.scrollLeft = todayCol.offsetLeft - (strip.offsetWidth / 2) + (todayCol.offsetWidth / 2);
+        }
+    });
+}
+
+window.loadAllAppointments = function() {
+    renderMyAppointments();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initDoctors();
+    renderMyAppointments();
+
+    // Category Filter Listeners
+    document.querySelectorAll('.cat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            filterDoctors(pill.dataset.cat);
+        });
+    });
+});
+</script>
+
+{% endblock %}

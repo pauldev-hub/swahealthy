@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-page-container">
+    <div class="profile-card">
+
+        <!-- ═══ HERO BANNER ═══ -->
+        <div class="profile-hero">
+            <div class="profile-hero-deco1"></div>
+            <div class="profile-hero-deco2"></div>
+
+            <!-- Avatar — tap to change photo -->
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar-ring" id="avatar-ring"
+                    onclick="document.getElementById('photo-upload-input').click()" style="cursor:pointer;"
+                    title="Tap to change photo">
+
+                    <!-- Priority: uploaded photo > Google photo > default SVG -->
+                    <img id="avatar-img" src="" alt="Profile"
+                        style="display:none;width:100%;height:100%;border-radius:50%;object-fit:cover;">
+
+                    <!-- Fallback Google photo -->
+                    {% if session.get('user') and session['user'].get('picture') %}
+                    <img id="avatar-google" src="{{ session['user']['picture'] }}" alt="Profile"
+                        style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                    {% else %}
+                    <svg id="avatar-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="32" cy="22" r="13" fill="rgba(255,255,255,0.92)" />
+                        <ellipse cx="32" cy="54" rx="20" ry="13" fill="rgba(255,255,255,0.92)" />
+                    </svg>
+                    {% endif %}
+
+                </div>
+
+                <!-- Camera badge -->
+                <div class="avatar-camera-badge" onclick="document.getElementById('photo-upload-input').click()">
+                    📷
+                </div>
+
+                <!-- Hidden file input -->
+                <input type="file" id="photo-upload-input" accept="image/*" style="display:none;"
+                    onchange="handlePhotoUpload(event)">
+            </div>
+
+            {% if session.get('user') %}
+            <h2 class="profile-hero-title">{{ session['user']['name'] }}</h2>
+            <p class="profile-hero-sub">{{ session['user']['email'] }}</p>
+            {% else %}
+            <h2 class="profile-hero-title" data-i18n="profile_title">My Health Profile</h2>
+            <p class="profile-hero-sub" data-i18n="profile_subtitle">Enter your age and gender to get more personalized health insights.</p>
+            {% endif %}
+
+            <div class="profile-stats-row">
+                <div class="profile-stat">
+                    <span class="profile-stat-value" id="stat-checks">0</span>
+                    <span class="profile-stat-label">Checks</span>
+                </div>
+                <div class="profile-stat-divider"></div>
+                <div class="profile-stat">
+                    <span class="profile-stat-value" id="stat-age">—</span>
+                    <span class="profile-stat-label">Age</span>
+                </div>
+                <div class="profile-stat-divider"></div>
+                <div class="profile-stat">
+                    <span class="profile-stat-value" id="stat-gender">—</span>
+                    <span class="profile-stat-label">Gender</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ FORM SECTION ═══ -->
+        <div class="profile-form-section">
+
+            <!-- Photo upload status -->
+            <div id="photo-upload-msg"
+                style="display:none;text-align:center;margin-bottom:1rem;font-size:0.82rem;font-weight:600;color:var(--sev-low);background:var(--sev-low-bg);padding:0.5rem;border-radius:var(--r-md);">
+                ✓ Photo updated!
+            </div>
+
+            <!-- ── VIEW MODE ── -->
+            <div id="profile-view-mode" style="display:none;">
+                <div class="profile-section-label">Health Information</div>
+                <div class="profile-info-card">
+                    <div class="profile-info-row">
+                        <span class="profile-info-icon">🎂</span>
+                        <div class="profile-info-content">
+                            <span class="profile-info-label">Age</span>
+                            <span class="profile-info-value" id="view-age">—</span>
+                        </div>
+                    </div>
+                    <div class="profile-info-divider"></div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-icon">👤</span>
+                        <div class="profile-info-content">
+                            <span class="profile-info-label">Gender</span>
+                            <span class="profile-info-value" id="view-gender">—</span>
+                        </div>
+                    </div>
+                    <div class="profile-info-divider"></div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-icon">📞</span>
+                        <div class="profile-info-content">
+                            <span class="profile-info-label">Phone</span>
+                            <span class="profile-info-value" id="view-phone">—</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="switchToEdit()" class="btn btn-secondary btn-block" style="margin-top:1rem;">
+                    ✏️ Edit Profile
+                </button>
+            </div>
+
+            <!-- ── EDIT MODE ── -->
+            <div id="profile-edit-mode">
+                <div class="profile-section-label">Health Information</div>
+                <form id="profile-form" onsubmit="saveProfile(event)">
+
+                    <div class="profile-field-group">
+                        <label class="profile-field-label">Your Age</label>
+                        <div class="profile-input-wrapper">
+                            <span class="profile-input-icon">🎂</span>
+                            <input type="number" id="profile-age" min="1" max="120" required
+                                class="form-control profile-input" placeholder="e.g. 28">
+                        </div>
+                    </div>
+
+                    <div class="profile-field-group">
+                        <label class="profile-field-label">Phone Number</label>
+                        <div class="profile-input-wrapper">
+                            <span class="profile-input-icon">📞</span>
+                            <input type="tel" id="profile-phone" required
+                                class="form-control profile-input" placeholder="e.g. +91 9876543210">
+                        </div>
+                    </div>
+
+                    <div class="profile-field-group">
+                        <label class="profile-field-label">Gender</label>
+                        <div class="gender-options-grid">
+                            <label class="gender-option">
+                                <input type="radio" name="gender" value="Male" checked style="display:none;">
+                                <div class="option-content">
+                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">👨</span>Male
+                                </div>
+                            </label>
+                            <label class="gender-option">
+                                <input type="radio" name="gender" value="Female" style="display:none;">
+                                <div class="option-content">
+                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">👩</span>Female
+                                </div>
+                            </label>
+                            <label class="gender-option">
+                                <input type="radio" name="gender" value="Other" style="display:none;">
+                                <div class="option-content">
+                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">🧑</span>Other
+                                </div>
+                            </label>
+                            <label class="gender-option">
+                                <input type="radio" name="gender" value="Prefer not to say" style="display:none;">
+                                <div class="option-content" style="font-size:0.78rem;">
+                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">🤐</span>Prefer not
+                                    to say
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block profile-save-btn">
+                        <span>💾</span>
+                        <span>Save Profile</span>
+                    </button>
+                    <div id="save-msg">✓ Profile saved successfully!</div>
+                </form>
+            </div>
+
+            <!-- ── QUICK ACTIONS ── -->
+            <div class="profile-section-label" style="margin-top:1.5rem;">Quick Actions</div>
+            <div class="profile-actions-grid">
+                <a href="/history" class="profile-action-card">
+                    <span class="profile-action-icon">🕐</span>
+                    <span class="profile-action-label">My History</span>
+                </a>
+                <a href="/appointments" class="profile-action-card">
+                    <span class="profile-action-icon">📅</span>
+                    <span class="profile-action-label">Book Doctor</span>
+                </a>
+                <a href="/ai-analysis" class="profile-action-card">
+                    <span class="profile-action-icon">🤖</span>
+                    <span class="profile-action-label">AI Scan</span>
+                </a>
+                <a href="/" class="profile-action-card">
+                    <span class="profile-action-icon">🩺</span>
+                    <span class="profile-action-label">Check Symptoms</span>
+                </a>
+            </div>
+
+            <!-- ── APP INFO ── -->
+            <div class="profile-app-info">
+                <div class="profile-app-info-row">
+                    <span>App Version</span><span>SwaHealthy v2.0</span>
+                </div>
+                <div class="profile-app-info-row">
+                    <span>Language</span><span id="info-lang">English</span>
+                </div>
+                <div class="profile-app-info-row">
+                    <span>Region</span><span>West Bengal, India</span>
+                </div>
+            </div>
+
+            <!-- ── REMOVE PHOTO (only if custom photo exists) ── -->
+            <button id="remove-photo-btn" onclick="removePhoto()" style="display:none;" class="btn btn-light btn-block"
+                style="margin-bottom:0.5rem;">
+                🗑️ Remove Custom Photo
+            </button>
+
+            {% if session.get('user') %}
+            <a href="/logout" class="profile-logout-btn">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span data-i18n="logout">Logout from SwaHealthy</span>
+            </a>
+            {% else %}
+            <a href="/login" class="profile-logout-btn" style="background: var(--primary); color: white; border-color: var(--primary);">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                <span data-i18n="login">Login to SwaHealthy</span>
+            </a>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-info-card {
+        background: var(--bg);
+        border: 1.5px solid var(--border-mid);
+        border-radius: var(--r-lg);
+        overflow: hidden;
+    }
+
+    .profile-info-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+    }
+
+    .profile-info-icon {
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .profile-info-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .profile-info-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+    }
+
+    .profile-info-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .profile-info-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 0 1.25rem;
+    }
+
+    /* Avatar wrapper for badge positioning */
+    .profile-avatar-wrapper {
+        position: relative;
+        width: 90px;
+        margin: 0 auto 1rem;
+    }
+
+    .avatar-camera-badge {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 26px;
+        height: 26px;
+        background: var(--surface);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        transition: transform var(--ease);
+    }
+
+    .avatar-camera-badge:hover {
+        transform: scale(1.15);
+    }
+
+    .profile-avatar-ring {
+        margin: 0 !important;
+        width: 90px !important;
+        height: 90px !important;
+    }
+</style>
+
+<script>
+    const GENDER_ICONS = { 'Male': '👨 Male', 'Female': '👩 Female', 'Other': '🧑 Other', 'Prefer not to say': '🤐 Private' };
+    const GENDER_SYMBOL = { 'Male': '♂', 'Female': '♀', 'Other': '⚧', 'Prefer not to say': '—' };
+    const PHOTO_KEY = 'swahealthy_profile_photo';
+
+    /* ── Photo upload ── */
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Warn if too large (>1.5MB)
+        if (file.size > 1.5 * 1024 * 1024) {
+            alert('Photo is too large. Please choose an image under 1.5MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const base64 = e.target.result;
+            try {
+                localStorage.setItem(PHOTO_KEY, base64);
+                applyPhoto(base64);
+                showPhotoMsg();
+            } catch (err) {
+                alert('Could not save photo — storage may be full. Try a smaller image.');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function applyPhoto(base64) {
+        const img = document.getElementById('avatar-img');
+        img.src = base64;
+        img.style.display = 'block';
+
+        // Hide Google photo and SVG fallback
+        const google = document.getElementById('avatar-google');
+        const svg = document.getElementById('avatar-svg');
+        if (google) google.style.display = 'none';
+        if (svg) svg.style.display = 'none';
+
+        // Show remove button
+        const removeBtn = document.getElementById('remove-photo-btn');
+        if (removeBtn) removeBtn.style.display = 'flex';
+    }
+
+    function removePhoto() {
+        localStorage.removeItem(PHOTO_KEY);
+        const img = document.getElementById('avatar-img');
+        img.src = '';
+        img.style.display = 'none';
+
+        // Restore Google photo or SVG
+        const google = document.getElementById('avatar-google');
+        const svg = document.getElementById('avatar-svg');
+        if (google) google.style.display = 'block';
+        else if (svg) svg.style.display = 'block';
+
+        const removeBtn = document.getElementById('remove-photo-btn');
+        if (removeBtn) removeBtn.style.display = 'none';
+    }
+
+    function showPhotoMsg() {
+        const msg = document.getElementById('photo-upload-msg');
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    }
+
+    /* ── View / Edit toggle ── */
+    function switchToEdit() {
+        document.getElementById('profile-view-mode').style.display = 'none';
+        document.getElementById('profile-edit-mode').style.display = 'block';
+    }
+
+    function switchToView(age, gender, phone) {
+        document.getElementById('view-age').textContent = age ? age + ' yrs' : '—';
+        document.getElementById('view-gender').textContent = GENDER_ICONS[gender] || gender || '—';
+        document.getElementById('view-phone').textContent = phone || '—';
+        document.getElementById('profile-edit-mode').style.display = 'none';
+        document.getElementById('profile-view-mode').style.display = 'block';
+    }
+
+    /* ── On load ── */
+    document.addEventListener('DOMContentLoaded', () => {
+        // Use server-side values if provided, else fallback to localStorage
+        const serverAge = {{ age|tojson if age is not none else 'null' }};
+        const serverGender = {{ gender|tojson if gender is not none else 'null' }};
+        const serverCheckCount = {{ check_count|tojson if check_count is not none else 'null' }};
+
+        const savedAge = serverAge || localStorage.getItem('swahealthy_age');
+        const savedGender = serverGender || localStorage.getItem('swahealthy_gender');
+        const savedPhone = localStorage.getItem('swahealthy_phone');
+        const savedPhoto = localStorage.getItem(PHOTO_KEY);
+        const savedLang = localStorage.getItem('swahealthy_lang') || 'en';
+
+        // Apply saved photo
+        if (savedPhoto) applyPhoto(savedPhoto);
+
+        // Check count
+        let checkCount = 0;
+        if (serverCheckCount !== null) {
+            checkCount = serverCheckCount;
+        } else {
+            try {
+                const h = localStorage.getItem('swahealthy_history');
+                checkCount = h ? JSON.parse(h).length : 0;
+            } catch (e) { }
+        }
+        document.getElementById('stat-checks').textContent = checkCount;
+
+        // Language
+        const langMap = { en: 'English', bn: 'বাংলা', hi: 'हिंदी' };
+        const infoLang = document.getElementById('info-lang');
+        if (infoLang) infoLang.textContent = langMap[savedLang] || 'English';
+
+        // Pre-fill and decide mode
+        if (savedAge || savedGender || savedPhone) {
+            if (savedAge) {
+                document.getElementById('profile-age').value = savedAge;
+                document.getElementById('stat-age').textContent = savedAge;
+            }
+            if (savedPhone) {
+                document.getElementById('profile-phone').value = savedPhone;
+            }
+            if (savedGender) {
+                const radio = document.querySelector(`input[name="gender"][value="${savedGender}"]`);
+                if (radio) radio.checked = true;
+                document.getElementById('stat-gender').textContent = GENDER_SYMBOL[savedGender] || '—';
+            }
+            switchToView(savedAge, savedGender, savedPhone);
+        }
+    });
+
+    // Update saveProfile to sync with backend if logged in
+    async function saveProfile(event) {
+        event.preventDefault();
+        const age = document.getElementById('profile-age').value;
+        const gender = document.querySelector('input[name="gender"]:checked').value;
+        const phone = document.getElementById('profile-phone').value;
+
+        // Save locally
+        localStorage.setItem('swahealthy_age', age);
+        localStorage.setItem('swahealthy_gender', gender);
+        localStorage.setItem('swahealthy_phone', phone);
+
+        // Sync with backend if logged in
+        {% if session.get('user') %}
+        try {
+            await fetch('/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ age, gender, phone })
+            });
+        } catch (e) {
+            console.error("Failed to sync profile to server:", e);
+        }
+        {% endif %}
+
+        document.getElementById('stat-age').textContent = age;
+        document.getElementById('stat-gender').textContent = GENDER_SYMBOL[gender] || '—';
+
+        const msg = document.getElementById('save-msg');
+        msg.style.display = 'block';
+        setTimeout(() => {
+            msg.style.display = 'none';
+            switchToView(age, gender, phone);
+        }, 1200);
+    }
+</script>
+{% endblock %}

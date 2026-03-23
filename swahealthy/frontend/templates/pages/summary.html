@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(180deg, #d3f0ef 0%, #9adbd9 100%) !important;
+        background-attachment: fixed !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+    }
+    
+    .top-nav, .bottom-nav { display: none !important; }
+    
+    .receipt-wrapper {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 20px 0 100px 0;
+    }
+    
+    .receipt-header-nav {
+        display: flex;
+        align-items: center;
+        padding: 0 20px 30px 20px;
+        color: #1a2a30;
+    }
+    .receipt-header-nav button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0 15px 0 0;
+        color: #1a2a30;
+    }
+    .receipt-header-nav h1 {
+        font-size: 1.15rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    /* "Slot" effect at the top */
+    .receipt-slot {
+        background: rgba(142, 185, 194, 0.4);
+        height: 18px;
+        margin: 0 8%;
+        border-radius: 12px;
+        position: relative;
+        z-index: 1;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Document/Receipt Core */
+    .receipt-card {
+        background: white;
+        margin: -9px 5% 0 5%;
+        border-radius: 4px; 
+        padding: 25px 20px 35px 20px;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+    }
+    
+    /* Wavy cut out bottom edge */
+    .receipt-card::after {
+        content: "";
+        position: absolute;
+        bottom: -15px; 
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background-image: radial-gradient(circle at 12.5px 15px, transparent 13px, white 14px);
+        background-size: 25px 30px;
+        background-repeat: repeat-x;
+        z-index: 2;
+    }
+    
+    /* Patient/Doctor Block */
+    .hero-block {
+        background: linear-gradient(135deg, #e4f9f0, #e0f2fe);
+        border-radius: 14px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .avatar {
+        background: rgba(255,255,255,0.6);
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .hero-info h2 {
+        margin: 0 0 4px 0;
+        font-size: 1.05rem;
+        color: #1a2f33;
+        font-weight: 600;
+    }
+    
+    .hero-info p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: #55757d;
+        line-height: 1.3;
+    }
+    
+    /* Sections */
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.05rem;
+        color: #1a2f33;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+    }
+    .section-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #00bfa5;
+        border-radius: 50%;
+    }
+    
+    .section-text {
+        font-size: 0.9rem;
+        color: #3b4e54;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    .separator {
+        border-top: 1px dashed #cfd8dc;
+        margin: 20px 0;
+    }
+    
+    /* Grid Prescriptions */
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px 10px;
+    }
+    
+    .rx-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .rx-name {
+        font-size: 0.75rem;
+        color: #7b8f96;
+        margin-bottom: 2px;
+    }
+    .rx-dosage {
+        font-size: 0.9rem;
+        color: #263238;
+        font-weight: 600;
+    }
+    
+    /* Action Buttons Area */
+    .action-arena {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+        margin-top: 50px;
+    }
+    
+    .fab-btn-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .fab-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: white;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+        cursor: pointer;
+        color: #263238;
+        transition: transform 0.2s;
+    }
+    .fab-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .fab-btn svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+    }
+    
+    .fab-label {
+        font-size: 0.75rem;
+        color: #3b4e54;
+        font-weight: 500;
+    }
+
+
+    
+    @media print {
+        body { background: white !important; margin: 0; padding: 0; }
+        .receipt-header-nav, .action-arena, .receipt-slot, .overlay-widgets { display: none !important; }
+        .receipt-wrapper { margin: 0; max-width: 100%; padding: 0; }
+        .receipt-card { box-shadow: none !important; border: 1px solid #ccc; margin: 0; padding: 15px; border-radius: 0; filter: none; }
+        .receipt-card::after { display: none; }
+        .hero-block, .section-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+</style>
+
+<div class="receipt-wrapper">
+
+
+    <!-- Header Nav -->
+    <div class="receipt-header-nav">
+        <button onclick="history.back()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <h1>Patient Medical Summary</h1>
+    </div>
+
+    <!-- Paper Slot Effect -->
+    <div class="receipt-slot"></div>
+    
+    <!-- Receipt Card Edge -->
+    <div class="receipt-card" id="summary-content">
+        
+        <!-- User/Doctor Info -->
+        <div class="hero-block">
+            <div class="avatar">
+                {% if doctor %}👩‍⚕️{% else %}👤{% endif %}
+            </div>
+            <div class="hero-info">
+                <h2>{% if doctor %}Dr. {{ doctor.name }}{% else %}{{ patient.name if patient and patient.name else "Guest Patient" }}{% endif %}</h2>
+                <p>
+                    {% if doctor %}
+                        {{ doctor.specialisation }}<br>
+                        <span id="patient-date" class="header-date-formatted" data-raw="{{ log.session_date }}">{{ log.session_date }}</span>
+                    {% else %}
+                        Age: <span id="patient-age">--</span> &middot; Gender: <span id="patient-gender">--</span><br>
+                        <span id="patient-date" class="header-date-formatted" data-raw="{{ log.session_date }}">{{ log.session_date }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Diagnosis Core -->
+        <h3 class="section-title"><div class="section-dot"></div> Diagnosis</h3>
+        <p class="section-text" style="font-weight: 500; color: #1a2f33;">{{ condition.translated_name if condition else log.result_condition }} <span style="font-size:0.75rem; background: {% if log.severity|lower == 'high' %}#ffebee{% elif log.severity|lower == 'medium' %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if log.severity|lower == 'high' %}#c62828{% elif log.severity|lower == 'medium' %}#ef6c00{% else %}#2e7d32{% endif %}; padding:2px 6px; border-radius:8px; margin-left:5px;">{{ log.severity|upper }} SEVERITY</span></p>
+        <p class="section-text" style="margin-top: 5px;">
+            The patient exhibits symptoms of {{ symptoms | join(', ') }}. Suspected condition treated symptomatically. Please review first aid and continue close monitoring for complications.
+        </p>
+
+        <div class="separator"></div>
+        
+        <!-- Prescriptions/OTC -->
+        <h3 class="section-title"><div class="section-dot"></div> Prescriptions & Care</h3>
+        <div class="grid-2">
+            {% if medicines %}
+                {% for med in medicines %}
+                    <div class="rx-item">
+                        <span class="rx-name">OTC Remedy</span>
+                        <span class="rx-dosage">{{ med }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="rx-item" style="grid-column: 1 / -1;">
+                    <span class="rx-name">General Care</span>
+                    <span class="rx-dosage">Symptomatic Relief</span>
+                </div>
+            {% endif %}
+            <div class="rx-item" style="grid-column: 1 / -1; margin-top: 8px;">
+                <span class="rx-name" style="color:#d32f2f;">Urgent Needs</span>
+                <span class="rx-dosage" style="font-size:0.85rem;">If symptoms worsen rapidly, consult a doctor immediately for clinical prescription.</span>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+
+        <!-- First Aid (Using as notes in receipt) -->
+        <h3 class="section-title"><div class="section-dot"></div> Medical Notes</h3>
+        <ul class="section-text" style="padding-left: 20px; list-style-type: disc; margin: 0;">
+            {% for step in first_aid_steps %}
+                <li style="margin-bottom: 6px;">{{ step }}</li>
+            {% else %}
+                <li style="color: #7b8f96; list-style: none; margin-left: -20px;">No additional notes available.</li>
+            {% endfor %}
+        </ul>
+        
+        <div class="separator"></div>
+
+        <!-- Health Tips -->
+        <h3 class="section-title"><div class="section-dot" style="background:#ffb300;"></div> Health Tips</h3>
+        <p class="section-text">
+            Stay hydrated with plenty of water, ensure proper rest (7-8 hours), and maintain a balanced diet rich in essential vitamins. Mild exercise is recommended unless symptomatic.
+        </p>
+
+        <div class="separator"></div>
+
+        <!-- Disclaimer -->
+        <h3 class="section-title"><div class="section-dot" style="background:#cfd8dc;"></div> Disclaimer</h3>
+        <p class="section-text" style="font-size: 0.75rem; color: #7b8f96; line-height: 1.4;">
+            SwaHealthy AI provides automated symptom assessments for informational and educational purposes only. This is not a clinical diagnosis. Always seek the advice of a qualified healthcare provider for any medical condition or treatment.
+        </p>
+
+    </div>
+
+    <!-- Floating Buttons below Receipt -->
+    <div class="action-arena">
+        <div class="fab-btn-group">
+            <button class="fab-btn" onclick="window.print()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            </button>
+            <span class="fab-label">Print</span>
+        </div>
+        <div class="fab-btn-group">
+            <button class="fab-btn" onclick="downloadPDF(event)" id="pdfBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </button>
+            <span class="fab-label">Save PDF</span>
+        </div>
+        <div class="fab-btn-group">
+            <button class="fab-btn" onclick="shareSummary()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+            <span class="fab-label">Share</span>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts for PDF and Sharing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Extract Age/Gender from local storage and fallback to "Not set"
+        let swaHealthyAge = localStorage.getItem('swahealthy_age');
+        let swaHealthyGender = localStorage.getItem('swahealthy_gender');
+
+        const age = (swaHealthyAge && swaHealthyAge.trim() !== '') ? swaHealthyAge : 'Not set';
+        const gender = (swaHealthyGender && swaHealthyGender.trim() !== '') ? swaHealthyGender : 'Not set';
+        
+        const patientAgeNode = document.getElementById('patient-age');
+        if (patientAgeNode) {
+            patientAgeNode.textContent = age;
+        }
+        
+        const patientGenderNode = document.getElementById('patient-gender');
+        if (patientGenderNode) {
+            patientGenderNode.textContent = gender;
+        }
+
+        // Date format fix: parse raw datetime and prettify
+        const dateElements = document.querySelectorAll('.header-date-formatted');
+        dateElements.forEach(el => {
+            const raw = el.getAttribute('data-raw');
+            if (raw) {
+                const isoStr = raw.replace(' ', 'T'); 
+                const d = new Date(isoStr);
+                if (!isNaN(d.valueOf())) {
+                    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+                    el.textContent = d.toLocaleDateString('en-GB', options).replace(',', '');
+                }
+            }
+        });
+    });
+
+    function downloadPDF(event) {
+        const element = document.getElementById('summary-content');
+        const btn = event.currentTarget || document.getElementById('pdfBtn');
+        const originalText = btn.innerHTML;
+        
+        // Prevent clicking twice
+        if(btn.disabled) return;
+        
+        btn.innerHTML = '...';
+        btn.disabled = true;
+
+        // Temporarily hide the jagged bottom for cleaner PDF edge
+        const style = document.createElement('style');
+        style.innerHTML = '.receipt-card::after { display: none !important; }';
+        document.head.appendChild(style);
+
+        html2canvas(element, { 
+            scale: 2, 
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('Patient_Medical_Summary.pdf');
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            style.remove();
+        }).catch(err => {
+            console.error('Error generating PDF', err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            style.remove();
+            alert('Could not generate PDF.');
+        });
+    }
+
+    function shareSummary() {
+        const url = window.location.href;
+        const condition = `{{ condition.translated_name if condition else log.result_condition }}`;
+        const severity = `{{ log.severity|upper }}`;
+        const text = `Condition: ${condition} (${severity})\nVia SwaHealthy.`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'My Health Summary — SwaHealthy',
+                text: text,
+                url: url
+            }).catch((error) => console.log('Error sharing', error));
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                let toast = document.createElement('div');
+                toast.textContent = "Link copied!";
+                toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1a2f33;color:#fff;padding:10px 20px;border-radius:20px;z-index:9999;font-size:0.85rem;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            }).catch(err => {
+                prompt("Copy this link:", url);
+            });
+        }
+    }
+</script>
+{% endblock %}

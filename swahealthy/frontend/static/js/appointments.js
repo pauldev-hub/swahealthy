@@ -3,81 +3,6 @@
  * Handles trilingual localization, tab switching, and API interactions.
  */
 
-const APPT_LOCALE = {
-    'en': {
-        'page_title': 'Doctor Appointments',
-        'tab_book': 'Book Appointment',
-        'tab_my': 'My Appointments',
-        'select_doctor': 'Select a Specialist',
-        'select_date': 'Choose Date & Time',
-        'patient_info': 'Patient Information',
-        'lbl_name': 'Full Name',
-        'lbl_phone': 'Phone Number',
-        'lbl_reason': 'Reason for Visit',
-        'btn_submit': 'Confirm Booking',
-        'lookup_msg': 'Enter your phone number to view your appointments.',
-        'btn_lookup': 'View',
-        'no_slots': 'Please select a date to see available slots.',
-        'no_slots_found': 'No slots available for this date.',
-        'success_title': 'Request Submitted',
-        'success_msg': "Doctor's office will confirm by phone.",
-        'btn_done': 'Done',
-        'cancel': 'Cancel',
-        'status_pending': 'Pending',
-        'status_confirmed': 'Confirmed',
-        'status_cancelled': 'Cancelled',
-        'offline': 'You are offline. Please check your internet connection.'
-    },
-    'bn': {
-        'page_title': 'ডাক্তার অ্যাপয়েন্টমেন্ট',
-        'tab_book': 'অ্যাপয়েন্টমেন্ট বুক করুন',
-        'tab_my': 'আমার অ্যাপয়েন্টমেন্ট',
-        'select_doctor': 'একজন বিশেষজ্ঞ নির্বাচন করুন',
-        'select_date': 'তারিখ এবং সময় বেছে নিন',
-        'patient_info': 'রোগীর তথ্য',
-        'lbl_name': 'পুরো নাম',
-        'lbl_phone': 'ফোন নম্বর',
-        'lbl_reason': 'কারন',
-        'btn_submit': 'বুকিং নিশ্চিত করুন',
-        'lookup_msg': 'আপনার অ্যাপয়েন্টমেন্ট দেখতে ফোন নম্বর লিখুন।',
-        'btn_lookup': 'দেখুন',
-        'no_slots': 'উপলব্ধ স্লট দেখতে একটি তারিখ নির্বাচন করুন।',
-        'no_slots_found': 'এই তারিখে কোন স্লট নেই।',
-        'success_title': 'অনুরোধ জমা দেওয়া হয়েছে',
-        'success_msg': "ডাক্তারের অফিস ফোনে নিশ্চিত করবে।",
-        'btn_done': 'ঠিক আছে',
-        'cancel': 'বাতিল করুন',
-        'status_pending': 'অপেক্ষমান',
-        'status_confirmed': 'নিশ্চিত',
-        'status_cancelled': 'বাতিল',
-        'offline': 'আপনি অফলাইনে আছেন। ইন্টারনেট সংযোগ পরীক্ষা করুন।'
-    },
-    'hi': {
-        'page_title': 'डॉक्टर अपॉइंटमेंट',
-        'tab_book': 'अपॉइंटमेंट बुक करें',
-        'tab_my': 'मेरे अपॉइंटमेंट',
-        'select_doctor': 'एक विशेषज्ञ चुनें',
-        'select_date': 'तारीख और समय चुनें',
-        'patient_info': 'रोगी की जानकारी',
-        'lbl_name': 'पूरा नाम',
-        'lbl_phone': 'फ़ोन नंबर',
-        'lbl_reason': 'मिलने का कारण',
-        'btn_submit': 'बुकिंग की पुष्टि करें',
-        'lookup_msg': 'अपने अपॉइंटमेंट देखने के लिए फ़ोन नंबर दर्ज करें।',
-        'btn_lookup': 'देखें',
-        'no_slots': 'उपलब्ध स्लॉट देखने के लिए तारीख चुनें।',
-        'no_slots_found': 'इस तारीख के लिए कोई स्लॉट उपलब्ध नहीं है।',
-        'success_title': 'अनुरोध सबमिट किया गया',
-        'success_msg': "डॉक्टर का कार्यालय फोन पर पुष्टि करेगा।",
-        'btn_done': 'हो गया',
-        'cancel': 'रद्द करें',
-        'status_pending': 'लंबित',
-        'status_confirmed': 'पुष्टि की गई',
-        'status_cancelled': 'रद्द',
-        'offline': 'आप ऑफलाइन हैं। कृपया अपना इंटरनेट कनेक्शन जांचें।'
-    }
-};
-
 let currentDoctorId = null;
 let selectedDate = null;
 let selectedSlot = null;
@@ -108,29 +33,18 @@ function initGlobalListeners() {
 }
 
 function initApptLanguage() {
-    const lang = localStorage.getItem('swahealthy_lang') || 'en';
-    const strings = APPT_LOCALE[lang];
-
-    document.getElementById('page-title').textContent = strings['page_title'];
-    document.getElementById('tab-book-btn').textContent = '📋 ' + strings['tab_book'];
-    document.getElementById('tab-my-btn').textContent = '📂 ' + strings['tab_my'];
-    const sdl = document.getElementById('select-doctor-label'); if(sdl) sdl.textContent = strings['select_doctor'];
-    const sel = document.getElementById('select-date-label'); if(sel) sel.textContent = strings['select_date'];
-    const pil = document.getElementById('patient-info-label'); if(pil) pil.textContent = strings['patient_info'];
-    document.getElementById('lbl-name').textContent = strings['lbl_name'];
-    document.getElementById('lbl-phone').textContent = strings['lbl_phone'];
-    document.getElementById('lbl-reason').textContent = strings['lbl_reason'];
-    document.getElementById('btn-submit').textContent = '✅ ' + strings['btn_submit'];
-    // Placeholders
-    document.getElementById('patient-name').placeholder = strings['lbl_name'];
-    document.getElementById('patient-phone').placeholder = '10-digit number';
-    document.getElementById('patient-reason').placeholder = strings['lbl_reason'];
+    // Rely on global applyTranslations() from app.js for data-i18n items
+    // But handle manual field placeholders and dynamic strings here
+    
+    const phoneEl = document.getElementById('patient-phone');
+    if (phoneEl) {
+        phoneEl.placeholder = t('phone_number_placeholder');
+    }
 
     // Pre-fill booking form phone from localStorage
     const savedPhone = localStorage.getItem('swahealthy_patient_phone');
-    if (savedPhone) {
-        const phoneEl = document.getElementById('patient-phone');
-        if (phoneEl) phoneEl.value = savedPhone;
+    if (savedPhone && phoneEl) {
+        phoneEl.value = savedPhone;
     }
 }
 

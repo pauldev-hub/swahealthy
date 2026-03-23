@@ -4,3 +4,14 @@
 # Python caching
 __pycache__/
 *.py[cod]
+
+# Database files
+data/*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Virtual environment
+venv/
+.venv/

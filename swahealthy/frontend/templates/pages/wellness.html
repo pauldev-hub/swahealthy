@@ -1,0 +1,1318 @@
+{%extends "base.html" %}
+{%block content %}
+<style>
+
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* NAVBAR */
+.navbar{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--sh-sm)}
+.nav-container{max-width:520px;margin:0 auto;padding:0 1.25rem;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.nav-brand{display:flex;align-items:center;gap:0.5rem;font-size:1.1rem;font-weight:700;color:var(--primary);text-decoration:none}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--primary),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.nav-controls{display:flex;align-items:center;gap:0.4rem}
+.lang-toggle{display:flex;background:var(--bg);border:1px solid var(--border-mid);border-radius:var(--r-sm);padding:3px 4px;gap:2px}
+.lang-btn{background:none;border:none;padding:0.25rem 0.55rem;font-size:0.72rem;font-weight:600;color:var(--text-light);border-radius:5px;cursor:pointer;font-family:var(--font)}
+.lang-btn.active{background:var(--primary);color:#fff}
+.nav-link{font-size:0.75rem;font-weight:500;color:var(--text-light);padding:0.35rem 0.55rem;border-radius:var(--r-sm);text-decoration:none;display:flex;align-items:center;gap:0.25rem}
+.nav-link:hover,.nav-link.active-link{background:var(--primary-light);color:var(--primary-dark)}
+
+/* PAGE */
+.page{max-width:520px;margin:0 auto;padding:1.25rem 1rem 6rem}
+
+/* HERO */
+.wellness-hero{background:linear-gradient(135deg,var(--primary) 0%,var(--accent2) 100%);border-radius:var(--r-xl);padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden;color:#fff}
+.wellness-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:130px;height:130px;background:rgba(255,255,255,.08);border-radius:50%}
+.wellness-hero::after{content:'🧠';position:absolute;right:1.25rem;bottom:-0.25rem;font-size:4rem;opacity:.15}
+.hero-label{font-size:0.68rem;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,.75);text-transform:uppercase;margin-bottom:0.35rem}
+.hero-title{font-size:1.4rem;font-weight:700;letter-spacing:-0.3px;margin-bottom:0.3rem}
+.hero-sub{font-size:0.82rem;color:rgba(255,255,255,.85);line-height:1.5}
+
+/* AI CHAT BAR */
+.chat-bar-wrap{margin-bottom:1.25rem;position:relative}
+.chat-bar{display:flex;align-items:center;gap:0.75rem;background:var(--surface);border:1.5px solid var(--border-mid);border-radius:50px;padding:0.7rem 1rem;box-shadow:var(--sh-md);cursor:text;transition:all var(--ease)}
+.chat-bar:hover,.chat-bar.focused{border-color:var(--primary);box-shadow:0 4px 20px rgba(13,148,136,.18)}
+.chat-bar-icon{font-size:1.1rem;flex-shrink:0}
+.chat-bar input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:0.9rem;color:var(--text)}
+.chat-bar input::placeholder{color:var(--text-muted)}
+.chat-send{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.8rem;flex-shrink:0;transition:all var(--ease)}
+.chat-send:hover{transform:scale(1.08)}
+
+/* Expanded chat panel */
+.chat-panel{background:var(--surface);border:1.5px solid var(--border-mid);border-radius:var(--r-xl);margin-top:0.5rem;overflow:hidden;box-shadow:var(--sh-lg);animation:slideDown .25s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.chat-disclaimer{background:#FFF7ED;border-bottom:1px solid #FED7AA;padding:0.5rem 1rem;font-size:0.72rem;color:#92400E;text-align:center}
+.chat-messages{padding:1rem;display:flex;flex-direction:column;gap:0.75rem;max-height:220px;overflow-y:auto}
+.msg{max-width:80%;padding:0.65rem 0.9rem;border-radius:var(--r-lg);font-size:0.88rem;line-height:1.5}
+.msg.ai{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px var(--r-lg) var(--r-lg) var(--r-lg);align-self:flex-start}
+.msg.user{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:var(--r-lg) 4px var(--r-lg) var(--r-lg);align-self:flex-end}
+.msg-name{font-size:0.68rem;font-weight:700;color:var(--text-muted);margin-bottom:0.25rem}
+.typing{display:flex;gap:4px;align-items:center;padding:0.65rem 0.9rem;background:var(--bg);border:1px solid var(--border);border-radius:4px var(--r-lg) var(--r-lg) var(--r-lg);width:fit-content}
+.dot{width:6px;height:6px;background:var(--text-muted);border-radius:50%;animation:bounce 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.chat-input-row{display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid var(--border);background:var(--surface)}
+.chat-input-row input{flex:1;border:1.5px solid var(--border-mid);border-radius:50px;padding:0.55rem 1rem;font-size:0.88rem;font-family:var(--font);outline:none;color:var(--text)}
+.chat-input-row input:focus{border-color:var(--primary)}
+.chat-close{text-align:center;padding:0.4rem;font-size:0.75rem;color:var(--text-muted);cursor:pointer;border-top:1px solid var(--border);background:var(--surface2,#f8fffe)}
+.chat-close:hover{color:var(--primary)}
+
+/* TABS */
+.tab-bar{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:4px;gap:3px;margin-bottom:1.25rem;box-shadow:var(--sh-sm)}
+.tab-btn{flex:1;padding:0.6rem 0.25rem;font-size:0.75rem;font-weight:600;color:var(--text-muted);border:none;background:none;border-radius:var(--r-md);cursor:pointer;transition:all var(--ease);font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab-btn .tab-icon{font-size:1rem}
+.tab-btn.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(13,148,136,.3)}
+.tab-btn:not(.active):hover{background:var(--primary-light);color:var(--primary)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem;box-shadow:var(--sh-sm);margin-bottom:1rem}
+.section-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:0.85rem}
+
+/* MOOD JOURNAL */
+.mood-emojis{display:flex;justify-content:space-around;margin-bottom:1rem}
+.mood-btn{background:none;border:2px solid var(--border-mid);border-radius:var(--r-md);padding:0.6rem 0.75rem;cursor:pointer;font-size:1.5rem;transition:all var(--ease);display:flex;flex-direction:column;align-items:center;gap:3px}
+.mood-btn span{font-size:0.6rem;font-weight:600;color:var(--text-muted)}
+.mood-btn:hover,.mood-btn.selected{border-color:var(--primary);background:var(--primary-light);transform:scale(1.08)}
+.mood-btn.selected{box-shadow:0 0 0 3px rgba(13,148,136,.2)}
+.mood-response{background:var(--primary-light);border:1px solid var(--border-mid);border-radius:var(--r-md);padding:0.65rem 1rem;font-size:0.85rem;color:var(--primary-dark);font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+.streak{display:inline-flex;align-items:center;gap:0.35rem;background:#FEF3C7;border:1px solid #FDE68A;border-radius:50px;padding:0.3rem 0.75rem;font-size:0.78rem;font-weight:700;color:#92400E;margin-bottom:1rem}
+.week-strip{display:flex;gap:0.5rem;justify-content:space-between}
+.day-bubble{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.day-bubble .emoji-circle{width:36px;height:36px;background:var(--bg);border:1.5px solid var(--border-mid);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:all var(--ease)}
+.day-bubble .emoji-circle:hover{border-color:var(--primary);transform:scale(1.1)}
+.day-bubble .emoji-circle.today{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
+.day-bubble .day-label{font-size:0.62rem;color:var(--text-muted);font-weight:500}
+
+/* REFLECTION */
+.reflection-card{border-left:4px solid var(--accent) !important}
+.reflection-prompt{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:0.85rem;line-height:1.4}
+.reflection-input{width:100%;border:1.5px solid var(--border-mid);border-radius:var(--r-md);padding:0.75rem 1rem;font-size:0.9rem;font-family:var(--font);color:var(--text);resize:none;min-height:90px;outline:none;transition:all var(--ease)}
+.reflection-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.1)}
+.reflection-footer{display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem}
+.char-count{font-size:0.72rem;color:var(--text-muted)}
+.reflection-actions{display:flex;gap:0.5rem}
+.save-badge{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;font-weight:600;color:var(--sev-low);background:var(--sev-low-bg);padding:0.25rem 0.65rem;border-radius:50px}
+.yesterday-reflection{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:0.65rem 0.85rem;margin-top:0.75rem;opacity:0.7}
+.yesterday-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:0.25rem}
+.yesterday-text{font-size:0.82rem;color:var(--text-light);font-style:italic}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;border:none;border-radius:var(--r-md);padding:0.75rem 1.25rem;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all var(--ease);font-family:var(--font);text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;box-shadow:0 4px 14px rgba(13,148,136,.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(13,148,136,.4)}
+.btn-sm{padding:0.45rem 0.9rem;font-size:0.78rem}
+.btn-ghost{background:none;border:1.5px solid var(--border-mid);color:var(--text-light)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.btn-block{width:100%}
+
+/* ASSESS TAB */
+.assess-cards{display:flex;flex-direction:column;gap:0.75rem}
+.assess-card{background:var(--surface);border:1.5px solid var(--border-mid);border-radius:var(--r-lg);padding:1.1rem;cursor:pointer;transition:all var(--ease);display:flex;align-items:center;gap:1rem}
+.assess-card:hover{border-color:var(--primary);background:var(--primary-light);transform:translateY(-1px);box-shadow:var(--sh-md)}
+.assess-icon{width:48px;height:48px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.assess-icon.depression{background:#EDE9FE}
+.assess-icon.anxiety{background:#FEF3C7}
+.assess-info{flex:1}
+.assess-name{font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:0.2rem}
+.assess-meta{font-size:0.78rem;color:var(--text-light)}
+.assess-badge{font-size:0.68rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:50px}
+.badge-purple{background:#EDE9FE;color:#6D28D9}
+.badge-yellow{background:#FEF3C7;color:#92400E}
+
+/* Question view */
+.question-view{display:block}
+.q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.q-title{font-size:0.88rem;font-weight:700;color:var(--text)}
+.q-progress-bar{width:100%;height:6px;background:var(--border);border-radius:3px;margin-bottom:1.25rem;overflow:hidden}
+.q-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent2));border-radius:3px;transition:width 0.4s ease;width:33%}
+.q-text{font-size:1rem;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:1.25rem}
+.q-options{display:flex;flex-direction:column;gap:0.5rem}
+.q-option{padding:0.85rem 1rem;border:1.5px solid var(--border-mid);border-radius:var(--r-md);cursor:pointer;font-size:0.88rem;font-weight:500;color:var(--text);transition:all var(--ease);background:var(--bg)}
+.q-option:hover{border-color:var(--primary);background:var(--primary-light)}
+.q-option.selected{border-color:var(--primary);background:var(--primary);color:#fff}
+
+/* Result view */
+.result-view{display:block}
+.result-top{background:linear-gradient(135deg,var(--primary),var(--accent2));border-radius:var(--r-xl) var(--r-xl) 0 0;padding:1.5rem;color:#fff;text-align:center}
+.result-score{font-size:2.5rem;font-weight:700;letter-spacing:-1px}
+.result-score span{font-size:1rem;font-weight:400;opacity:.8}
+.result-label{font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.8;margin-bottom:0.35rem}
+.severity-pill{display:inline-flex;align-items:center;padding:0.35rem 1rem;border-radius:50px;font-size:0.8rem;font-weight:700;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);margin-top:0.5rem}
+.result-body{background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--r-xl) var(--r-xl);padding:1.25rem}
+.groq-analysis{background:var(--bg);border-left:4px solid var(--accent);border-radius:0 var(--r-md) var(--r-md) 0;padding:1rem;margin-bottom:1rem;font-size:0.88rem;line-height:1.65;color:var(--text)}
+.actions-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:0.75rem}
+.action-steps{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem}
+.action-step{display:flex;gap:0.75rem;align-items:flex-start;font-size:0.88rem;color:var(--text)}
+.step-num{min-width:24px;height:24px;background:var(--primary-light);color:var(--primary-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0}
+.result-btns{display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem}
+.btn-chat-handoff{background:linear-gradient(135deg,#6D28D9,#8B5CF6);color:#fff;box-shadow:0 4px 14px rgba(109,40,217,.3)}
+
+/* TIPS TAB */
+.breathing-card{text-align:center}
+.breath-circle-wrap{display:flex;justify-content:center;margin:1.25rem 0}
+.breath-circle{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),var(--border));border:3px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:0.88rem;font-weight:600;color:var(--primary-dark);animation:breathe 19s infinite;position:relative}
+.breath-circle::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--border-mid);animation:breathe 19s infinite;opacity:.5}
+@keyframes breathe{0%,100%{transform:scale(1)}21%{transform:scale(1.3)}58%{transform:scale(1.3)}100%{transform:scale(1)}}
+.breath-label{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:0.25rem}
+.breath-sub{font-size:0.78rem;color:var(--text-muted)}
+.cycle-count{display:inline-flex;align-items:center;gap:0.35rem;background:var(--primary-light);color:var(--primary-dark);border-radius:50px;padding:0.3rem 0.85rem;font-size:0.78rem;font-weight:700;margin-top:0.5rem}
+
+.grounding-step{text-align:center;padding:0.5rem 0}
+.grounding-emoji{font-size:3rem;margin-bottom:0.75rem;display:block}
+.grounding-title{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:0.35rem}
+.grounding-desc{font-size:0.88rem;color:var(--text-light);line-height:1.5;margin-bottom:1.25rem}
+.grounding-nav{display:flex;align-items:center;justify-content:space-between;gap:0.75rem}
+.step-dots{display:flex;gap:6px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border-mid);transition:all var(--ease)}
+.step-dot.active{background:var(--primary);width:20px;border-radius:4px}
+
+.sleep-cards-wrap{position:relative;overflow:hidden}
+.sleep-cards{display:flex;transition:transform 0.3s ease;gap:1rem}
+.sleep-card-slide{min-width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;text-align:center}
+.sleep-card-emoji{font-size:2.5rem;margin-bottom:0.75rem;display:block}
+.sleep-card-title{font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:0.4rem}
+.sleep-card-text{font-size:0.85rem;color:var(--text-light);line-height:1.5}
+.slide-dots{display:flex;justify-content:center;gap:6px;margin-top:0.85rem}
+
+/* SUMMARY TAB */
+.generate-btn-wrap{text-align:center;padding:1.5rem 0}
+.gen-btn{padding:1rem 2rem;font-size:0.95rem}
+.summary-section{margin-bottom:1.25rem}
+.summary-chart{display:flex;align-items:flex-end;justify-content:space-around;height:80px;gap:0.35rem;padding:0 0.5rem;margin-bottom:0.5rem}
+.chart-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;transition:height 0.6s cubic-bezier(.34,1.56,.64,1);min-height:8px}
+.chart-bar.happy{background:linear-gradient(to top,#16A34A,#4ADE80)}
+.chart-bar.okay{background:linear-gradient(to top,var(--primary),var(--accent2))}
+.chart-bar.sad{background:linear-gradient(to top,#6B7280,#9CA3AF)}
+.chart-day{font-size:0.62rem;color:var(--text-muted);font-weight:500}
+.chart-emoji{font-size:0.85rem}
+.typewriter{font-size:0.9rem;font-weight:600;color:var(--text);text-align:center;padding:0.5rem 0;min-height:1.5rem}
+.timeline{display:flex;flex-direction:column;gap:0}
+.timeline-item{display:flex;gap:1rem;padding:0.85rem 0;position:relative}
+.timeline-item:not(:last-child)::after{content:'';position:absolute;left:15px;top:44px;bottom:0;width:2px;background:var(--border)}
+.tl-dot{width:32px;height:32px;border-radius:50%;background:var(--primary-light);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:var(--primary-dark);flex-shrink:0;z-index:1}
+.tl-content{flex:1}
+.tl-date{font-size:0.72rem;color:var(--text-muted);margin-bottom:0.2rem}
+.tl-name{font-size:0.88rem;font-weight:600;color:var(--text)}
+.reflection-quote{border-left:4px solid var(--accent);padding:0.75rem 1rem;background:var(--bg);border-radius:0 var(--r-md) var(--r-md) 0;font-style:italic;font-size:0.88rem;color:var(--text-light);line-height:1.6;margin-bottom:0.5rem}
+.encouragement{background:linear-gradient(135deg,var(--primary-light),#E0F2FE);border-radius:var(--r-lg);padding:1rem 1.25rem;text-align:center;font-size:0.9rem;font-weight:600;color:var(--primary-dark);line-height:1.5;margin-bottom:1rem}
+.share-btn{border-color:var(--border-mid);color:var(--text-light)}
+
+/* HELPLINES */
+.helplines{margin-top:0.5rem}
+.helpline-card{display:flex;align-items:center;gap:0.85rem;padding:0.9rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:0.5rem;transition:all var(--ease)}
+.helpline-card:hover{border-color:var(--border-mid);box-shadow:var(--sh-sm)}
+.helpline-icon{width:40px;height:40px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.hi-teal{background:#CCFBF1}
+.hi-blue{background:#DBEAFE}
+.hi-purple{background:#EDE9FE}
+.hi-green{background:#DCFCE7}
+.helpline-info{flex:1}
+.helpline-name{font-size:0.88rem;font-weight:700;color:var(--text)}
+.helpline-meta{font-size:0.75rem;color:var(--text-muted)}
+.call-btn{padding:0.35rem 0.85rem;font-size:0.75rem;font-weight:700;border-radius:50px;background:var(--primary-light);color:var(--primary-dark);border:1.5px solid var(--border-mid);text-decoration:none;transition:all var(--ease)}
+.call-btn:hover{background:var(--primary);color:#fff}
+
+/* SEVERITY BADGES */
+.sev-minimal{background:#DCFCE7;color:#16A34A}
+.sev-mild{background:#FEF3C7;color:#D97706}
+.sev-moderate{background:#FEE2E2;color:#DC2626}
+
+/* UTILS */
+.mt-1{margin-top:0.5rem}.mt-2{margin-top:1rem}.mt-3{margin-top:1.25rem}
+.mb-1{margin-bottom:0.5rem}.mb-2{margin-bottom:1rem}
+.text-center{text-align:center}.text-muted{color:var(--text-muted)}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.gap-sm{gap:0.5rem}
+
+</style>
+<div class="wellness-page">
+
+  <!-- HERO -->
+  <div class="wellness-hero">
+    <div class="hero-label">Mental Wellness</div>
+    <div class="hero-title">Your Safe Space 💙</div>
+    <div class="hero-sub">Check in daily, understand yourself better, and find support when you need it.</div>
+  </div>
+
+  <!-- AI CHAT BAR -->
+  <div class="chat-bar-wrap">
+    <div class="chat-bar focused" id="chatBar" onclick="toggleChat()">
+      <span class="chat-bar-icon">🧠</span>
+      <input type="text" id="chatBarInput" placeholder="How are you feeling today?" />
+      <button class="chat-send">➤</button>
+    </div>
+
+    <!-- Expanded chat panel -->
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat-disclaimer">⚠️ MindCare AI is not a substitute for professional help</div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg ai">
+          <div class="msg-name">MindCare AI 🧠</div>
+          Hi! I'm here to listen and support you. You can ask me anything about mental health, or just tell me how you're feeling today. 💙
+        </div>
+        <div class="msg user">
+          I've been feeling really anxious lately and can't sleep well
+        </div>
+        <div class="msg ai">
+          <div class="msg-name">MindCare AI 🧠</div>
+          I hear you — anxiety and poor sleep often feed into each other, making both feel worse. You're not alone in this. A few things that can help right now: try the 4-7-8 breathing in the Tips tab, limit screen time 30 mins before bed, and write down your worries before sleeping. Would you like to talk more about what's causing the anxiety?
+        </div>
+        <div class="typing">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" placeholder="Type your message..." />
+        <button class="btn btn-primary btn-sm">Send</button>
+      </div>
+      <div class="chat-close" onclick="toggleChat()">✕ Close chat</div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('checkin', this)">
+      <span class="tab-icon">😊</span>Check-in
+    </button>
+    <button class="tab-btn" onclick="switchTab('assess', this)">
+      <span class="tab-icon">📋</span>Assess
+    </button>
+    <button class="tab-btn" onclick="switchTab('tips', this)">
+      <span class="tab-icon">🌱</span>Tips
+    </button>
+    <button class="tab-btn" onclick="switchTab('summary', this)">
+      <span class="tab-icon">📊</span>Summary
+    </button>
+  </div>
+
+  <!-- TAB 1: CHECK-IN -->
+  <div class="tab-pane active" id="tab-checkin">
+
+    <div class="card">
+      <div class="section-label">Today's Mood</div>
+      <div class="mood-emojis">
+        <button class="mood-btn" onclick="selectMood(this, '😢', 'sad')"><span>😢</span><span>Sad</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '😟', 'low')"><span>😟</span><span>Low</span></button>
+        <button class="mood-btn selected" onclick="selectMood(this, '😐', 'okay')"><span>😐</span><span>Okay</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '🙂', 'good')"><span>🙂</span><span>Good</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '😄', 'great')"><span>😄</span><span>Great</span></button>
+      </div>
+      <div class="mood-response">💙 Neutral days are valid. Be kind to yourself today.</div>
+      <div class="streak">🔥 4 day streak — keep it up!</div>
+      <div class="section-label">This Week</div>
+      <div class="week-strip">
+        <div class="day-bubble"><div class="emoji-circle">😟</div><div class="day-label">Mon</div></div>
+        <div class="day-bubble"><div class="emoji-circle">😐</div><div class="day-label">Tue</div></div>
+        <div class="day-bubble"><div class="emoji-circle">🙂</div><div class="day-label">Wed</div></div>
+        <div class="day-bubble"><div class="emoji-circle">😄</div><div class="day-label">Thu</div></div>
+        <div class="day-bubble"><div class="emoji-circle today">😐</div><div class="day-label">Today</div></div>
+        <div class="day-bubble"><div class="emoji-circle" style="opacity:.35">—</div><div class="day-label">Sat</div></div>
+        <div class="day-bubble"><div class="emoji-circle" style="opacity:.35">—</div><div class="day-label">Sun</div></div>
+      </div>
+    </div>
+
+    <div class="card reflection-card">
+      <div class="section-label">Today's Reflection ✨</div>
+      <div class="reflection-prompt">"What is one small thing that made you smile today?"</div>
+      <textarea class="reflection-input" placeholder="Write your thoughts here..." oninput="updateCharCount(this)">My morning chai and the sunlight coming through the window.</textarea>
+      <div class="reflection-footer">
+        <span class="char-count" id="charCount">58 characters</span>
+        <div class="reflection-actions">
+          <button class="btn btn-ghost btn-sm">Skip</button>
+          <button class="btn btn-ghost btn-sm" onclick="generateReflection(this)">✨ AI</button>
+          <button class="btn btn-primary btn-sm">Save ✓</button>
+        </div>
+      </div>
+      <div class="save-badge mt-1">✓ Reflection saved</div>
+      <div class="yesterday-reflection mt-2">
+        <div class="yesterday-label">Yesterday's reflection</div>
+        <div class="yesterday-text">"I felt grateful that my family was healthy and together."</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: ASSESS -->
+  <div class="tab-pane" id="tab-assess">
+
+    <!-- Assessment picker -->
+    <div id="assessPicker">
+      <div class="card" style="padding:0.85rem 1.1rem;margin-bottom:0.5rem">
+        <div class="section-label">Choose an Assessment</div>
+        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem">These are WHO-validated questionnaires. Your responses are private and stored only on your device.</p>
+      </div>
+      <div class="assess-cards">
+        <div class="assess-card" onclick="showQuestion()">
+          <div class="assess-icon depression">😔</div>
+          <div class="assess-info">
+            <div class="assess-name">PHQ-9 — Depression</div>
+            <div class="assess-meta">9 questions · ~3 minutes</div>
+          </div>
+          <span class="assess-badge badge-purple">Depression</span>
+        </div>
+        <div class="assess-card">
+          <div class="assess-icon anxiety">😰</div>
+          <div class="assess-info">
+            <div class="assess-name">GAD-7 — Anxiety</div>
+            <div class="assess-meta">7 questions · ~2 minutes</div>
+          </div>
+          <span class="assess-badge badge-yellow">Anxiety</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question view -->
+    <div id="questionView" style="display:none">
+      <div class="card">
+        <div class="q-header">
+          <span class="q-title">PHQ-9 — Depression</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600">3 of 9</span>
+        </div>
+        <div class="q-progress-bar"><div class="q-progress-fill"></div></div>
+        <div class="q-text">Over the last 2 weeks, how often have you had little interest or pleasure in doing things?</div>
+        <div class="q-options">
+          <div class="q-option">Not at all</div>
+          <div class="q-option selected">Several days</div>
+          <div class="q-option">More than half the days</div>
+          <div class="q-option">Nearly every day</div>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+          <button class="btn btn-ghost btn-sm" onclick="showPicker()">← Back</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="startAssessment(currentAssessment)">Clear</button>
+          <button class="btn btn-primary btn-sm" style="flex:1" onclick="showResult()">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result view -->
+    <div id="resultView" style="display:none">
+      <div style="border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-lg);margin-bottom:1rem">
+        <div class="result-top">
+          <div class="result-label">PHQ-9 Score</div>
+          <div class="result-score">14 <span>/ 27</span></div>
+          <div class="severity-pill">⚠️ Moderate Depression</div>
+        </div>
+        <div class="result-body">
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:0.6rem">🤖 Groq Analysis</div>
+          <div class="groq-analysis">
+            Your responses suggest you've been experiencing a moderate level of depressive symptoms over the past two weeks. You mentioned feeling down or hopeless on several days, having low energy nearly every day, and difficulty concentrating. These patterns are meaningful and deserve attention — this isn't something to push through alone.
+          </div>
+          <div class="actions-title">Recommended Actions</div>
+          <div class="action-steps">
+            <div class="action-step"><div class="step-num">1</div><span>Try to maintain a small daily routine — even a 10-minute walk outside can shift your mood significantly.</span></div>
+            <div class="action-step"><div class="step-num">2</div><span>Reach out to someone you trust today — sharing how you feel, even briefly, reduces the weight of it.</span></div>
+            <div class="action-step"><div class="step-num">3</div><span>Consider speaking with a counsellor. iCall (9152987821) offers free sessions and is a safe, confidential space.</span></div>
+          </div>
+          <div class="result-btns">
+            <button class="btn btn-chat-handoff btn-block btn-sm">🧠 Talk to MindCare AI about this</button>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="showPicker()">↩ Retake</button>
+              <button class="btn btn-primary btn-sm" style="flex:1">💾 Save to Summary</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- iCall shown prominently for moderate -->
+      <div class="helpline-card" style="border-color:var(--border-mid);border-radius:var(--r-lg)">
+        <div class="helpline-icon hi-teal">📞</div>
+        <div class="helpline-info">
+          <div class="helpline-name">iCall — Free Counselling</div>
+          <div class="helpline-meta">9152987821 · Mon–Sat · TISS-backed</div>
+        </div>
+        <a href="tel:9152987821" class="call-btn">Call</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 3: TIPS -->
+  <div class="tab-pane" id="tab-tips">
+
+    <!-- Breathing -->
+    <div class="card breathing-card">
+      <div class="section-label">🫁 4-7-8 Breathing</div>
+      <div class="breath-circle-wrap">
+        <div class="breath-circle" id="breathCircle">Breathe in...</div>
+      </div>
+      <div class="breath-label">Inhale 4s · Hold 7s · Exhale 8s</div>
+      <div class="breath-sub">Repeat 4 cycles to calm your nervous system</div>
+      <div class="cycle-count">Cycle 2 of 4</div>
+      <div style="margin-top:1rem;display:flex;gap:0.5rem">
+        <button class="btn btn-primary btn-sm" style="flex:1">▶ Start Breathing</button>
+        <button class="btn btn-ghost btn-sm">⏹ Stop</button>
+      </div>
+      <!-- After 4 cycles -->
+      <div style="margin-top:1rem;background:var(--sev-low-bg);border-radius:var(--r-md);padding:0.75rem;text-align:center">
+        <div style="font-size:0.88rem;font-weight:600;color:var(--sev-low);margin-bottom:0.5rem">Well done 💙 How do you feel now?</div>
+        <div style="display:flex;justify-content:center;gap:0.75rem;font-size:1.5rem">
+          <span style="cursor:pointer">😐</span>
+          <span style="cursor:pointer">🙂</span>
+          <span style="cursor:pointer">😄</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grounding -->
+    <div class="card">
+      <div class="section-label">🌱 5-4-3-2-1 Grounding</div>
+      <div class="grounding-step">
+        <span class="grounding-emoji">👀</span>
+        <div class="grounding-title">Name 5 things you can see</div>
+        <div class="grounding-desc">Look around slowly. A door, a tree, your hands, a cup, the sky. Name them out loud or in your mind.</div>
+        <div class="grounding-nav">
+          <button class="btn btn-ghost btn-sm">← Back</button>
+          <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+          </div>
+          <button class="btn btn-primary btn-sm">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sleep Tips -->
+    <div class="card">
+      <div class="section-label">😴 Sleep Tips</div>
+      <div class="sleep-cards-wrap">
+        <div class="sleep-cards" id="sleepCards">
+          <div class="sleep-card-slide">
+            <span class="sleep-card-emoji">🕙</span>
+            <div class="sleep-card-title">Keep a consistent bedtime</div>
+            <div class="sleep-card-text">Going to sleep and waking at the same time every day — even weekends — trains your body's internal clock for better sleep quality.</div>
+          </div>
+          <div class="sleep-card-slide">
+            <span class="sleep-card-emoji">📵</span>
+            <div class="sleep-card-title">No screens 30 min before bed</div>
+            <div class="sleep-card-text">Blue light from phones tricks your brain into thinking it's daytime. Put the phone down 30 minutes before sleeping.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.85rem">
+        <button class="btn btn-ghost btn-sm" onclick="prevSlide()">←</button>
+        <div class="slide-dots" id="slideDots">
+          <div class="step-dot active"></div>
+          <div class="step-dot"></div>
+          <div class="step-dot"></div>
+          <div class="step-dot"></div>
+          <div class="step-dot"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="nextSlide()">→</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 4: SUMMARY -->
+  <div class="tab-pane" id="tab-summary">
+
+    <div class="card" style="text-align:center;padding:1.5rem">
+      <div style="font-size:2rem;margin-bottom:0.75rem">📊</div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.4rem">Your Weekly Wellness Summary</div>
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem">Generated from your Check-ins, Assessments & Reflections</div>
+      <button class="btn btn-primary gen-btn btn-block" onclick="showSummary()">✨ Generate My Week</button>
+    </div>
+
+    <!-- Summary results (shown after generate) -->
+    <div id="summaryResults" style="display:block">
+
+      <div class="card">
+        <div class="section-label">Mood This Week</div>
+        <div class="summary-chart">
+          <div class="chart-bar-wrap"><div class="chart-emoji">😟</div><div class="chart-bar sad" style="height:30%"></div><div class="chart-day">M</div></div>
+          <div class="chart-bar-wrap"><div class="chart-emoji">😐</div><div class="chart-bar okay" style="height:50%"></div><div class="chart-day">T</div></div>
+          <div class="chart-bar-wrap"><div class="chart-emoji">🙂</div><div class="chart-bar happy" style="height:70%"></div><div class="chart-day">W</div></div>
+          <div class="chart-bar-wrap"><div class="chart-emoji">😄</div><div class="chart-bar happy" style="height:90%"></div><div class="chart-day">T</div></div>
+          <div class="chart-bar-wrap"><div class="chart-emoji">😐</div><div class="chart-bar okay" style="height:50%"></div><div class="chart-day">F</div></div>
+          <div class="chart-bar-wrap"><div class="chart-emoji">—</div><div class="chart-bar" style="height:8%;background:var(--border)"></div><div class="chart-day">S</div></div>
+          <div class="chart-bar-wrap"><div class="chart-emoji">—</div><div class="chart-bar" style="height:8%;background:var(--border)"></div><div class="chart-day">S</div></div>
+        </div>
+        <div class="typewriter">You had more positive days than difficult ones this week 🌱</div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">Assessments This Week</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="tl-dot">PHQ</div>
+            <div class="tl-content">
+              <div class="tl-date">Thursday, Mar 20</div>
+              <div class="tl-name" style="display:flex;align-items:center;justify-content:space-between">PHQ-9 — Depression <span class="assess-badge sev-mild" style="font-size:0.68rem;padding:.2rem .6rem;border-radius:50px">Mild · 10/27</span></div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-dot">GAD</div>
+            <div class="tl-content">
+              <div class="tl-date">Tuesday, Mar 18</div>
+              <div class="tl-name" style="display:flex;align-items:center;justify-content:space-between">GAD-7 — Anxiety <span class="assess-badge sev-minimal" style="font-size:0.68rem;padding:.2rem .6rem;border-radius:50px">Minimal · 4/21</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">Reflection Highlight ✨</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.6rem">4 reflections written this week</div>
+        <div class="reflection-quote">"My morning chai and the sunlight coming through the window made me smile today."</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)">Friday, Mar 21</div>
+      </div>
+
+      <div class="encouragement">
+        You showed up for yourself every day this week. That takes real strength. Keep going 💙
+      </div>
+
+      <button class="btn btn-ghost btn-block share-btn">📋 Copy Summary to Clipboard</button>
+
+    </div>
+
+  </div>
+
+  <!-- HELPLINES (always visible) -->
+  <div class="card mt-3">
+    <div class="section-label">Need Help? 💙</div>
+    <div class="helplines">
+      <div class="helpline-card">
+        <div class="helpline-icon hi-teal">📞</div>
+        <div class="helpline-info">
+          <div class="helpline-name">iCall</div>
+          <div class="helpline-meta">9152987821 · Free · Mon–Sat · TISS</div>
+        </div>
+        <a href="tel:9152987821" class="call-btn">Call</a>
+      </div>
+      <div class="helpline-card">
+        <div class="helpline-icon hi-blue">🌙</div>
+        <div class="helpline-info">
+          <div class="helpline-name">Vandrevala Foundation</div>
+          <div class="helpline-meta">1860-2662-345 · 24/7 · Hindi + English</div>
+        </div>
+        <a href="tel:18602662345" class="call-btn">Call</a>
+      </div>
+      <div class="helpline-card">
+        <div class="helpline-icon hi-purple">🏥</div>
+        <div class="helpline-info">
+          <div class="helpline-name">NIMHANS Helpline</div>
+          <div class="helpline-meta">080-46110007 · Bangalore</div>
+        </div>
+        <a href="tel:08046110007" class="call-btn">Call</a>
+      </div>
+      <div class="helpline-card" style="background:var(--sev-low-bg);border-color:#BBF7D0">
+        <div class="helpline-icon hi-green">🤝</div>
+        <div class="helpline-info">
+          <div class="helpline-name">Your ASHA Worker</div>
+          <div class="helpline-meta" style="line-height:1.4">Trained to help with mental health support. Ask them — it's safe and free.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+
+const STORAGE_LANG = 'swahealthy_lang';
+const STORAGE_PREFIX = 'swahealthy_';
+
+// State
+let currentLang = 'en';
+let chatOpen = false;
+let breathStage = 0;
+let breathInterval = null;
+let cycleTimeout1 = null, cycleTimeout2 = null;
+let breathCycles = 0;
+let currentAssessment = null; // 'PHQ-9' or 'GAD-7'
+let currentQuestionIndex = 0;
+let currentAnswers = [];
+let slideIndex = 0;
+
+// Configs
+const phq9_qs = [
+  'Little interest or pleasure in doing things?',
+  'Feeling down, depressed, or hopeless?',
+  'Trouble falling/staying asleep, or sleeping too much?',
+  'Feeling tired or having little energy?',
+  'Poor appetite or overeating?',
+  'Feeling bad about yourself or that you\'ve failed?',
+  'Trouble concentrating on things?',
+  'Moving/speaking slowly, or being fidgety/restless?',
+  'Thoughts that you\'d be better off dead or hurting yourself?'
+];
+const gad7_qs = [
+  'Feeling nervous, anxious, or on edge?',
+  'Not being able to stop or control worrying?',
+  'Worrying too much about different things?',
+  'Trouble relaxing?',
+  'Being so restless it\'s hard to sit still?',
+  'Becoming easily annoyed or irritable?',
+  'Feeling afraid as if something awful might happen?'
+];
+const grounding_steps = [
+  {emoji:'👀', title:'Name 5 things you can see', desc:'Look around slowly. A door, a tree, your hands, a cup, the sky. Name them out loud or in your mind.'},
+  {emoji:'👂', title:'Name 4 things you can hear', desc:'Listen carefully. Traffic, your breathing, a fan, birds outside.'},
+  {emoji:'🤲', title:'Name 3 things you can touch', desc:'Feel your phone, your clothes, the surface beneath you.'},
+  {emoji:'👃', title:'Name 2 things you can smell', desc:'Your surroundings, your own skin, something nearby.'},
+  {emoji:'👅', title:'Name 1 thing you can taste', desc:'Water, food, or just the natural taste in your mouth.'}
+];
+const sleep_slides = [
+  {emoji:'🕙',title:'Keep a consistent bedtime',text:"Going to sleep and waking at the same time every day — even weekends — trains your body's internal clock for better sleep quality."},
+  {emoji:'📵',title:'No screens 30 min before bed',text:"Blue light from phones tricks your brain into thinking it's daytime. Put the phone down 30 minutes before sleeping."},
+  {emoji:'☕',title:'Avoid caffeine after 3pm',text:"Caffeine stays in your system for 6–8 hours. A cup of chai at 4pm could still be keeping you awake at midnight."},
+  {emoji:'🌑',title:'Keep your room dark and cool',text:"Your body temperature drops during sleep. A cool, dark room signals to your brain that it's time to rest."},
+  {emoji:'📝',title:'Write your worries down',text:"Before bed, write down anything on your mind. Getting thoughts onto paper clears mental clutter and helps you sleep faster."}
+];
+
+// Core UI
+function switchTab(name, btnEl) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if(btnEl) btnEl.classList.add('active');
+  if(name === 'summary') renderSummary();
+}
+
+function toggleChat() {
+  const panel = document.getElementById('chatPanel');
+  chatOpen = !chatOpen;
+  panel.style.display = chatOpen ? 'block' : 'none';
+  if(chatOpen) {
+    document.querySelector('.chat-input-row input').focus();
+    scrollChat();
+  }
+}
+
+function scrollChat() {
+  const c = document.getElementById('chatMessages');
+  c.scrollTop = c.scrollHeight;
+}
+
+// Format YYYY-MM-DD
+function getTodayStr() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function getPastDays(daysBack) {
+  const res = [];
+  const today = new Date();
+  today.setHours(12,0,0,0);
+  for(let i=daysBack-1; i>=0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const str = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().split('T')[0];
+      const dayName = i === 0 ? 'Today' : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+      res.push({ str, dayName });
+  }
+  return res;
+}
+
+// ------ TAB 1: CHECK-IN ------
+function selectMood(btn, emoji, type) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  if(btn) btn.classList.add('selected');
+  const responses = {
+    sad: "Sending you warmth 💙 You're not alone.",
+    low: "It's okay to not be okay. Want to talk about it?",
+    okay: "Neutral days are valid. Be kind to yourself today 💙",
+    good: "Glad you're doing okay today 😊",
+    great: "That's wonderful! Keep that energy 🌟"
+  };
+  document.querySelector('.mood-response').textContent = responses[type] || '';
+  
+  try {
+    localStorage.setItem(STORAGE_PREFIX + 'mood_' + getTodayStr(), JSON.stringify({
+      emoji, type, timestamp: new Date().toISOString()
+    }));
+  } catch(e){}
+  renderStreak();
+}
+
+function renderStreak() {
+  const past = getPastDays(7);
+  let streak = 0;
+  for(let i=past.length-1; i>=0; i--) {
+    let d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + past[i].str);
+    if(d) streak++; else if(i !== past.length-1) break;
+  }
+  document.querySelector('.streak').innerHTML = `🔥 ${streak} day streak — keep it up!`;
+  
+  const strip = document.querySelector('.week-strip');
+  strip.innerHTML = past.map((p, i) => {
+    let d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + p.str);
+    let item = d ? JSON.parse(d) : null;
+    let emoji = item ? item.emoji : (i < past.length-1 ? '<span style="opacity:0.35">—</span>' : '+');
+    let clz = i === past.length-1 ? 'today' : '';
+    return `<div class="day-bubble"><div class="emoji-circle ${clz}" ${i===past.length-1?'onclick="document.querySelector(\'#tab-checkin\').scrollIntoView()"':''}>${emoji}</div><div class="day-label">${p.dayName}</div></div>`;
+  }).join('');
+}
+
+window.updateCharCount = function(el) {
+  document.getElementById('charCount').textContent = el.value.length + ' characters';
+}
+
+function saveReflection() {
+  const text = document.querySelector('.reflection-input').value.trim();
+  if(!text) return;
+  const prompt = document.querySelector('.reflection-prompt').textContent;
+  try {
+    localStorage.setItem(STORAGE_PREFIX + 'reflection_' + getTodayStr(), JSON.stringify({
+      prompt, text, timestamp: new Date().toISOString()
+    }));
+    document.querySelector('.save-badge').style.display = 'inline-flex';
+    setTimeout(() => { document.querySelector('.save-badge').style.display = 'none'; }, 3000);
+  } catch(e){}
+}
+
+function loadReflection() {
+  try {
+    const today = localStorage.getItem(STORAGE_PREFIX + 'reflection_' + getTodayStr());
+    if(today) {
+      document.querySelector('.reflection-input').value = JSON.parse(today).text;
+      updateCharCount(document.querySelector('.reflection-input'));
+    }
+    const past = getPastDays(2);
+    const yest = localStorage.getItem(STORAGE_PREFIX + 'reflection_' + past[0].str);
+    const yWrap = document.querySelector('.yesterday-reflection');
+    if(yest) {
+      yWrap.style.display = 'block';
+      let y = JSON.parse(yest);
+      yWrap.querySelector('.yesterday-text').textContent = `"${y.text}"`;
+    } else {
+      yWrap.style.display = 'none';
+    }
+    
+    // Wire up save
+    const saveBtn = document.querySelector('.reflection-actions .btn-primary');
+    if(saveBtn) saveBtn.addEventListener('click', saveReflection);
+    const skipBtn = document.querySelector('.reflection-actions .btn-ghost');
+    if(skipBtn) skipBtn.addEventListener('click', () => { document.querySelector('.reflection-input').value=''; updateCharCount(document.querySelector('.reflection-input')); });
+  } catch(e){}
+}
+
+// ------ TAB 2: ASSESS ------
+window.generateReflection = async function(btn) {
+  const ogText = btn.textContent;
+  btn.textContent = '...';
+  try {
+    const d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + getTodayStr());
+    let mood = 'okay';
+    if(d) mood = JSON.parse(d).type;
+    const res = await fetch('/wellness/reflection', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ mood: mood, language: currentLang })
+    });
+    const parsed = await res.json();
+    document.querySelector('.reflection-input').value = parsed.reflection;
+    updateCharCount(document.querySelector('.reflection-input'));
+  } catch(e) {}
+  btn.textContent = ogText;
+}
+
+window.startAssessment = function(type) {
+  currentAssessment = type;
+  currentQuestionIndex = 0;
+  currentAnswers = [];
+  document.getElementById('assessPicker').style.display = 'none';
+  document.getElementById('questionView').style.display = 'block';
+  document.getElementById('resultView').style.display = 'none';
+  renderQuestion();
+}
+
+window.showPicker = function() {
+  document.getElementById('assessPicker').style.display = 'block';
+  document.getElementById('questionView').style.display = 'none';
+  document.getElementById('resultView').style.display = 'none';
+}
+
+window.showResult = window.nextQuestion = function() {
+  const opts = document.querySelectorAll('.q-option');
+  let points = 0;
+  let answerStr = '';
+  opts.forEach((o, i) => { if(o.classList.contains('selected')) { points = i; answerStr = o.textContent; } });
+  
+  const qs = currentAssessment === 'PHQ-9' ? phq9_qs : gad7_qs;
+  currentAnswers.push({
+    question: qs[currentQuestionIndex],
+    answer: answerStr,
+    points: points
+  });
+  
+  currentQuestionIndex++;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const qs = currentAssessment === 'PHQ-9' ? phq9_qs : gad7_qs;
+  if(currentQuestionIndex >= qs.length) {
+    submitAssessment();
+    return;
+  }
+  document.querySelector('.q-title').textContent = `${currentAssessment} — ${currentAssessment === 'PHQ-9'?'Depression':'Anxiety'}`;
+  document.querySelector('.q-header span:last-child').textContent = `${currentQuestionIndex + 1} of ${qs.length}`;
+  document.querySelector('.q-progress-fill').style.width = `${((currentQuestionIndex)/qs.length)*100}%`;
+  document.querySelector('.q-text').textContent = qs[currentQuestionIndex];
+  
+  // Reset selected
+  const opts = document.querySelectorAll('.q-option');
+  opts.forEach(o => o.classList.remove('selected'));
+  if(opts.length>0) opts[0].classList.add('selected'); // default to 0
+  
+  const nextBtn = document.querySelector('.q-options + div > button.btn-primary');
+  if(nextBtn) nextBtn.textContent = (currentQuestionIndex === qs.length - 1) ? 'See Results →' : 'Next →';
+}
+
+// Global click delegation for dynamically written q-options
+document.addEventListener('click', function(e) {
+  if(e.target.classList.contains('q-option')) {
+    document.querySelectorAll('.q-option').forEach(o => o.classList.remove('selected'));
+    e.target.classList.add('selected');
+  }
+});
+
+async function submitAssessment() {
+  document.querySelector('.q-progress-fill').style.width = '100%';
+  const btns = document.querySelector('.q-options + div');
+  const oldHTML = btns.innerHTML;
+  btns.innerHTML = '<div style="width:100%;text-align:center;padding:1rem;color:var(--primary)">Analysing your responses... ✨</div>';
+  
+  let totalScore = currentAnswers.reduce((sum, a) => sum + a.points, 0);
+  let maxScore = (currentAssessment === 'PHQ-9' ? 27 : 21);
+  let severity = 'minimal';
+  if(totalScore >= 15) severity = 'severe';
+  else if(totalScore >= 10) severity = 'moderate';
+  else if(totalScore >= 5) severity = 'mild';
+
+  // Save to localstorage
+  try {
+    localStorage.setItem(STORAGE_PREFIX + 'assessment_' + getTodayStr() + '_' + Date.now(), JSON.stringify({
+      type: currentAssessment, score: totalScore, maxScore: maxScore, severity: severity, date: new Date().toISOString()
+    }));
+  } catch(e){}
+
+  if(severity === 'severe') {
+     btns.innerHTML = oldHTML;
+     renderResult({
+        score: totalScore, maxScore, severity, analysis: null, actions: [], is_severe: true
+     });
+     return;
+  }
+
+  // Call API for Groq
+  try {
+    const res = await fetch('/wellness/analyse', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+         assessment: currentAssessment,
+         score: totalScore, 
+         severity: severity,
+         language: currentLang,
+         answers: currentAnswers
+      })
+    });
+    const parsed = await res.json();
+    btns.innerHTML = oldHTML;
+    renderResult({
+       score: totalScore, maxScore, severity, analysis: parsed.analysis, actions: parsed.actions, is_severe: parsed.is_severe
+    });
+  } catch(e) {
+    btns.innerHTML = oldHTML;
+    renderResult({
+       score: totalScore, maxScore, severity, 
+       analysis: "Your responses have been noted. Please consider speaking with a mental health professional for a thorough evaluation.", 
+       actions: ["Try to maintain a daily routine.", "Reach out to someone you trust today."], 
+       is_severe: false
+    });
+  }
+}
+
+function renderResult(data) {
+  document.getElementById('questionView').style.display = 'none';
+  document.getElementById('resultView').style.display = 'block';
+  
+  const resTop = document.querySelector('.result-top');
+  const severityPill = document.querySelector('.severity-pill');
+  
+  document.querySelector('.result-label').textContent = `${currentAssessment} Score`;
+  document.querySelector('.result-score').innerHTML = `${data.score} <span>/ ${data.maxScore}</span>`;
+  
+  const body = document.querySelector('.result-body');
+  const icallCard = document.querySelector('#resultView > .helpline-card');
+  
+  let clz = '', txt = '', bg = '';
+  if(data.severity === 'minimal') { clz='sev-minimal'; txt='Minimal'; bg='var(--sev-low)'; icallCard.style.display='none'; }
+  else if(data.severity === 'mild') { clz='sev-mild'; txt='Mild'; bg='var(--sev-med)'; icallCard.style.display='none'; }
+  else if(data.severity === 'moderate') { clz='sev-moderate'; txt='Moderate'; bg='var(--sev-med)'; icallCard.style.display='flex'; }
+  else { clz='sev-severe'; txt='Severe'; bg='var(--sev-high)'; icallCard.style.display='flex'; }
+  
+  let shortTxt = txt;
+  if(currentAssessment==='PHQ-9') txt += ' Depression'; else txt += ' Anxiety';
+  severityPill.className = `severity-pill ${clz}`;
+  severityPill.innerHTML = `⚠️ ` + txt;
+  resTop.style.background = bg;
+
+  if(data.is_severe) {
+     body.innerHTML = `
+        <div style="text-align:center;padding:1rem">
+          <div style="font-size:3rem;margin-bottom:1rem">💙</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:0.5rem">Please reach out to someone today.</div>
+          <div style="font-size:0.9rem;color:var(--text-light);margin-bottom:1.5rem">You don't have to face this alone. Confidential help is just a tap away.</div>
+          <a href="tel:9152987821" class="btn btn-primary btn-block">Call iCall Now</a>
+          <a href="tel:18602662345" class="btn btn-ghost btn-block mt-1">Call Vandrevala</a>
+          <button class="btn btn-ghost btn-block mt-2" onclick="showPicker()">↩ Back</button>
+        </div>
+     `;
+  } else {
+     body.innerHTML = `
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:0.6rem">🤖 AI ANALYSIS</div>
+        <div class="groq-analysis">${data.analysis || ''}</div>
+        <div class="actions-title">Recommended Actions</div>
+        <div class="action-steps">
+          ${(data.actions || []).map((a, i) => `<div class="action-step"><div class="step-num">${i+1}</div><span>${a}</span></div>`).join('')}
+        </div>
+        <div class="result-btns">
+          <button class="btn btn-chat-handoff btn-block btn-sm" onclick="handoffToChat(\`${shortTxt}\`, \`${(data.analysis || '').substring(0,80).replace(/'/g,"").replace(/"/g,"")}\`) ">🧠 Talk to MindCare AI</button>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="showPicker()">↩ Retake</button>
+          </div>
+        </div>
+     `;
+  }
+}
+
+window.handoffToChat = function(severityTxt, snippet) {
+  if(!chatOpen) toggleChat();
+  document.getElementById('chatBarInput').value = `I just completed a ${currentAssessment} and scored ${severityTxt}. ${snippet}...`;
+  document.getElementById('chatBarInput').focus();
+}
+
+// ------ TAB 3: TIPS ------
+function startBreathing() {
+  const el = document.getElementById('breathCircle');
+  document.querySelector('.breathing-card .btn-primary').style.display='none';
+  document.querySelector('.breathing-card .btn-ghost').style.display='block';
+  el.style.animation = 'breathe 19s infinite';
+  document.querySelector('.breath-circle-wrap').style.display = 'flex';
+  
+  breathStage = 0; breathCycles = 0;
+  cycleBreath();
+}
+
+function stopBreathing() {
+  clearTimeout(cycleTimeout1); clearTimeout(cycleTimeout2); clearInterval(breathInterval);
+  document.getElementById('breathCircle').style.animation = 'none';
+  document.getElementById('breathCircle').textContent = 'Breathe in...';
+  document.querySelector('.breathing-card .btn-primary').style.display='flex';
+  document.querySelector('.breathing-card .btn-ghost').style.display='none';
+  document.querySelector('.cycle-count').textContent = 'Cycle 0 of 4';
+}
+
+function cycleBreath() {
+  const el = document.getElementById('breathCircle');
+  if(!el) return;
+  const stages = [
+    {label:'Breathe in...', ms:4000},
+    {label:'Hold...', ms:7000},
+    {label:'Breathe out...', ms:8000}
+  ];
+  
+  el.textContent = stages[breathStage].label;
+  const nextMs = stages[breathStage].ms;
+  breathStage++;
+  
+  if(breathStage >= 3) {
+    breathStage = 0;
+    breathCycles++;
+    document.querySelector('.cycle-count').textContent = `Cycle ${breathCycles} of 4`;
+    if(breathCycles >= 4) {
+      stopBreathing();
+      document.querySelector('.cycle-count').insertAdjacentHTML('afterend', `
+        <div style="margin-top:1rem;background:var(--sev-low-bg);border-radius:var(--r-md);padding:0.75rem;text-align:center" id="wellDoneBox">
+          <div style="font-size:0.88rem;font-weight:600;color:var(--sev-low);margin-bottom:0.5rem">Well done 💙 How do you feel now?</div>
+          <div style="display:flex;justify-content:center;gap:0.75rem;font-size:1.5rem">
+            <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">😐</span>
+            <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">🙂</span>
+            <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">😄</span>
+          </div>
+        </div>
+      `);
+      return;
+    }
+  }
+  cycleTimeout1 = setTimeout(cycleBreath, nextMs);
+}
+
+// Attach Breathing Events
+window.addEventListener('DOMContentLoaded', () => {
+    const brBtns = document.querySelectorAll('.breathing-card button.btn');
+    if(brBtns[0]) brBtns[0].addEventListener('click', startBreathing);
+    if(brBtns[1]) brBtns[1].addEventListener('click', stopBreathing);
+});
+
+
+let groundingStep = 0;
+window.renderGrounding = function() {
+  const step = grounding_steps[groundingStep];
+  const nav = document.querySelector('.grounding-nav');
+  if(!step) {
+     document.querySelector('.grounding-emoji').textContent = '🌱';
+     document.querySelector('.grounding-title').textContent = 'You just grounded yourself';
+     document.querySelector('.grounding-desc').textContent = "Take a slow deep breath. You're here. You're safe. 💙";
+     nav.innerHTML = `<button class="btn btn-primary btn-block" onclick="groundingStep=0;renderGrounding()">Start Again</button>`;
+     return;
+  }
+  document.querySelector('.grounding-emoji').textContent = step.emoji;
+  document.querySelector('.grounding-title').textContent = step.title;
+  document.querySelector('.grounding-desc').textContent = step.desc;
+  
+  let dots = grounding_steps.map((_, i) => `<div class="step-dot ${i===groundingStep?'active':''} "></div>`).join('');
+  nav.innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="if(groundingStep>0){groundingStep--;renderGrounding();}">← Back</button>
+    <div class="step-dots">${dots}</div>
+    <button class="btn btn-primary btn-sm" onclick="groundingStep++;renderGrounding();">Next →</button>
+  `;
+}
+
+window.updateSleepSlide = function() {
+  const wrap = document.getElementById('sleepCards');
+  if(!wrap) return;
+  wrap.innerHTML = sleep_slides.map((s, idx) => `
+    <div class="sleep-card-slide">
+      <span class="sleep-card-emoji">${s.emoji}</span>
+      <div class="sleep-card-title">${s.title}</div>
+      <div class="sleep-card-text">${s.text}</div>
+      ${(idx === 4) ? `<a href="#" style="display:block;margin-top:1rem;color:var(--primary);font-weight:700;font-size:0.88rem">Set a sleep reminder →</a>` : ''}
+    </div>`).join('');
+  wrap.style.transform = `translateX(-${slideIndex * 100}%)`;
+  document.getElementById('slideDots').innerHTML = sleep_slides.map((_, i) => `<div class="step-dot ${i === slideIndex ? 'active' : ''}"></div>`).join('');
+}
+window.nextSlide = function() { slideIndex = (slideIndex + 1) % sleep_slides.length; updateSleepSlide(); }
+window.prevSlide = function() { slideIndex = (slideIndex - 1 + sleep_slides.length) % sleep_slides.length; updateSleepSlide(); }
+
+
+// ------ TAB 4: SUMMARY ------
+window.showSummary = function() {
+  const r = document.getElementById('summaryResults');
+  const btn = document.querySelector('.gen-btn');
+  btn.textContent = '✨ Generating...';
+  setTimeout(() => {
+    btn.style.display = 'none';
+    r.style.display = 'block';
+    
+    // Animate bars
+    setTimeout(() => {
+      document.querySelectorAll('.chart-bar').forEach((b, i) => {
+        setTimeout(() => {
+          b.style.height = b.dataset.h;
+        }, i * 80);
+      });
+    }, 100);
+
+    // Typewriter
+    let tw = document.querySelector('.typewriter');
+    let text = tw.dataset.text;
+    tw.textContent = '';
+    let curr = 0;
+    let intv = setInterval(() => {
+      tw.textContent += text[curr++];
+      if(curr >= text.length) clearInterval(intv);
+    }, 30);
+  }, 1000);
+}
+
+function renderSummary() {
+  const past = getPastDays(7);
+  let totalScore = 0, count = 0;
+  
+  // Render Chart
+  const chart = document.querySelector('.summary-chart');
+  chart.innerHTML = past.map(p => {
+    let d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + p.str);
+    let h = '8%', cls = '', emoji = '—';
+    if(d) {
+       let m = JSON.parse(d);
+       emoji = m.emoji; count++;
+       if(m.type==='sad') { h='30%'; cls='sad'; totalScore+=1; }
+       else if(m.type==='low') { h='45%'; cls='sad'; totalScore+=2; }
+       else if(m.type==='okay') { h='55%'; cls='okay'; totalScore+=3; }
+       else if(m.type==='good') { h='75%'; cls='happy'; totalScore+=4; }
+       else if(m.type==='great') { h='95%'; cls='happy'; totalScore+=5; }
+    }
+    return `<div class="chart-bar-wrap"><div class="chart-emoji">${emoji}</div><div class="chart-bar ${cls}" style="height:0%" data-h="${h}"></div><div class="chart-day">${p.dayName}</div></div>`;
+  }).join('');
+  
+  let avg = count > 0 ? (totalScore / count) : 0;
+  let twText = "No check-ins yet. Start prioritizing yourself 💙";
+  if(count>0) {
+    if(avg>3.5) twText = "You had more positive days than difficult ones this week 🌱";
+    else if(avg>2.5) twText = "A mixed week — completely normal. Every day you showed up 💙";
+    else twText = "This was a heavy week. You made it through every day 💙";
+  }
+  document.querySelector('.typewriter').dataset.text = twText;
+  
+  // Render timeline
+  let tlHtml = '';
+  for(let i=0; i<localStorage.length; i++) {
+    let key = localStorage.key(i);
+    if(key.includes(STORAGE_PREFIX + 'assessment_')) {
+       let obj = JSON.parse(localStorage.getItem(key));
+       let dStr = new Date(obj.date).toLocaleDateString();
+       let badgeCls = obj.severity==='mild'?'sev-mild':(obj.severity==='severe'?'sev-moderate':'sev-minimal');
+       tlHtml += `
+         <div class="timeline-item">
+            <div class="tl-dot">${obj.type.substring(0,3)}</div>
+            <div class="tl-content">
+              <div class="tl-date">${dStr}</div>
+              <div class="tl-name" style="display:flex;align-items:center;justify-content:space-between">${obj.type} <span class="assess-badge ${badgeCls}" style="font-size:0.68rem;padding:.2rem .6rem;border-radius:50px">${obj.severity.toUpperCase()} · ${obj.score}/${obj.maxScore}</span></div>
+            </div>
+         </div>
+       `;
+    }
+  }
+  document.querySelector('.timeline').innerHTML = tlHtml || '<div style="color:var(--text-muted);font-size:0.85rem">No assessments taken recently.</div>';
+  
+  // Render reflections
+  let refCount = 0; let lastRef = null;
+  for(let i=0; i<localStorage.length; i++) {
+    if(localStorage.key(i).includes(STORAGE_PREFIX + 'reflection_')) {
+      refCount++; lastRef = JSON.parse(localStorage.getItem(localStorage.key(i)));
+    }
+  }
+  if(lastRef) {
+    document.querySelector('.reflection-quote').textContent = `"${lastRef.text}"`;
+    document.querySelector('.reflection-quote').nextElementSibling.textContent = new Date(lastRef.timestamp).toLocaleDateString();
+    document.querySelector('.reflection-quote').previousElementSibling.textContent = `${refCount} reflections written recently.`;
+  } else {
+    document.querySelector('.reflection-quote').textContent = "No reflections yet. Start with today's Check-in.";
+  }
+}
+
+// ------ CHAT / AI LOGIC ------
+let chatHistory = [];
+
+window.sendMsg = async function() {
+  const inp = document.querySelector('.chat-input-row input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  inp.value = '';
+  
+  const msgs = document.getElementById('chatMessages');
+  const typing = document.querySelector('.typing');
+  
+  chatHistory.push({role: 'user', content: txt});
+  
+  // Render user message
+  const udiv = document.createElement('div');
+  udiv.className = 'msg user';
+  udiv.textContent = txt;
+  msgs.insertBefore(udiv, typing);
+  
+  typing.style.display = 'flex';
+  scrollChat();
+  
+  try {
+    const res = await fetch('/wellness/chat', {
+       method: 'POST',
+       headers: {'Content-Type': 'application/json'},
+       body: JSON.stringify({ message: txt, language: currentLang, history: chatHistory.slice(-6) })
+    });
+    const parsed = await res.json();
+    typing.style.display = 'none';
+    
+    chatHistory.push({role: 'assistant', content: parsed.reply});
+    
+    const adiv = document.createElement('div');
+    adiv.className = 'msg ai';
+    adiv.innerHTML = `<div class="msg-name">MindCare AI 🧠</div>\n` + parsed.reply.replace(/\n/g, '<br>');
+    msgs.insertBefore(adiv, typing);
+    scrollChat();
+  } catch(e) {
+    typing.style.display = 'none';
+    const errdiv = document.createElement('div');
+    errdiv.className = 'msg ai';
+    errdiv.innerHTML = `<div class="msg-name">MindCare AI 🧠</div>I'm unable to connect right now. Please try again later.`;
+    msgs.insertBefore(errdiv, typing);
+    scrollChat();
+  }
+}
+
+// ------ INIT ------
+document.addEventListener('DOMContentLoaded', () => {
+  renderStreak();
+  loadReflection();
+  renderGrounding();
+  updateSleepSlide();
+  
+  const typingEls = document.querySelectorAll('.typing');
+  typingEls.forEach(el => el.style.display='none');
+  
+  const sr = document.getElementById('summaryResults');
+  if(sr) sr.style.display = 'none';
+  
+  const assessPicker = document.querySelector('.assess-cards');
+  if(assessPicker) {
+      assessPicker.innerHTML = `
+        <div class="assess-card" onclick="startAssessment('PHQ-9')">
+           <div class="assess-icon depression">😔</div>
+           <div class="assess-info">
+             <div class="assess-name">PHQ-9 — Depression</div>
+             <div class="assess-meta">9 questions · ~3 minutes</div>
+           </div>
+           <span class="assess-badge badge-purple">Depression</span>
+        </div>
+        <div class="assess-card" onclick="startAssessment('GAD-7')">
+           <div class="assess-icon anxiety">😰</div>
+           <div class="assess-info">
+             <div class="assess-name">GAD-7 — Anxiety</div>
+             <div class="assess-meta">7 questions · ~2 minutes</div>
+           </div>
+           <span class="assess-badge badge-yellow">Anxiety</span>
+        </div>
+      `;
+  }
+  
+  const sendBtn = document.querySelector('.chat-input-row button');
+  if(sendBtn) sendBtn.addEventListener('click', window.sendMsg);
+  
+  const chatInput = document.querySelector('.chat-input-row input');
+  if(chatInput) {
+    chatInput.addEventListener('keypress', function(e){
+      if(e.key === 'Enter') window.sendMsg();
+    });
+  }
+
+  const barInput = document.getElementById('chatBarInput');
+  if(barInput) {
+      barInput.addEventListener('keypress', function(e){
+        if(e.key === 'Enter') {
+           const v = this.value; this.value='';
+           if(!chatOpen) toggleChat();
+           document.querySelector('.chat-input-row input').value = v;
+           window.sendMsg();
+        }
+      });
+  }
+  
+  const shBtn = document.querySelector('.share-btn');
+  if(shBtn) {
+      shBtn.addEventListener('click', function(e) {
+        navigator.clipboard.writeText("Mental Wellness checked in on SwaHealthy! Feeling prioritizing myself 💙").then(() => {
+          e.target.textContent = "✓ Copied!";
+          setTimeout(() => { e.target.textContent = "📋 Copy Summary to Clipboard"; }, 2000);
+        });
+      });
+  }
+  
+});
+
+</script>
+
+{%endblock %}

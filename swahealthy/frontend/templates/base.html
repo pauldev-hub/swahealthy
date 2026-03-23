@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="{{ lang if lang else 'en' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwaHealthy</title>
+
+    <link rel="manifest" href="/static/pwa/manifest.json">
+    <meta name="theme-color" content="#0D9488">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════════
+         TOP NAR — logo + lang toggle only
+    ═══════════════════════════════════════ -->
+    <nav class="navbar">
+        <div class="nav-container">
+
+            <a href="/" class="nav-brand">
+                <span class="logo-icon">🌿</span>
+                SwaHealthy
+            </a>
+
+            <div class="nav-controls">
+                <!-- Language toggle -->
+                <div class="lang-toggle">
+                    <button class="lang-btn {% if lang == 'en' %}active{% endif %}" onclick="setLang('en')">EN</button>
+                    <span class="divider">|</span>
+                    <button class="lang-btn {% if lang == 'bn' %}active{% endif %}"
+                        onclick="setLang('bn')">বাংলা</button>
+                    <span class="divider">|</span>
+                    <button class="lang-btn {% if lang == 'hi' %}active{% endif %}"
+                        onclick="setLang('hi')">हिंदी</button>
+                </div>
+                <a href="/wellness" class="history-link">
+                    <span class="history-icon">🧠</span>
+                    <span>Wellness</span>
+                </a>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════
+         PAGE CONTENT
+    ═══════════════════════════════════════ -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ═══════════════════════════════════════
+         BOTTOM NAV BAR
+    ═══════════════════════════════════════ -->
+    {% set path = request.path %}
+    <nav class="bottom-nav">
+      <a href="/" class="nav-item {% if path == '/' %}active{% endif %}">
+        <span class="nav-bubble"><span class="nav-icon">🏠</span></span>
+        <span class="nav-label" data-i18n="home">Home</span>
+      </a>
+      <a href="/history" class="nav-item {% if path == '/history' %}active{% endif %}">
+        <span class="nav-bubble"><span class="nav-icon">📋</span></span>
+        <span class="nav-label" data-i18n="history">History</span>
+      </a>
+      <button type="button" class="nav-item" id="ai-assistant-btn">
+        <span class="nav-bubble"><span class="nav-icon">✨</span></span>
+        <span class="nav-label">AI</span>
+      </button>
+      <a href="/appointments" class="nav-item {% if path == '/appointments' %}active{% endif %}">
+        <span class="nav-bubble"><span class="nav-icon">📅</span></span>
+        <span class="nav-label" data-i18n="appointments">Appts</span>
+      </a>
+      <a href="/profile" class="nav-item {% if path == '/profile' %}active{% endif %}">
+        <span class="nav-bubble"><span class="nav-icon">👤</span></span>
+        <span class="nav-label" data-i18n="profile">Profile</span>
+      </a>
+    </nav>
+
+
+
+    <!-- ═══════════════════════════════════════
+         SOS EMERGENCY WIDGET
+    ═══════════════════════════════════════ -->
+    <!-- Mental Wellness Action Button -->
+    <a href="/wellness" class="brain-fab" aria-label="Mental Wellness" title="Mental Wellness">
+        <span class="brain-icon">🧠</span>
+    </a>
+
+    <!-- Global SOS Action Button -->
+    <button id="sos-fab" class="sos-fab" onclick="openSOSModal()" aria-label="Emergency SOS">
+        <span class="sos-icon">☎</span>
+        <span class="sos-label">SOS</span>
+    </button>
+
+    <div id="sos-overlay" class="sos-overlay" onclick="handleOverlayClick(event)">
+        <div id="sos-card" class="sos-card" role="dialog" aria-modal="true" aria-labelledby="sos-title">
+            <div id="sos-high-alert" class="sos-high-alert" style="display: none;">
+                <span id="sos-alert-text" data-i18n="high_severity_alert">⚠ High severity detected. Please call
+                    emergency services if needed.</span>
+            </div>
+            <h2 id="sos-title" data-i18n="emergency_contacts">Emergency Contacts</h2>
+            <div class="sos-buttons">
+                <a href="tel:108" class="sos-btn">
+                    <span class="btn-icon">☎</span>
+                    <span class="btn-label" data-i18n="ambulance">Ambulance / MSVS</span>
+                    <span class="btn-num">108</span>
+                </a>
+                <a href="tel:100" class="sos-btn">
+                    <span class="btn-icon">📞</span>
+                    <span class="btn-label" data-i18n="police">Police</span>
+                    <span class="btn-num">100</span>
+                </a>
+                <a href="tel:112" class="sos-btn">
+                    <span class="btn-icon">☎</span>
+                    <span class="btn-label" data-i18n="national_emergency">National Emergency</span>
+                    <span class="btn-num">112</span>
+                </a>
+                <a href="tel:1091" class="sos-btn">
+                    <span class="btn-icon">📞</span>
+                    <span class="btn-label" data-i18n="women_helpline">Women Helpline</span>
+                    <span class="btn-num">1091</span>
+                </a>
+            </div>
+            <button class="sos-close-btn" onclick="closeSOSModal()" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- App JS -->
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/app.js"></script>
+
+    <!-- ═══════════════════════════════════════
+         AI ASSISTANT SHEET
+    ═══════════════════════════════════════ -->
+    <div class="ai-sheet-overlay" id="ai-sheet-overlay"></div>
+    <div class="ai-sheet" id="ai-sheet">
+        <div class="sheet-handle"></div>
+
+        <!-- Sheet Header -->
+        <div class="sheet-header">
+            <span class="sheet-title">✦ AI Health Assistant</span>
+            <button class="sheet-clear-btn" id="sheet-clear-btn">Clear</button>
+            <button class="sheet-close-btn" id="sheet-close-btn">✕</button>
+        </div>
+
+        <!-- Sheet Tabs -->
+        <div class="sheet-tabs">
+            <button class="sheet-tab active" data-tab="features">Features</button>
+            <button class="sheet-tab" data-tab="chat">Chat</button>
+        </div>
+
+        <!-- Tab: Features -->
+        <div class="sheet-tab-pane active" id="sheet-tab-features">
+            <!-- Hero tip -->
+            <div class="sheet-hero">
+                <span class="sheet-hero-icon">💡</span>
+                <p id="sheet-daily-tip">Loading tip...</p>
+            </div>
+
+            <!-- 6 Feature items -->
+            <div class="sheet-feature-grid">
+                <div class="sheet-feat-item" data-action="chat">
+                    <div class="feat-icon feat-icon-chat">💬</div>
+                    <div class="feat-text"><strong>Ask Health Questions</strong><span>AI-powered guidance</span></div>
+                </div>
+                <div class="sheet-feat-item" data-action="photo">
+                    <div class="feat-icon feat-icon-photo">📷</div>
+                    <div class="feat-text"><strong>Photo Analysis</strong><span>Upload for visual check</span></div>
+                </div>
+                <div class="sheet-feat-item" data-action="symptoms">
+                    <div class="feat-icon feat-icon-symptoms">🩺</div>
+                    <div class="feat-text"><strong>Check Symptoms</strong><span>Rule-based diagnosis</span></div>
+                </div>
+                <div class="sheet-feat-item" data-action="facilities">
+                    <div class="feat-icon feat-icon-fac">🏥</div>
+                    <div class="feat-text"><strong>Find Facilities</strong><span>Nearest PHC & hospitals</span></div>
+                </div>
+                <div class="sheet-feat-item" data-action="medicine">
+                    <div class="feat-icon feat-icon-med">💊</div>
+                    <div class="feat-text"><strong>Medicine Info</strong><span>Ask about any medicine</span></div>
+                </div>
+                <div class="sheet-feat-item" data-action="history">
+                    <div class="feat-icon feat-icon-history">📋</div>
+                    <div class="feat-text"><strong>My Health History</strong><span>Past check results</span></div>
+                </div>
+            </div>
+
+            <!-- Mood row -->
+            <div class="mood-row">
+                <label>How are you feeling?</label>
+                <button class="mood-btn" data-mood="great">😊 Great</button>
+                <button class="mood-btn" data-mood="okay">😐 Okay</button>
+                <button class="mood-btn" data-mood="unwell">😔 Unwell</button>
+            </div>
+        </div>
+
+        <!-- Tab: Chat -->
+        <div class="sheet-tab-pane" id="sheet-tab-chat">
+            <div class="chat-messages" id="sheet-chat-messages">
+                <div class="typing-indicator" id="sheet-typing" style="display:none">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            <div class="chat-input-row">
+                <textarea class="chat-input" id="sheet-chat-input" placeholder="Ask about health..." rows="1"></textarea>
+                <button class="chat-send-btn" id="sheet-send-btn">➤</button>
+            </div>
+            <p class="chat-disclaimer">Not a substitute for professional medical advice.</p>
+        </div>
+    </div>
+
+    <!-- Bottom sheet JS -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const aiBtn = document.getElementById('ai-assistant-btn');
+        const sheetOverlay = document.getElementById('ai-sheet-overlay');
+        const sheet = document.getElementById('ai-sheet');
+        const closeBtn = document.getElementById('sheet-close-btn');
+        const clearBtn = document.getElementById('sheet-clear-btn');
+        const chatInput = document.getElementById('sheet-chat-input');
+        const sendBtn = document.getElementById('sheet-send-btn');
+        const chatMessages = document.getElementById('sheet-chat-messages');
+        const typingIndicator = document.getElementById('sheet-typing');
+        
+        let chatHistory = [];
+        let hasOpened = false;
+
+        function openSheet() {
+            sheetOverlay.classList.add('open');
+            sheet.classList.add('open');
+            if (!hasOpened && chatHistory.length === 0) {
+                appendBubble("Hello! I'm SwaHealthy Assistant 👋 Ask me anything about health, medicines, or wellness!", 'asst');
+                hasOpened = true;
+            }
+            // By default focus input if Chat tab is active
+            if (document.querySelector('.sheet-tab[data-tab="chat"]').classList.contains('active')) {
+                chatInput.focus();
+            }
+        }
+
+        function closeSheet() {
+            sheetOverlay.classList.remove('open');
+            sheet.classList.remove('open');
+        }
+
+        if (aiBtn) aiBtn.addEventListener('click', openSheet);
+        if (sheetOverlay) sheetOverlay.addEventListener('click', closeSheet);
+        if (closeBtn) closeBtn.addEventListener('click', closeSheet);
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (confirm('Clear chat history?')) {
+                    chatHistory = [];
+                    // Keep only the typing indicator
+                    chatMessages.querySelectorAll('.chat-bubble').forEach(b => b.remove());
+                    appendBubble("Hello! I'm SwaHealthy Assistant 👋 Ask me anything about health, medicines, or wellness!", 'asst');
+                }
+            });
+        }
+
+        // Tab switching
+        document.querySelectorAll('.sheet-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.sheet-tab-pane').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('sheet-tab-' + btn.dataset.tab).classList.add('active');
+                if (btn.dataset.tab === 'chat') {
+                    chatInput.focus();
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+        });
+
+        // Daily tip
+        const DAILY_TIPS = [
+            "Drink 8 glasses of water daily.",
+            "Wash hands for 20 seconds before meals.",
+            "Sleep 7-8 hours for a strong immune system.",
+            "Eat seasonal fruits like guava and papaya.",
+            "Walk 30 minutes daily for heart health.",
+            "Avoid skipping meals — eat small portions regularly.",
+            "Use mosquito nets at night to prevent malaria.",
+            "Watch for dengue symptoms during monsoon season.",
+            "Store drinking water in covered containers.",
+            "Boil water if unsure about its safety.",
+            "Get children vaccinated at your local PHC.",
+            "Wear slippers outdoors to avoid infections.",
+            "Dry clothes in sunlight to kill bacteria.",
+            "Eat spinach and lentils to prevent anaemia.",
+            "Check blood pressure regularly if over 40.",
+            "Avoid self-medication — consult a doctor.",
+            "Breastfeed infants exclusively for 6 months.",
+            "Keep wounds clean and covered.",
+            "Exercise reduces stress and improves mood.",
+            "Visit your PHC for free health checkups."
+        ];
+        const tipIndex = Math.floor(Date.now() / 86400000) % DAILY_TIPS.length;
+        const tipEl = document.getElementById('sheet-daily-tip');
+        if (tipEl) tipEl.textContent = DAILY_TIPS[tipIndex];
+
+        // Feature grid actions
+        document.querySelectorAll('.sheet-feat-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                if (action === 'chat') {
+                    document.querySelector('.sheet-tab[data-tab="chat"]').click();
+                } else if (action === 'photo') {
+                    window.location.href = '/ai-analysis';
+                } else if (action === 'symptoms') {
+                    closeSheet();
+                    document.querySelector('.symptom-groups')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (action === 'facilities') {
+                    closeSheet();
+                    document.querySelector('.facilities-card, #fac-map')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (action === 'medicine') {
+                    document.querySelector('.sheet-tab[data-tab="chat"]').click();
+                    chatInput.value = 'Tell me about: ';
+                    chatInput.focus();
+                } else if (action === 'history') {
+                    window.location.href = '/history';
+                }
+            });
+        });
+
+        // Mood buttons
+        document.querySelectorAll('.mood-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                const msgs = {
+                    great: "I'm feeling great today!",
+                    okay: "I'm feeling okay, any health tips for me?",
+                    unwell: "I'm not feeling well today."
+                };
+                document.querySelector('.sheet-tab[data-tab="chat"]').click();
+                sendChatMessage(msgs[btn.dataset.mood]);
+            });
+        });
+
+        function appendBubble(text, sender) {
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${sender}-bubble`;
+            div.textContent = text;
+            chatMessages.insertBefore(div, typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendChatMessage(text) {
+            if (!text) return;
+            appendBubble(text, 'user');
+            if (chatInput.value === text) chatInput.value = '';
+            chatHistory.push({ role: 'user', content: text });
+            
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const lang = localStorage.getItem('swahealthy_lang') || 'en';
+
+            try {
+                const resp = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, language: lang, history: chatHistory })
+                });
+
+                typingIndicator.style.display = 'none';
+
+                if (!resp.ok) {
+                    appendBubble("Couldn't connect, try again.", 'asst');
+                    return;
+                }
+                const data = await resp.json();
+                
+                if (data.reply) {
+                    appendBubble(data.reply, 'asst');
+                    chatHistory.push({ role: 'assistant', content: data.reply });
+                } else {
+                    appendBubble("Couldn't connect, try again.", 'asst');
+                }
+            } catch (err) {
+                typingIndicator.style.display = 'none';
+                appendBubble("Couldn't connect, try again.", 'asst');
+            }
+        }
+
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                const val = chatInput.value.trim();
+                if (val) sendChatMessage(val);
+                chatInput.value = '';
+            });
+        }
+
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const val = chatInput.value.trim();
+                    if (val) sendChatMessage(val);
+                    chatInput.value = '';
+                }
+            });
+        }
+    });
+    </script>
+<script>
+(function(){
+  var nav = document.querySelector('.navbar');
+  if(!nav) return;
+  var last = 0, delta = 8, navH = nav.offsetHeight;
+  window.addEventListener('scroll', function(){
+    var cur = window.scrollY;
+    if(Math.abs(cur - last) < delta) return;
+    if(cur > last && cur > navH) {
+      nav.style.transform = 'translateY(-110%)';
+    } else {
+      nav.style.transform = 'translateY(0)';
+    }
+    last = cur;
+  }, {passive: true});
+})();
+</script>
+</body>
+</html>
