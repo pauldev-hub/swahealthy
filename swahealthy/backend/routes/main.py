@@ -510,21 +510,25 @@ def wellness_chat():
     ]
     is_distressed = any(w in msg_lower for w in distress_words)
 
-    system_prompt = f"""You are MindCare, a compassionate mental wellness support assistant 
-built into SwaHealthy, a rural health app for users in West Bengal, India.
+    prompt_lines = [
+        "You are MindCare, a compassionate mental wellness support assistant",
+        "built into SwaHealthy, a rural health app for users in West Bengal, India.",
+        "",
+        "Rules you must always follow:",
+        "- You are NOT a therapist. Never diagnose. Never prescribe.",
+        "- Respond ONLY in the same language the user writes in (Bengali, Hindi, or English).",
+        "- Keep responses warm, non-clinical, and under 120 words.",
+        "- If the user seems emotionally distressed or very low, shift your response to include:",
+        "  one immediate coping tip + a gentle mention of iCall (9152987821).",
+        "- You may discuss: anxiety, depression, stress, sleep, relationships, loneliness,",
+        "  motivation, self-care, breathing techniques, and general mental wellbeing.",
+        "- If asked something unrelated to mental health, gently redirect back.",
+        "- Never use jargon. Write as a caring friend who happens to know about mental health.",
+    ]
+    if is_distressed:
+        prompt_lines.append("- The user seems distressed. Prioritise warmth and one actionable tip first.")
 
-Rules you must always follow:
-- You are NOT a therapist. Never diagnose. Never prescribe.
-- Respond ONLY in the same language the user writes in (Bengali, Hindi, or English).
-- Keep responses warm, non-clinical, and under 120 words.
-- If the user seems emotionally distressed or very low, shift your response to include:
-  one immediate coping tip + a gentle mention of iCall (9152987821).
-- You may discuss: anxiety, depression, stress, sleep, relationships, loneliness,
-  motivation, self-care, breathing techniques, and general mental wellbeing.
-- If asked something unrelated to mental health, gently redirect back.
-- Never use jargon. Write as a caring friend who happens to know about mental health.
-{"- The user seems distressed. Prioritise warmth and one actionable tip first." if is_distressed else ""}
-"""
+    system_prompt = "\n".join(prompt_lines)
 
     messages = [{"role": "system", "content": system_prompt}]
     for h in history[-6:]:
@@ -537,6 +541,9 @@ Rules you must always follow:
     try:
         from flask import current_app
         api_key = current_app.config.get('GROQ_API_KEY') or os.environ.get('GROQ_API_KEY')
+        if not api_key:
+            raise RuntimeError("GROQ_API_KEY is not configured")
+
         resp = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
@@ -544,14 +551,23 @@ Rules you must always follow:
                 "Content-Type": "application/json"
             },
             json={
-                "model": "llama3-70b-8192",
+                "model": "llama-3.3-70b-versatile",
                 "messages": messages,
                 "max_tokens": 200,
                 "temperature": 0.7
             },
             timeout=15
         )
-        reply = resp.json()['choices'][0]['message']['content'].strip()
+        resp.raise_for_status()
+        payload = resp.json()
+        choices = payload.get('choices') or []
+        if not choices:
+            raise ValueError(f"Groq response missing choices: {payload}")
+
+        message = choices[0].get('message') or {}
+        reply = (message.get('content') or "").strip()
+        if not reply:
+            raise ValueError(f"Groq response missing assistant content: {payload}")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -561,29 +577,39 @@ Rules you must always follow:
 
 @main_bp.route('/wellness/reflection', methods=['POST'])
 def wellness_reflection():
-    import requests, os
+    import requests, os, random
     from flask import current_app
     
     data = request.get_json()
     mood = data.get('mood', 'okay')
     language = data.get('language', 'en')
-
-    prompt = f"The user is feeling '{mood}' today. Write a single, short, compassionate sentence (max 15 words) reflecting on this feeling as a journal entry prompt or thought. Respond entirely in {language}. Do not use quotes."
+    
+    # Varied prompt styles to get diverse responses
+    prompt_styles = [
+        f"The user feels '{mood}' today. Suggest ONE fresh journal reflection question (not a statement) in {language}. Max 18 words. No quotes.",
+        f"Generate a warm, unique journaling prompt in {language} for someone feeling '{mood}'. Max 18 words. No quotes, no formatting.",
+        f"Write one mindful observation or question for a daily journal. The person feels '{mood}'. Respond in {language}. Max 18 words.",
+        f"Create a short, thought-provoking journal starter sentence in {language} for someone who feels '{mood}' today. Max 18 words. No quotes.",
+        f"The user's mood today is '{mood}'. Write a gentle, introspective journal prompt in {language} to help them reflect. Max 18 words. No quotes."
+    ]
+    prompt = random.choice(prompt_styles)
 
     try:
         api_key = current_app.config.get('GROQ_API_KEY') or os.environ.get('GROQ_API_KEY')
         resp = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "llama3-70b-8192", "messages": [{"role": "user", "content": prompt}], "max_tokens": 50, "temperature": 0.7},
+            json={"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": prompt}], "max_tokens": 60, "temperature": 0.95},
             timeout=10
         )
         content = resp.json()['choices'][0]['message']['content'].strip()
+        # Remove any surrounding quotes the model might add
+        content = content.strip('"').strip("'").strip()
         return jsonify({'reflection': content})
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({'reflection': "Taking it one day at a time. 💙"})
+        return jsonify({'reflection': None}), 500
 
 @main_bp.route('/wellness/analyse', methods=['POST'])
 def wellness_analyse():
@@ -622,7 +648,7 @@ Respond entirely in {language}."""
         resp = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "llama3-70b-8192", "messages": [{"role": "user", "content": prompt}], "max_tokens": 350, "temperature": 0.6},
+            json={"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": prompt}], "max_tokens": 350, "temperature": 0.6},
             timeout=20
         )
         content = resp.json()['choices'][0]['message']['content'].strip()

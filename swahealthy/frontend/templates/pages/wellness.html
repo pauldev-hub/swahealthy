@@ -172,8 +172,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .step-dot.active{background:var(--primary);width:20px;border-radius:4px}
 
 .sleep-cards-wrap{position:relative;overflow:hidden}
-.sleep-cards{display:flex;transition:transform 0.3s ease;gap:1rem}
-.sleep-card-slide{min-width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;text-align:center}
+.sleep-cards{display:flex;transition:transform 0.3s ease;gap:1rem;width:100%}
+.sleep-card-slide{flex:0 0 100%;width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;text-align:center}
 .sleep-card-emoji{font-size:2.5rem;margin-bottom:0.75rem;display:block}
 .sleep-card-title{font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:0.4rem}
 .sleep-card-text{font-size:0.85rem;color:var(--text-light);line-height:1.5}
@@ -235,22 +235,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- HERO -->
   <div class="wellness-hero">
-    <div class="hero-label">Mental Wellness</div>
-    <div class="hero-title">Your Safe Space 💙</div>
-    <div class="hero-sub">Check in daily, understand yourself better, and find support when you need it.</div>
+    <div class="hero-label" data-i18n="wellness_title">Mental Wellness</div>
+    <div class="hero-title" data-i18n="wellness_hero_title">Your Safe Space 💙</div>
+    <div class="hero-sub" data-i18n="wellness_hero_sub">Check in daily, understand yourself better, and find support when you need it.</div>
   </div>
 
   <!-- AI CHAT BAR -->
   <div class="chat-bar-wrap">
     <div class="chat-bar focused" id="chatBar" onclick="toggleChat()">
       <span class="chat-bar-icon">🧠</span>
-      <input type="text" id="chatBarInput" placeholder="How are you feeling today?" />
-      <button class="chat-send">➤</button>
+      <input type="text" id="chatBarInput" placeholder="How are you feeling today?" data-i18n-ph="chat_placeholder" />
+      <button class="chat-send" data-i18n="chat_send">➤</button>
     </div>
 
     <!-- Expanded chat panel -->
     <div class="chat-panel" id="chatPanel">
-      <div class="chat-disclaimer">⚠️ MindCare AI is not a substitute for professional help</div>
+      <div class="chat-disclaimer" data-i18n="chat_disclaimer">⚠️ MindCare AI is not a substitute for professional help</div>
       <div class="chat-messages" id="chatMessages">
         <div class="msg ai">
           <div class="msg-name">MindCare AI 🧠</div>
@@ -269,25 +269,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
       <div class="chat-input-row">
         <input type="text" placeholder="Type your message..." />
-        <button class="btn btn-primary btn-sm">Send</button>
+        <button class="btn btn-primary btn-sm" data-i18n="chat_send">Send</button>
       </div>
-      <div class="chat-close" onclick="toggleChat()">✕ Close chat</div>
+      <div class="chat-close" onclick="toggleChat()" data-i18n="chat_close">✕ Close chat</div>
     </div>
   </div>
 
   <!-- TAB BAR -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('checkin', this)">
-      <span class="tab-icon">😊</span>Check-in
+      <span class="tab-icon">😊</span><span data-i18n="tab_checkin">Check-in</span>
     </button>
     <button class="tab-btn" onclick="switchTab('assess', this)">
-      <span class="tab-icon">📋</span>Assess
+      <span class="tab-icon">📋</span><span data-i18n="tab_assess">Assess</span>
     </button>
     <button class="tab-btn" onclick="switchTab('tips', this)">
-      <span class="tab-icon">🌱</span>Tips
+      <span class="tab-icon">🌱</span><span data-i18n="tab_tips">Tips</span>
     </button>
     <button class="tab-btn" onclick="switchTab('summary', this)">
-      <span class="tab-icon">📊</span>Summary
+      <span class="tab-icon">📊</span><span data-i18n="tab_summary">Summary</span>
     </button>
   </div>
 
@@ -295,17 +295,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="tab-pane active" id="tab-checkin">
 
     <div class="card">
-      <div class="section-label">Today's Mood</div>
+      <div class="section-label" data-i18n="todays_mood">Today's Mood</div>
       <div class="mood-emojis">
-        <button class="mood-btn" onclick="selectMood(this, '😢', 'sad')"><span>😢</span><span>Sad</span></button>
-        <button class="mood-btn" onclick="selectMood(this, '😟', 'low')"><span>😟</span><span>Low</span></button>
-        <button class="mood-btn selected" onclick="selectMood(this, '😐', 'okay')"><span>😐</span><span>Okay</span></button>
-        <button class="mood-btn" onclick="selectMood(this, '🙂', 'good')"><span>🙂</span><span>Good</span></button>
-        <button class="mood-btn" onclick="selectMood(this, '😄', 'great')"><span>😄</span><span>Great</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '😢', 'sad')"><span>😢</span><span data-i18n="mood_sad">Sad</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '😟', 'low')"><span>😟</span><span data-i18n="mood_low">Low</span></button>
+        <button class="mood-btn selected" onclick="selectMood(this, '😐', 'okay')"><span>😐</span><span data-i18n="mood_okay">Okay</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '🙂', 'good')"><span>🙂</span><span data-i18n="mood_good">Good</span></button>
+        <button class="mood-btn" onclick="selectMood(this, '😄', 'great')"><span>😄</span><span data-i18n="mood_great">Great</span></button>
       </div>
       <div class="mood-response">💙 Neutral days are valid. Be kind to yourself today.</div>
       <div class="streak">🔥 4 day streak — keep it up!</div>
-      <div class="section-label">This Week</div>
+      <div class="section-label" data-i18n="this_week">This Week</div>
       <div class="week-strip">
         <div class="day-bubble"><div class="emoji-circle">😟</div><div class="day-label">Mon</div></div>
         <div class="day-bubble"><div class="emoji-circle">😐</div><div class="day-label">Tue</div></div>
@@ -318,20 +318,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <div class="card reflection-card">
-      <div class="section-label">Today's Reflection ✨</div>
+      <div class="section-label" data-i18n="reflection_title">Today's Reflection ✨</div>
       <div class="reflection-prompt">"What is one small thing that made you smile today?"</div>
-      <textarea class="reflection-input" placeholder="Write your thoughts here..." oninput="updateCharCount(this)">My morning chai and the sunlight coming through the window.</textarea>
+      <textarea class="reflection-input" data-i18n-ph="reflection_placeholder" placeholder="Write your thoughts here..." oninput="updateCharCount(this)">My morning chai and the sunlight coming through the window.</textarea>
       <div class="reflection-footer">
         <span class="char-count" id="charCount">58 characters</span>
         <div class="reflection-actions">
-          <button class="btn btn-ghost btn-sm">Skip</button>
-          <button class="btn btn-ghost btn-sm" onclick="generateReflection(this)">✨ AI</button>
-          <button class="btn btn-primary btn-sm">Save ✓</button>
+          <button class="btn btn-ghost btn-sm" data-i18n="btn_skip">Skip</button>
+          <button class="btn btn-ghost btn-sm" onclick="generateReflection(this)" data-i18n="btn_ai">✨ AI</button>
+          <button class="btn btn-primary btn-sm" data-i18n="btn_save" onclick="saveReflection()">Save ✓</button>
         </div>
       </div>
-      <div class="save-badge mt-1">✓ Reflection saved</div>
+      <div class="save-badge mt-1" data-i18n="reflection_saved">✓ Reflection saved</div>
       <div class="yesterday-reflection mt-2">
-        <div class="yesterday-label">Yesterday's reflection</div>
+        <div class="yesterday-label" data-i18n="yesterday_reflection">Yesterday's reflection</div>
         <div class="yesterday-text">"I felt grateful that my family was healthy and together."</div>
       </div>
     </div>
@@ -344,23 +344,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <!-- Assessment picker -->
     <div id="assessPicker">
       <div class="card" style="padding:0.85rem 1.1rem;margin-bottom:0.5rem">
-        <div class="section-label">Choose an Assessment</div>
-        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem">These are WHO-validated questionnaires. Your responses are private and stored only on your device.</p>
+        <div class="section-label" data-i18n="assess_choose">Choose an Assessment</div>
+        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem" data-i18n="assess_desc">These are WHO-validated questionnaires. Your responses are private and stored only on your device.</p>
       </div>
       <div class="assess-cards">
         <div class="assess-card" onclick="showQuestion()">
           <div class="assess-icon depression">😔</div>
           <div class="assess-info">
-            <div class="assess-name">PHQ-9 — Depression</div>
-            <div class="assess-meta">9 questions · ~3 minutes</div>
+            <div class="assess-name" data-i18n="assess_phq9">PHQ-9 — Depression</div>
+            <div class="assess-meta" data-i18n="assess_phq9_meta">9 questions · ~3 minutes</div>
           </div>
           <span class="assess-badge badge-purple">Depression</span>
         </div>
         <div class="assess-card">
           <div class="assess-icon anxiety">😰</div>
           <div class="assess-info">
-            <div class="assess-name">GAD-7 — Anxiety</div>
-            <div class="assess-meta">7 questions · ~2 minutes</div>
+            <div class="assess-name" data-i18n="assess_gad7">GAD-7 — Anxiety</div>
+            <div class="assess-meta" data-i18n="assess_gad7_meta">7 questions · ~2 minutes</div>
           </div>
           <span class="assess-badge badge-yellow">Anxiety</span>
         </div>
@@ -383,9 +383,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div class="q-option">Nearly every day</div>
         </div>
         <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
-          <button class="btn btn-ghost btn-sm" onclick="showPicker()">← Back</button>
-          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="startAssessment(currentAssessment)">Clear</button>
-          <button class="btn btn-primary btn-sm" style="flex:1" onclick="showResult()">Next →</button>
+          <button class="btn btn-ghost btn-sm" onclick="showPicker()" data-i18n="btn_back">← Back</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="startAssessment(currentAssessment)" data-i18n="btn_clear">Clear</button>
+          <button class="btn btn-primary btn-sm" style="flex:1" onclick="showResult()" data-i18n="btn_next">Next →</button>
         </div>
       </div>
     </div>
@@ -437,16 +437,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <!-- Breathing -->
     <div class="card breathing-card">
-      <div class="section-label">🫁 4-7-8 Breathing</div>
+      <div class="section-label" data-i18n="tips_breathing">🫁 4-7-8 Breathing</div>
       <div class="breath-circle-wrap">
         <div class="breath-circle" id="breathCircle">Breathe in...</div>
       </div>
-      <div class="breath-label">Inhale 4s · Hold 7s · Exhale 8s</div>
-      <div class="breath-sub">Repeat 4 cycles to calm your nervous system</div>
+      <div class="breath-label" data-i18n="breath_label">Inhale 4s · Hold 7s · Exhale 8s</div>
+      <div class="breath-sub" data-i18n="breath_sub">Repeat 4 cycles to calm your nervous system</div>
       <div class="cycle-count">Cycle 2 of 4</div>
       <div style="margin-top:1rem;display:flex;gap:0.5rem">
-        <button class="btn btn-primary btn-sm" style="flex:1">▶ Start Breathing</button>
-        <button class="btn btn-ghost btn-sm">⏹ Stop</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" data-i18n="breath_start">▶ Start Breathing</button>
+        <button class="btn btn-ghost btn-sm" data-i18n="breath_stop">⏹ Stop</button>
       </div>
       <!-- After 4 cycles -->
       <div style="margin-top:1rem;background:var(--sev-low-bg);border-radius:var(--r-md);padding:0.75rem;text-align:center">
@@ -461,7 +461,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <!-- Grounding -->
     <div class="card">
-      <div class="section-label">🌱 5-4-3-2-1 Grounding</div>
+      <div class="section-label" data-i18n="tips_grounding">🌱 5-4-3-2-1 Grounding</div>
       <div class="grounding-step">
         <span class="grounding-emoji">👀</span>
         <div class="grounding-title">Name 5 things you can see</div>
@@ -482,7 +482,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <!-- Sleep Tips -->
     <div class="card">
-      <div class="section-label">😴 Sleep Tips</div>
+      <div class="section-label" data-i18n="tips_sleep">😴 Sleep Tips</div>
       <div class="sleep-cards-wrap">
         <div class="sleep-cards" id="sleepCards">
           <div class="sleep-card-slide">
@@ -517,16 +517,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="card" style="text-align:center;padding:1.5rem">
       <div style="font-size:2rem;margin-bottom:0.75rem">📊</div>
-      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.4rem">Your Weekly Wellness Summary</div>
-      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem">Generated from your Check-ins, Assessments & Reflections</div>
-      <button class="btn btn-primary gen-btn btn-block" onclick="showSummary()">✨ Generate My Week</button>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.4rem" data-i18n="summary_title">Your Weekly Wellness Summary</div>
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem" data-i18n="summary_sub">Generated from your Check-ins, Assessments & Reflections</div>
+      <button class="btn btn-primary gen-btn btn-block" onclick="showSummary()" data-i18n="btn_generate_week">✨ Generate My Week</button>
     </div>
 
     <!-- Summary results (shown after generate) -->
     <div id="summaryResults" style="display:block">
 
       <div class="card">
-        <div class="section-label">Mood This Week</div>
+        <div class="section-label" data-i18n="summary_mood">Mood This Week</div>
         <div class="summary-chart">
           <div class="chart-bar-wrap"><div class="chart-emoji">😟</div><div class="chart-bar sad" style="height:30%"></div><div class="chart-day">M</div></div>
           <div class="chart-bar-wrap"><div class="chart-emoji">😐</div><div class="chart-bar okay" style="height:50%"></div><div class="chart-day">T</div></div>
@@ -540,7 +540,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
 
       <div class="card">
-        <div class="section-label">Assessments This Week</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span data-i18n="summary_assess">Assessments This Week</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearAssessments()" style="padding:0.2rem 0.5rem;font-size:0.65rem" data-i18n="btn_clear">Clear</button>
+        </div>
         <div class="timeline">
           <div class="timeline-item">
             <div class="tl-dot">PHQ</div>
@@ -560,7 +563,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
 
       <div class="card">
-        <div class="section-label">Reflection Highlight ✨</div>
+        <div class="section-label" data-i18n="summary_reflections">Reflection Highlight ✨</div>
         <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.6rem">4 reflections written this week</div>
         <div class="reflection-quote">"My morning chai and the sunlight coming through the window made me smile today."</div>
         <div style="font-size:0.72rem;color:var(--text-muted)">Friday, Mar 21</div>
@@ -570,7 +573,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         You showed up for yourself every day this week. That takes real strength. Keep going 💙
       </div>
 
-      <button class="btn btn-ghost btn-block share-btn">📋 Copy Summary to Clipboard</button>
+      <button class="btn btn-ghost btn-block share-btn" data-i18n="btn_copy_summary">📋 Copy Summary to Clipboard</button>
 
     </div>
 
@@ -578,7 +581,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- HELPLINES (always visible) -->
   <div class="card mt-3">
-    <div class="section-label">Need Help? 💙</div>
+    <div class="section-label" data-i18n="need_help">Need Help? 💙</div>
     <div class="helplines">
       <div class="helpline-card">
         <div class="helpline-icon hi-teal">📞</div>
@@ -737,19 +740,29 @@ function selectMood(btn, emoji, type) {
 function renderStreak() {
   const past = getPastDays(7);
   let streak = 0;
-  for(let i=past.length-1; i>=0; i--) {
+  // Count backwards from today
+  for(let i = past.length - 1; i >= 0; i--) {
     let d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + past[i].str);
-    if(d) streak++; else if(i !== past.length-1) break;
+    if(d) streak++; else break;
   }
-  document.querySelector('.streak').innerHTML = `🔥 ${streak} day streak — keep it up!`;
+  document.querySelector('.streak').innerHTML = `🔥 ${streak > 0 ? streak : 0} day streak — keep it up!`;
   
   const strip = document.querySelector('.week-strip');
   strip.innerHTML = past.map((p, i) => {
     let d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + p.str);
     let item = d ? JSON.parse(d) : null;
-    let emoji = item ? item.emoji : (i < past.length-1 ? '<span style="opacity:0.35">—</span>' : '+');
-    let clz = i === past.length-1 ? 'today' : '';
-    return `<div class="day-bubble"><div class="emoji-circle ${clz}" ${i===past.length-1?'onclick="document.querySelector(\'#tab-checkin\').scrollIntoView()"':''}>${emoji}</div><div class="day-label">${p.dayName}</div></div>`;
+    const isToday = i === past.length - 1;
+    let innerContent;
+    if(item) {
+      innerContent = item.emoji;
+    } else if(isToday) {
+      innerContent = '<span style="font-size:1.1rem;color:var(--primary)">+</span>';
+    } else {
+      innerContent = '<span style="opacity:0.3;font-size:0.9rem">—</span>';
+    }
+    let clz = isToday ? 'today' : '';
+    let clickHandler = isToday ? 'onclick="switchTab(\'checkin\',null);this.closest(\'.week-strip\').scrollIntoView({behavior:\'smooth\'})"' : '';
+    return `<div class="day-bubble"><div class="emoji-circle ${clz}" style="cursor:${isToday?'pointer':'default'}" title="${p.dayName}" ${clickHandler}>${innerContent}</div><div class="day-label">${p.dayName}</div></div>`;
   }).join('');
 }
 
@@ -799,21 +812,41 @@ function loadReflection() {
 // ------ TAB 2: ASSESS ------
 window.generateReflection = async function(btn) {
   const ogText = btn.textContent;
-  btn.textContent = '...';
+  btn.textContent = '⏳';
+  btn.disabled = true;
   try {
     const d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + getTodayStr());
     let mood = 'okay';
     if(d) mood = JSON.parse(d).type;
+    // Pass a random seed so backend generates varied responses each time
+    const seed = Math.random().toString(36).substring(2, 8);
     const res = await fetch('/wellness/reflection', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ mood: mood, language: currentLang })
+      body: JSON.stringify({ mood: mood, language: currentLang, seed: seed })
     });
+    if(!res.ok) throw new Error('Server error');
     const parsed = await res.json();
-    document.querySelector('.reflection-input').value = parsed.reflection;
+    if(parsed.reflection) {
+      document.querySelector('.reflection-input').value = parsed.reflection;
+      updateCharCount(document.querySelector('.reflection-input'));
+    } else {
+      throw new Error('No reflection returned');
+    }
+  } catch(e) {
+    // Show a varied local fallback
+    const fallbacks = [
+      "What is one small thing that made me smile today?",
+      "What emotion did I feel most strongly today, and why?",
+      "What is something I am grateful for right now?",
+      "What would I tell a friend who was feeling the way I feel today?",
+      "What is one thing that brought me comfort or peace today?"
+    ];
+    document.querySelector('.reflection-input').value = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     updateCharCount(document.querySelector('.reflection-input'));
-  } catch(e) {}
+  }
   btn.textContent = ogText;
+  btn.disabled = false;
 }
 
 window.startAssessment = function(type) {
@@ -997,12 +1030,22 @@ window.handoffToChat = function(severityTxt, snippet) {
 // ------ TAB 3: TIPS ------
 function startBreathing() {
   const el = document.getElementById('breathCircle');
-  document.querySelector('.breathing-card .btn-primary').style.display='none';
-  document.querySelector('.breathing-card .btn-ghost').style.display='block';
-  el.style.animation = 'breathe 19s infinite';
+  // Remove any existing CSS animation — timing is entirely JS-driven
+  el.style.animation = 'none';
+  el.style.transform = 'scale(1)';
+  document.querySelector('.breathing-card .btn-primary').style.display = 'none';
+  document.querySelector('.breathing-card .btn-ghost').style.display = 'block';
   document.querySelector('.breath-circle-wrap').style.display = 'flex';
   
+  // Clear any leftover timers
+  clearTimeout(cycleTimeout1); clearTimeout(cycleTimeout2); clearInterval(breathInterval);
   breathStage = 0; breathCycles = 0;
+  document.querySelector('.cycle-count').textContent = 'Cycle 1 of 4';
+  
+  // Remove previous well done box if any
+  const old = document.getElementById('wellDoneBox');
+  if(old) old.remove();
+  
   cycleBreath();
 }
 
@@ -1018,14 +1061,21 @@ function stopBreathing() {
 function cycleBreath() {
   const el = document.getElementById('breathCircle');
   if(!el) return;
+  
   const stages = [
-    {label:'Breathe in...', ms:4000},
-    {label:'Hold...', ms:7000},
-    {label:'Breathe out...', ms:8000}
+    {label: 'Breathe in...', ms: 4000, scale: 1.3},
+    {label: 'Hold...', ms: 7000, scale: 1.3},
+    {label: 'Breathe out...', ms: 8000, scale: 1.0}
   ];
   
-  el.textContent = stages[breathStage].label;
-  const nextMs = stages[breathStage].ms;
+  const stage = stages[breathStage];
+  el.textContent = stage.label;
+  
+  // Animate the circle scale smoothly
+  el.style.transition = `transform ${stage.ms}ms ease-in-out`;
+  el.style.transform = `scale(${stage.scale})`;
+  
+  const nextMs = stage.ms;
   breathStage++;
   
   if(breathStage >= 3) {
@@ -1033,17 +1083,23 @@ function cycleBreath() {
     breathCycles++;
     document.querySelector('.cycle-count').textContent = `Cycle ${breathCycles} of 4`;
     if(breathCycles >= 4) {
-      stopBreathing();
-      document.querySelector('.cycle-count').insertAdjacentHTML('afterend', `
-        <div style="margin-top:1rem;background:var(--sev-low-bg);border-radius:var(--r-md);padding:0.75rem;text-align:center" id="wellDoneBox">
-          <div style="font-size:0.88rem;font-weight:600;color:var(--sev-low);margin-bottom:0.5rem">Well done 💙 How do you feel now?</div>
-          <div style="display:flex;justify-content:center;gap:0.75rem;font-size:1.5rem">
-            <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">😐</span>
-            <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">🙂</span>
-            <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">😄</span>
-          </div>
-        </div>
-      `);
+      // Wait for exhale to complete before showing well done
+      cycleTimeout1 = setTimeout(() => {
+        stopBreathing();
+        const old = document.getElementById('wellDoneBox');
+        if(!old) {
+          document.querySelector('.cycle-count').insertAdjacentHTML('afterend', `
+            <div style="margin-top:1rem;background:var(--sev-low-bg);border-radius:var(--r-md);padding:0.75rem;text-align:center" id="wellDoneBox">
+              <div style="font-size:0.88rem;font-weight:600;color:var(--sev-low);margin-bottom:0.5rem">Well done 💙 How do you feel now?</div>
+              <div style="display:flex;justify-content:center;gap:0.75rem;font-size:1.5rem">
+                <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">😐</span>
+                <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">🙂</span>
+                <span style="cursor:pointer" onclick="document.getElementById('wellDoneBox').remove()">😄</span>
+              </div>
+            </div>
+          `);
+        }
+      }, nextMs);
       return;
     }
   }
@@ -1132,7 +1188,6 @@ function renderSummary() {
   const past = getPastDays(7);
   let totalScore = 0, count = 0;
   
-  // Render Chart
   const chart = document.querySelector('.summary-chart');
   chart.innerHTML = past.map(p => {
     let d = localStorage.getItem(STORAGE_PREFIX + 'mood_' + p.str);
@@ -1146,8 +1201,17 @@ function renderSummary() {
        else if(m.type==='good') { h='75%'; cls='happy'; totalScore+=4; }
        else if(m.type==='great') { h='95%'; cls='happy'; totalScore+=5; }
     }
-    return `<div class="chart-bar-wrap"><div class="chart-emoji">${emoji}</div><div class="chart-bar ${cls}" style="height:0%" data-h="${h}"></div><div class="chart-day">${p.dayName}</div></div>`;
+    return `<div class="chart-bar-wrap"><div class="chart-emoji">${emoji}</div><div class="chart-bar ${cls}" style="height:0%;transition:height 0.6s ease" data-h="${h}"></div><div class="chart-day">${p.dayName}</div></div>`;
   }).join('');
+  
+  // Trigger bar animations immediately (don't wait for showSummary click)
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.chart-bar').forEach((b, i) => {
+        setTimeout(() => { b.style.height = b.dataset.h; }, i * 80);
+      });
+    }, 50);
+  });
   
   let avg = count > 0 ? (totalScore / count) : 0;
   let twText = "No check-ins yet. Start prioritizing yourself 💙";
@@ -1192,7 +1256,20 @@ function renderSummary() {
     document.querySelector('.reflection-quote').previousElementSibling.textContent = `${refCount} reflections written recently.`;
   } else {
     document.querySelector('.reflection-quote').textContent = "No reflections yet. Start with today's Check-in.";
+    document.querySelector('.reflection-quote').nextElementSibling.textContent = "";
+    document.querySelector('.reflection-quote').previousElementSibling.textContent = "0 reflections written this week";
   }
+}
+
+window.clearAssessments = function() {
+  if(!confirm("Are you sure you want to clear your assessment history?")) return;
+  const keysToRemove = [];
+  for(let i=0; i<localStorage.length; i++) {
+    let key = localStorage.key(i);
+    if(key.includes(STORAGE_PREFIX + 'assessment_')) keysToRemove.push(key);
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  renderSummary();
 }
 
 // ------ CHAT / AI LOGIC ------
@@ -1222,7 +1299,8 @@ window.sendMsg = async function() {
     const res = await fetch('/wellness/chat', {
        method: 'POST',
        headers: {'Content-Type': 'application/json'},
-       body: JSON.stringify({ message: txt, language: currentLang, history: chatHistory.slice(-6) })
+       // Send only the PREVIOUS history (before the current user msg) to avoid duplicate roles
+       body: JSON.stringify({ message: txt, language: currentLang, history: chatHistory.slice(0, -1).slice(-6) })
     });
     const parsed = await res.json();
     typing.style.display = 'none';

@@ -18,8 +18,6 @@
             <h3 data-i18n="visible_symptom">Have a visible symptom?</h3>
             <p style="margin-bottom: 15px; color: var(--text-light);" data-i18n="ai_photo_cta">Try our new dedicated AI Photo Analysis tool for instant visual assessment.</p>
             <a href="/ai-analysis" class="btn btn-primary" style="display: inline-block;" data-i18n="try_ai_analysis">Try AI Analysis</a>
-        </div>
-
         <div class="card result-card">
             <div class="result-header">
                 <div>
@@ -27,16 +25,6 @@
                     <h1 id="res-condition" class="condition-title">Condition Name</h1>
                 </div>
                 <div id="res-severity" class="severity-badge low">LOW<br>SEVERITY</div>
-            </div>
-
-            <!-- Quick Actions — Medicines + Save Summary at the top -->
-            <div class="results-quick-actions">
-                <button id="medicines-btn" class="quick-action-btn medicines-btn">
-                    💊 <span data-i18n="medicines">Medicines</span>
-                </button>
-                <a href="#" id="save-summary-widget" class="quick-action-btn save-btn" style="display: none;">
-                    📄 <span data-i18n="save_summary">Save Summary</span>
-                </a>
             </div>
 
             <p class="result-description" id="res-desc" data-i18n="result_description">
@@ -54,15 +42,8 @@
             <div id="res-emergency" class="alert-box emergency-alert" style="display: none;">
                 <div class="alert-icon">⚠️</div>
                 <div class="alert-content">
-                    <strong data-i18n="emergency">EMERGENCY</strong>
+                    <strong>EMERGENCY</strong>
                     <p id="emergency-text"></p>
-                </div>
-            </div>
-
-            <div id="res-duration-container" class="alert-box duration-alert" style="display: none; background: #e3f2fd; border-left-color: #2196f3; color: #0d47a1;">
-                <div class="alert-icon">⏳</div>
-                <div class="alert-content">
-                    <p id="res-duration-text" style="margin: 0; font-weight: 500;"></p>
                 </div>
             </div>
 
@@ -75,10 +56,10 @@
                 </div>
             </div>
 
-            <!-- 2-tab row: Jan Aushadhi + Nearby Facilities only -->
             <div class="med-tab-row">
                 <button id="tab-aushadhi" class="med-tab active" data-i18n="nearby_aushadhi">Nearby Jan Aushadhi</button>
                 <button id="tab-facilities" class="med-tab" data-i18n="nearby_facilities">Nearby Facilities</button>
+                <button id="tab-medicines" class="med-tab" data-i18n="recommended_medicines">Recommended Medicines</button>
             </div>
 
             <div id="tab-content-aushadhi" class="tab-content active">
@@ -90,7 +71,7 @@
                     <p class="medicines-subtitle" data-i18n="aushadhi_subtitle">Jan Aushadhi centers stocking OTC medicines for your condition</p>
                     <div id="medicines-count" class="medicines-count"></div>
                     <div id="medicines-list" class="medicines-list"></div>
-                    <div id="medicines-empty" class="medicines-empty" style="display: none;" data-i18n="no_aushadhi_found">No nearby Jan Aushadhi facilities were found stocking your condition's OTC medicines.</div>
+                    <div id="medicines-empty" class="medicines-empty" style="display: none;">No nearby Jan Aushadhi facilities were found stocking your condition’s OTC medicines.</div>
                 </div>
             </div>
 
@@ -98,7 +79,7 @@
                 <div class="card facilities-card">
                     <div class="facilities-header">
                         <span class="loc-icon">📍</span>
-                        <h3 data-i18n="nearby_facilities">Nearby Facilities</h3>
+                        <h3>Nearby Facilities</h3>
                         <span id="loc-status" class="loc-status" data-i18n="detecting">Detecting...</span>
                     </div>
                     <div id="fac-map" class="map-container"></div>
@@ -108,10 +89,26 @@
                 </div>
             </div>
 
+            <div id="tab-content-medicines" class="tab-content">
+                <div class="card medicines-required-card">
+                    <div class="medications-head"><span class="med-icon">💊</span><h3>Recommended OTC Medicines</h3></div>
+                    <div id="recommended-meds" class="recommended-meds"></div>
+                </div>
+            </div>
 
-
+            <!-- Doctor Booking CTA -->
+            <div id="doctor-booking-cta" style="display: none;">
+                <a href="/appointments" class="doctor-cta">
+                    <div class="cta-icon">👨‍⚕️</div>
+                    <div class="cta-text">
+                        <strong id="cta-title">Need a Consultation?</strong>
+                        <p id="cta-msg">Book an appointment with a specialist now.</p>
+                    </div>
+                </a>
+            </div>
+            
             <div id="alternates-section" class="alternates-section" style="display: none;">
-                <h3 data-i18n="alternative_possibilities">Alternative Possibilities</h3>
+                <h3>Alternative Possibilities</h3>
                 <div id="res-alternates" class="alternates-list">
                     <!-- alternate cards injected -->
                 </div>
@@ -121,7 +118,6 @@
         <div class="disclaimer-block">
             <p class="disclaimer-title" data-i18n="medical_disclaimer">MEDICAL DISCLAIMER</p>
             <p class="disclaimer-text" data-i18n="medical_disclaimer_text">
-                The information provided by SwaHealthy is for educational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.
             </p>
         </div>
 
@@ -130,7 +126,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 History
             </a>
-            <a href="/" class="btn btn-primary btn-icon" id="check-again-btn" data-i18n="check_again_button">
+            <a href="/" class="btn btn-primary btn-icon" data-i18n="check_again_button">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 Check Again
             </a>
@@ -138,63 +134,4 @@
 
     </div>
 </div>
-
-<div id="medicines-overlay"></div>
-<div id="medicines-drawer">
-  <div class="drawer-handle"></div>
-  <h3 data-i18n="recommended_medicines">💊 Recommended Medicines</h3>
-  <div id="drawer-medicines-list">
-    <!-- medicines injected here by JS -->
-  </div>
-  <p class="drawer-disclaimer">These are OTC suggestions only. Consult a pharmacist before use.</p>
-  <button class="btn btn-block btn-light mt-2">✕ Close</button>
-</div>
-
-<style>
-/* Quick action buttons row — top of results */
-.results-quick-actions {
-    display: flex;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    flex-wrap: wrap;
-}
-
-.quick-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0.6rem 1.15rem;
-    border-radius: 50px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    border: none;
-    transition: all 0.2s ease;
-    font-family: var(--font);
-}
-
-.quick-action-btn.medicines-btn {
-    background: linear-gradient(135deg, #0D9488, #2DD4BF);
-    color: #fff;
-    box-shadow: 0 3px 12px rgba(13, 148, 136, .3);
-}
-
-.quick-action-btn.medicines-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 18px rgba(13, 148, 136, .5);
-}
-
-.quick-action-btn.save-btn {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: #fff;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-}
-
-.quick-action-btn.save-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
-    color: #fff;
-}
-</style>
 {% endblock %}
