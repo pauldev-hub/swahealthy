@@ -42,3 +42,6 @@ mental.html
 # Build artifacts
 dist/
 build/
+
+mental.html
+ui_redesign/
