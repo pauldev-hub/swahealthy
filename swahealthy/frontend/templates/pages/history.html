@@ -4,7 +4,7 @@
 <div class="page-container">
     <div class="page-header history-header">
         <div class="title-action">
-            <a href="/" class="back-link" aria-label="Back">
+            <a href="/" class="back-link" data-i18n-aria-label="back" aria-label="Back">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </a>
             <h1 data-i18n="your_history">Your History</h1>
@@ -35,7 +35,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l6 6"></path><path d="M4 14l6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="M22 22l-5-10-5 10"></path><path d="M14 18h6"></path></svg>
                         <span data-i18n="language_label">Language:</span> {% if log.language == 'en' %}English{% elif log.language == 'bn' %}Bangla{% else %}Hindi{% endif %}
                     </span>
-                    <a href="/summary/{{ log.log_id }}?lang={{ log.language }}" class="view-details-link">📄 View Summary →</a>
+                    <a href="/summary/{{ log.log_id }}?lang={{ log.language }}" class="view-details-link" data-i18n="view_summary">📄 View Summary →</a>
                 </div>
             </div>
             {% endfor %}

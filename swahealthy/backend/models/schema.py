@@ -483,3 +483,123 @@ def reseed_medicines(cursor):
                 (fac_id, m_id)
             )
 
+
+def reseed_medicines(cursor):
+    """Strictly enforce OTC medicine mappings by wiping and reseeding."""
+    cursor.execute("DELETE FROM facility_medicines")
+    cursor.execute("DELETE FROM medicines")
+
+    def normalize_condition_name(name):
+        cleaned = ''.join(ch.lower() if ch.isalnum() else ' ' for ch in (name or ''))
+        return ' '.join(cleaned.split())
+
+    medicine_map = {
+        'common cold': ['Cetirizine 10mg', 'Guaifenesin Syrup', 'Vitamin C 500mg', 'Povidone Iodine Gargle', 'Strepsils'],
+        'influenza': ['Paracetamol 500mg', 'Cetirizine 10mg', 'Guaifenesin Syrup', 'Vitamin C 500mg'],
+        'dengue risk': ['Paracetamol 500mg', 'ORS Sachets'],
+        'malaria risk': ['Paracetamol 500mg', 'ORS Sachets'],
+        'typhoid risk': ['Paracetamol 500mg', 'ORS Sachets'],
+        'food poisoning': ['ORS Sachets', 'Activated Charcoal', 'Domperidone 10mg'],
+        'gastroenteritis': ['ORS Sachets', 'Loperamide 2mg', 'Zinc Sulfate 20mg'],
+        'dehydration': ['ORS Sachets', 'Electrolyte Powder'],
+        'gastritis': ['Antacid (Gelusil)', 'Domperidone 10mg'],
+        'diarrhea': ['ORS Sachets', 'Loperamide 2mg', 'Zinc Sulfate 20mg'],
+        'skin allergy': ['Cetirizine 10mg', 'Calamine Lotion', 'Hydrocortisone 1% Cream'],
+        'fungal infection': ['Clotrimazole Cream'],
+        'scabies': ['Clotrimazole Cream', 'Calamine Lotion', 'Hydrocortisone 1% Cream'],
+        'conjunctivitis': ['Sodium Chloride Eye Drops', 'Chloramphenicol Eye Drops'],
+        'ear infection': ['Otocain Ear Drops', 'Paracetamol 500mg'],
+        'asthma attack': ['Salbutamol Inhaler'],
+        'heat stroke': ['ORS Sachets', 'Electrolyte Powder'],
+        'migraine': ['Paracetamol 500mg', 'Ibuprofen 400mg'],
+        'tension headache': ['Paracetamol 500mg', 'Ibuprofen 400mg'],
+        'jaundice risk': ['Vitamin C 500mg', 'ORS Sachets'],
+        'uti': ['Potassium Citrate Sachets', 'Cranberry Extract Tablet'],
+        'urinary tract infection': ['Potassium Citrate Sachets', 'Cranberry Extract Tablet'],
+        'chest infection': ['Guaifenesin Syrup', 'Paracetamol 500mg'],
+        'wound skin infection': ['Betadine Ointment', 'Paracetamol 500mg'],
+        'sore throat': ['Povidone Iodine Gargle', 'Strepsils'],
+        'general illness': ['Paracetamol 500mg', 'Vitamin C 500mg'],
+        'anaemia': ['Iron + Folic Acid Tablets', 'Vitamin C 500mg'],
+        'anaemia risk': ['Iron + Folic Acid Tablets', 'Vitamin C 500mg'],
+        'anemia': ['Iron + Folic Acid Tablets', 'Vitamin C 500mg'],
+        'anemia risk': ['Iron + Folic Acid Tablets', 'Vitamin C 500mg'],
+        'hypertension risk': ['Vitamin C 500mg'],
+        'chickenpox': ['Calamine Lotion', 'Paracetamol 500mg', 'Vitamin C 500mg'],
+        'chickenpox risk': ['Calamine Lotion', 'Paracetamol 500mg', 'Vitamin C 500mg'],
+    }
+
+    medicine_aliases = {
+        'pink eye': 'conjunctivitis',
+        'conjunctivitis pink eye': 'conjunctivitis',
+        'urinary infection': 'urinary tract infection',
+    }
+
+    medicine_translations = {
+        'Cetirizine 10mg': ('à¦¸à§‡à¦Ÿà¦¿à¦°à¦¿à¦œà¦¿à¦¨ à§§à§¦à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤¸à¥‡à¤Ÿà¥€à¤°à¤¿à¤œà¤¼à¥€à¤¨ 10mg'),
+        'Guaifenesin syrup': ('à¦—à§à¦«à§‡à¦¨à§‡à¦¸à¦¿à¦¨ à¦¸à¦¿à¦°à¦¾à¦ª', 'à¤—à¥à¤‡à¤«à¤¼à¥‡à¤¨à¥‡à¤¸à¤¿à¤¨ à¤¸à¤¿à¤°à¤ª'),
+        'Guaifenesin Syrup': ('à¦—à§à¦«à§‡à¦¨à§‡à¦¸à¦¿à¦¨ à¦¸à¦¿à¦°à¦¾à¦ª', 'à¤—à¥à¤‡à¤«à¤¼à¥‡à¤¨à¥‡à¤¸à¤¿à¤¨ à¤¸à¤¿à¤°à¤ª'),
+        'Vitamin C 500mg': ('à¦­à¦¿à¦Ÿà¦¾à¦®à¦¿à¦¨ à¦¸à¦¿ à§«à§¦à§¦à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤µà¤¿à¤Ÿà¤¾à¤®à¤¿à¤¨ à¤¸à¥€ 500mg'),
+        'Paracetamol 500mg': ('à¦ªà§à¦¯à¦¾à¦°à¦¾à¦¸à¦¿à¦Ÿà¦¾à¦®à¦² à§«à§¦à§¦à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤ªà¥ˆà¤°à¤¾à¤¸à¤¿à¤Ÿà¤¾à¤®à¥‹à¤² 500mg'),
+        'ORS Sachets': ('à¦“à¦†à¦°à¦à¦¸ à¦¸à§à¦¯à¦¾à¦¸à§‡', 'à¤“à¤†à¤°à¤à¤¸ à¤ªà¤¾à¤‰à¤š'),
+        'Activated Charcoal': ('à¦…à§à¦¯à¦¾à¦•à§à¦Ÿà¦¿à¦­à§‡à¦Ÿà§‡à¦¡ à¦šà¦¾à¦°à¦•à§‹à¦²', 'à¤à¤•à¥à¤Ÿà¤¿à¤µà¥‡à¤Ÿà¥‡à¤¡ à¤šà¤¾à¤°à¤•à¥‹à¤²'),
+        'Domperidone 10mg': ('à¦¡à¦®à¦ªà§‡à¦°à¦¿à¦¡à¦¨ à§§à§¦à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤¡à¥‹à¤®à¥à¤ªà¥‡à¤°à¤¿à¤¡à¥‹à¤¨ 10mg'),
+        'Electrolyte Powder': ('à¦‡à¦²à§‡à¦•à§à¦Ÿà§à¦°à§‹à¦²à¦¾à¦‡à¦Ÿ à¦ªà¦¾à¦‰à¦¡à¦¾à¦°', 'à¤‡à¤²à¥‡à¤•à¥à¤Ÿà¥à¤°à¥‹à¤²à¤¾à¤‡à¤Ÿ à¤ªà¤¾à¤‰à¤¡à¤°'),
+        'Antacid (Gelusil)': ('à¦…à§à¦¯à¦¾à¦¨à§à¦Ÿà¦¾à¦¸à¦¿à¦¡ (à¦œà§‡à¦²à§à¦¸à¦¿à¦²)', 'à¤à¤‚à¤Ÿà¤¾à¤¸à¤¿à¤¡ (à¤œà¥‡à¤²à¥à¤¸à¤¿à¤²)'),
+        'Loperamide 2mg': ('à¦²à§‹à¦ªà§‡à¦°à¦¾à¦®à¦¾à¦‡à¦¡ à§¨à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤²à¥‹à¤ªà¤°à¤¾à¤®à¤¾à¤‡à¤¡ 2mg'),
+        'Zinc Sulfate 20mg': ('à¦œà¦¿à¦™à§à¦• à¦¸à¦¾à¦²à¦«à§‡à¦Ÿ à§¨à§¦à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤œà¤¿à¤‚à¤• à¤¸à¤²à¥à¤«à¥‡à¤Ÿ 20mg'),
+        'Calamine Lotion': ('à¦•à§à¦¯à¦¾à¦²à¦¾à¦®à¦¾à¦‡à¦¨ à¦²à§‹à¦¶à¦¨', 'à¤•à¥ˆà¤²à¤¾à¤®à¤¾à¤‡à¤¨ à¤²à¥‹à¤¶à¤¨'),
+        'Hydrocortisone 1% Cream': ('à¦¹à¦¾à¦‡à¦¡à§à¦°à§‹à¦•à¦°à§à¦Ÿà¦¿à¦¸à§‹à¦¨ à§§% à¦•à§à¦°à¦¿à¦®', 'à¤¹à¤¾à¤‡à¤¡à¥à¤°à¥‹à¤•à¤¾à¤°à¥à¤Ÿà¤¿à¤¸à¥‹à¤¨ 1% à¤•à¥à¤°à¥€à¤®'),
+        'Sodium Chloride Eye Drops': ('à¦¸à§à¦¯à¦¾à¦²à¦¾à¦‡à¦¨ à¦†à¦‡ à¦¡à§à¦°à¦ª', 'à¤¸à¥‡à¤²à¤¾à¤‡à¤¨ à¤†à¤ˆ à¤¡à¥à¤°à¥‰à¤ª'),
+        'Chloramphenicol Eye Drops': ('à¦•à§à¦²à§‹à¦°à¦¾à¦®à¦«à§‡à¦¨à¦¿à¦•à¦² à¦†à¦‡ à¦¡à§à¦°à¦ª', 'à¤•à¥à¤²à¥‹à¤°à¥ˆà¤®à¥à¤«à¥‡à¤¨à¤¿à¤•à¥‰à¤² à¤†à¤ˆ à¤¡à¥à¤°à¥‰à¤ª'),
+        'Otocain Ear Drops': ('à¦…à¦Ÿà§‹à¦•à§‡à¦¨ à¦‡à¦¯à¦¼à¦¾à¦° à¦¡à§à¦°à¦ª', 'à¤“à¤Ÿà¥‹à¤•à¥‡à¤¨ à¤ˆà¤¯à¤° à¤¡à¥à¤°à¥‰à¤ª'),
+        'Salbutamol Inhaler': ('à¦¸à¦¾à¦²à¦¬à¦¿à¦‰à¦Ÿà¦¾à¦®à¦² à¦‡à¦¨à¦¹à§‡à¦²à¦¾à¦°', 'à¤¸à¤¾à¤²à¤¬à¥à¤Ÿà¤¾à¤®à¥‹à¤² à¤‡à¤¨à¥à¤¹à¥‡à¤²à¤°'),
+        'Ibuprofen 400mg': ('à¦†à¦‡à¦¬à§à¦ªà§à¦°à§‹à¦«à§‡à¦¨ à§ªà§¦à§¦à¦®à¦¿à¦—à§à¦°à¦¾', 'à¤‡à¤¬à¥à¤ªà¥à¤°à¥‹à¤«à¥‡à¤¨ 400mg'),
+        'Potassium Citrate Sachets': ('à¦ªà¦Ÿà¦¾à¦¸à¦¿à¦¯à¦¼à¦¾à¦® à¦¸à¦¿à¦Ÿà§à¦°à§‡à¦Ÿ à¦¸à§à¦¯à¦¾à¦¸à§‡', 'à¤ªà¥‹à¤Ÿà¥‡à¤¶à¤¿à¤¯à¤® à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¥‡à¤Ÿ à¤ªà¤¾à¤‰à¤š'),
+        'Cranberry Extract Tablet': ('à¦•à§à¦°à§à¦¯à¦¾à¦¨à¦¬à§‡à¦°à¦¿ à¦¸à¦¾à¦°à¦¾à¦‚à¦¶à§‡à¦° à¦Ÿà§à¦¯à¦¾à¦¬à¦²à§‡à¦Ÿ', 'à¤•à¥à¤°à¥ˆà¤¨à¤¬à¥‡à¤°à¥€ à¤…à¤°à¥à¤• à¤Ÿà¥ˆà¤¬à¤²à¥‡à¤Ÿ'),
+        'Clotrimazole Cream': ('à¦•à§à¦²à§‹à¦Ÿà§à¦°à¦¾à¦‡à¦®à¦¾à¦œà§‹à¦² à¦•à§à¦°à¦¿à¦®', 'à¤•à¥à¤²à¥‹à¤Ÿà¥à¤°à¤¿à¤®à¥‡à¤œà¤¼à¥‹à¤² à¤•à¥à¤°à¥€à¤®'),
+        'Betadine Ointment': ('à¦¬à¦¿à¦Ÿà¦¾à¦¦à¦¿à¦¨ à¦®à¦²à¦®', 'à¤¬à¥€à¤Ÿà¤¾à¤¡à¥€à¤¨ à¤®à¤²à¤¹à¤®'),
+        'Povidone Iodine Gargle': ('à¦ªà§‹à¦­à¦¿à¦¡à§‹à¦¨ à¦†à¦¯à¦¼à§‹à¦¡à¦¿à¦¨ à¦—à¦¾à¦°à§à¦—à¦²', 'à¤ªà¥‹à¤µà¤¿à¤¡à¥‹à¤¨ à¤†à¤¯à¥‹à¤¡à¥€à¤¨ à¤—à¤°à¤¾à¤°à¥‡'),
+        'Strepsils': ('à¦¸à§à¦Ÿà§à¦°à§‡à¦ªà¦¸à¦¿à¦²à¦¸', 'à¤¸à¥à¤Ÿà¥à¤°à¥‡à¤ªà¥à¤¸à¤¿à¤²à¥à¤¸'),
+        'Iron + Folic Acid Tablets': ('à¦†à¦¯à¦¼à¦°à¦¨ + à¦«à¦²à¦¿à¦• à¦…à§à¦¯à¦¾à¦¸à¦¿à¦¡ à¦Ÿà§à¦¯à¦¾à¦¬à¦²à§‡à¦Ÿ', 'à¤†à¤¯à¤°à¤¨ + à¤«à¥‹à¤²à¤¿à¤• à¤à¤¸à¤¿à¤¡ à¤Ÿà¥ˆà¤¬à¤²à¥‡à¤Ÿ'),
+    }
+
+    cursor.execute("SELECT condition_id, name_en FROM conditions")
+    cond_rows = cursor.fetchall()
+    new_med_ids = []
+
+    for row in cond_rows:
+        normalized_name = normalize_condition_name(row['name_en'])
+        matched_key = medicine_aliases.get(normalized_name, normalized_name)
+
+        if matched_key not in medicine_map:
+            for key in medicine_map.keys():
+                if key in normalized_name or normalized_name in key:
+                    matched_key = key
+                    break
+
+        meds = medicine_map.get(matched_key)
+        if not meds:
+            continue
+
+        for medicine_name in meds:
+            name_bn, name_hi = medicine_translations.get(medicine_name, (medicine_name, medicine_name))
+            cursor.execute(
+                """
+                    INSERT INTO medicines (condition_id, name_en, name_bn, name_hi, otc_available)
+                    VALUES (?, ?, ?, ?, 1)
+                """,
+                (row['condition_id'], medicine_name, name_bn, name_hi),
+            )
+            new_med_ids.append(cursor.lastrowid)
+
+    cursor.execute("SELECT facility_id FROM facilities WHERE type IN ('Jan Aushadhi', 'Pharmacy')")
+    pharma_facs = [r['facility_id'] for r in cursor.fetchall()]
+
+    for fac_id in pharma_facs:
+        for med_id in new_med_ids:
+            cursor.execute(
+                "INSERT OR IGNORE INTO facility_medicines (facility_id, medicine_id) VALUES (?, ?)",
+                (fac_id, med_id),
+            )
+

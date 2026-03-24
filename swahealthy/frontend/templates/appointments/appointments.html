@@ -14,24 +14,24 @@
 
     <!-- Tabs -->
     <div class="appt-tabs">
-        <button class="appt-tab-btn active" data-tab="book" id="tab-book-btn" data-i18n="book_appointment">📋 Book Appointment</button>
-        <button class="appt-tab-btn" data-tab="my" id="tab-my-btn" data-i18n="my_appointments">📂 My Appointments <span id="my-apps-badge" style="background:var(--primary);color:#fff;border-radius:50px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:5px;display:none;">0</span></button>
+        <button type="button" class="appt-tab-btn active" data-tab="book" id="tab-book-btn" data-i18n="book_appointment">📋 Book Appointment</button>
+        <button type="button" class="appt-tab-btn" data-tab="my" id="tab-my-btn" data-i18n="my_appointments">📂 My Appointments <span id="my-apps-badge" style="background:var(--primary);color:#fff;border-radius:50px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:5px;display:none;">0</span></button>
     </div>
 
     <!-- Book Tab -->
     <div class="appt-tab-pane active" id="book-tab">
         <div class="category-filter-wrap">
           <div class="category-filter" id="categoryFilter">
-            <button class="cat-pill active" data-cat="All">All</button>
-            <button class="cat-pill" data-cat="General Physician">🩺 General</button>
-            <button class="cat-pill" data-cat="Cardiologist">❤️ Cardio</button>
-            <button class="cat-pill" data-cat="Neurologist">🧠 Neuro</button>
-            <button class="cat-pill" data-cat="Pulmonologist">🫁 Pulmo</button>
-            <button class="cat-pill" data-cat="Orthopedist">🦴 Ortho</button>
-            <button class="cat-pill" data-cat="Dermatologist">✨ Derma</button>
-            <button class="cat-pill" data-cat="Gynecologist">👩‍⚕️ Gynae</button>
-            <button class="cat-pill" data-cat="Pediatrician">👶 Pedia</button>
-            <button class="cat-pill" data-cat="ENT Specialist">👂 ENT</button>
+            <button type="button" class="cat-pill active" data-cat="All">All</button>
+            <button type="button" class="cat-pill" data-cat="General Physician">🩺 General</button>
+            <button type="button" class="cat-pill" data-cat="Cardiologist">❤️ Cardio</button>
+            <button type="button" class="cat-pill" data-cat="Neurologist">🧠 Neuro</button>
+            <button type="button" class="cat-pill" data-cat="Pulmonologist">🫁 Pulmo</button>
+            <button type="button" class="cat-pill" data-cat="Orthopedist">🦴 Ortho</button>
+            <button type="button" class="cat-pill" data-cat="Dermatologist">✨ Derma</button>
+            <button type="button" class="cat-pill" data-cat="Gynecologist">👩‍⚕️ Gynae</button>
+            <button type="button" class="cat-pill" data-cat="Pediatrician">👶 Pedia</button>
+            <button type="button" class="cat-pill" data-cat="ENT Specialist">👂 ENT</button>
           </div>
         </div>
         <div class="doc-grid" id="docGrid"></div>
@@ -48,9 +48,9 @@
             <div id="my-apps-list"></div>
             <div id="my-apps-empty" style="display:none; text-align:center; padding: 3rem 1rem;">
                 <div style="font-size:3rem; margin-bottom:1rem;">📅</div>
-                <h3 style="color:var(--text); margin-bottom:0.5rem;">No appointments yet</h3>
-                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">You haven't booked any consultations.</p>
-                <button class="btn btn-primary" onclick="document.getElementById('tab-book-btn').click()">Book an Appointment</button>
+                <h3 style="color:var(--text); margin-bottom:0.5rem;" data-i18n="no_appointments_yet">No appointments yet</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;" data-i18n="no_appointments_subtitle">You haven't booked any consultations.</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('tab-book-btn').click()" data-i18n="book_an_appointment">Book an Appointment</button>
             </div>
         </div>
     </div>
@@ -113,7 +113,7 @@ document.querySelectorAll('.appt-doc-avatar[data-name]').forEach(el => {
 
 
 
-<div class="sos-overlay" id="docModal" style="display:none; justify-content:center; align-items:flex-end;">
+<div class="sos-overlay" id="docModal" style="display:none; justify-content:center; align-items:center;" onclick="handleDocModalBgClick(event)">
   <div class="doc-modal-card" id="docModalCard">
     <div class="doc-modal-header">
       <div class="doc-modal-avatar" id="modalAvatar"></div>
@@ -122,22 +122,22 @@ document.querySelectorAll('.appt-doc-avatar[data-name]').forEach(el => {
         <h2 class="doc-modal-name" id="modalName"></h2>
         <p class="doc-modal-creds" id="modalCreds"></p>
       </div>
-      <button class="doc-modal-close" onclick="closeDocModal()">✕</button>
+      <button type="button" class="doc-modal-close" onclick="closeDocModal()">✕</button>
     </div>
 
     <div class="doc-stats-row" id="modalStats"></div>
 
     <div class="doc-modal-tabs">
-      <button class="doc-mtab active" data-tab="about">About</button>
-      <button class="doc-mtab" data-tab="availability">Availability</button>
-      <button class="doc-mtab" data-tab="fees">Fees</button>
-      <button class="doc-mtab" data-tab="reviews">Reviews</button>
+      <button type="button" class="doc-mtab active" data-tab="about" data-i18n="about">About</button>
+      <button type="button" class="doc-mtab" data-tab="availability" data-i18n="availability">Availability</button>
+      <button type="button" class="doc-mtab" data-tab="fees" data-i18n="fees">Fees</button>
+      <button type="button" class="doc-mtab" data-tab="reviews" data-i18n="reviews">Reviews</button>
     </div>
 
     <div class="doc-mtab-content" id="modalTabContent"></div>
 
     <div class="doc-modal-footer">
-      <button class="btn btn-primary btn-block" onclick="requestAppointment()">
+      <button type="button" class="btn btn-primary btn-block" onclick="requestAppointment()" data-i18n="request_appointment">
         Request Appointment
       </button>
     </div>
@@ -704,9 +704,17 @@ let currentDoc = null;
 let selectedBookingDate = null;
 let selectedBookingTime = null;
 
+function promoteAppointmentModalToBody() {
+    const modal = document.getElementById('docModal');
+    if (modal && modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+    }
+}
+
 function openDoctorModal(id) {
     const doc = DOCTORS.find(d => d.id === parseInt(id, 10));
     if (!doc) return;
+    promoteAppointmentModalToBody();
     currentDoc = doc;
     selectedBookingDate = null;
     selectedBookingTime = null;
@@ -721,9 +729,9 @@ function openDoctorModal(id) {
     document.getElementById('modalCreds').textContent = doc.credentials;
 
     document.getElementById('modalStats').innerHTML = `
-      <div class="doc-stat-pill"><div class="doc-stat-val">🗓️ ${doc.experience}</div><div class="doc-stat-label">Experience</div></div>
-      <div class="doc-stat-pill"><div class="doc-stat-val">⭐ ${doc.rating}</div><div class="doc-stat-label">Rating</div></div>
-      <div class="doc-stat-pill"><div class="doc-stat-val">👥 ${doc.patients}</div><div class="doc-stat-label">Patients</div></div>
+      <div class="doc-stat-pill"><div class="doc-stat-val">🗓️ ${doc.experience}</div><div class="doc-stat-label">${t('experience_label') || 'Experience'}</div></div>
+      <div class="doc-stat-pill"><div class="doc-stat-val">⭐ ${doc.rating}</div><div class="doc-stat-label">${t('rating_label') || 'Rating'}</div></div>
+      <div class="doc-stat-pill"><div class="doc-stat-val">👥 ${doc.patients}</div><div class="doc-stat-label">${t('patients_label') || 'Patients'}</div></div>
     `;
 
     document.querySelectorAll('.doc-mtab').forEach(t => t.classList.remove('active'));
@@ -741,6 +749,12 @@ function closeDocModal() {
     modal.style.display = 'none';
     selectedBookingDate = null;
     selectedBookingTime = null;
+}
+
+function handleDocModalBgClick(event) {
+    if (event.target.id === 'docModal') {
+        closeDocModal();
+    }
 }
 
 function showToast(msg) {
@@ -819,12 +833,12 @@ function renderMyAppointments() {
         else if (app.status === 'Confirmed') { statusColor = '#16A34A'; statusBg = '#DCFCE7'; }
         else if (app.status === 'Cancelled') { statusColor = '#DC2626'; statusBg = '#FEE2E2'; }
 
-        let probHtml = app.problem ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>Problem:</strong> ${app.problem}</div>` : '';
-        let sympHtml = app.symptoms ? `<div style="font-size:0.75rem; color:var(--text-muted);"><strong>Symptoms:</strong> ${app.symptoms}</div>` : '';
+        let probHtml = app.problem ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>${t('problem_label') || 'Problem'}:</strong> ${app.problem}</div>` : '';
+        let sympHtml = app.symptoms ? `<div style="font-size:0.75rem; color:var(--text-muted);"><strong>${t('symptoms_label') || 'Symptoms'}:</strong> ${app.symptoms}</div>` : '';
         
         let actionHtml = '';
         if (app.status !== 'Cancelled') {
-            actionHtml = `<button class="btn btn-secondary btn-sm" onclick="cancelAppointment(${app.id})" style="padding:0.25rem 0.75rem; font-size:0.75rem;">Cancel</button>`;
+            actionHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="cancelAppointment(${app.id})" style="padding:0.25rem 0.75rem; font-size:0.75rem;">Cancel</button>`;
         } else {
             actionHtml = `<span style="font-size:0.7rem; color:var(--text-muted); font-style:italic;">This appointment was cancelled</span>`;
         }
@@ -858,10 +872,12 @@ function renderMyAppointments() {
             </div>
             
             <div style="margin-bottom:1rem;">
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>Patient:</strong> ${app.patientName} (Age: ${app.patientAge}) - ${app.patientPhone}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>${t('patient_label') || 'Patient'}:</strong> ${app.patientName} (Age: ${app.patientAge}) - ${app.patientPhone}</div>
                 ${probHtml}
                 ${sympHtml}
             </div>
+            
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;"><strong>${t('date_label') || 'Date'}:</strong> ${app.appointment_date} &nbsp; <strong>${t('time_label') || 'Time'}:</strong> ${app.appointment_time}</div>
             
             <div style="display:flex; justify-content:flex-end;">
                 ${actionHtml}
@@ -938,20 +954,20 @@ function initDoctors() {
               <div class="doc-rating">
                 <span class="star">★</span>
                 <span class="rating-val">${doc.rating}</span>
-                <span class="rating-count">(${doc.reviewCount} reviews)</span>
+                <span class="rating-count">(${doc.reviewCount} ${t('reviews_label') || 'reviews'})</span>
               </div>
             </div>
           </div>
           <div class="doc-divider"></div>
           <div class="doc-avail-row">
-            <span class="avail-label">Availability</span>
-            <span class="avail-slots">● ${doc.slots} slots</span>
+            <span class="avail-label">${t('availability_label')}</span>
+            <span class="avail-slots">● ${doc.slots} ${t('slots_label')}</span>
           </div>
           <div class="doc-date-strip scrollable-strip" data-docid="${doc.id}">
             ${buildDateStripHtml()}
           </div>
-          <button class="doc-book-btn" onclick="openDoctorModal(${doc.id})">
-            Book Appointment →
+          <button type="button" class="doc-book-btn" onclick="openDoctorModal(${doc.id})">
+            ${t('book_appointment')}
           </button>
         `;
         grid.appendChild(card);
@@ -970,6 +986,7 @@ window.loadAllAppointments = function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    promoteAppointmentModalToBody();
     initDoctors();
     renderMyAppointments();
 

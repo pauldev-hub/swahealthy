@@ -1,17 +1,44 @@
-# Environments
+# Environment variables
 .env
+.env.*
 
 # Python caching
 __pycache__/
 *.py[cod]
 
-# Database files
-data/*.db
-
-# IDE
-.vscode/
-.idea/
+# Database
+*.db
 
 # Virtual environment
 venv/
 .venv/
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# User uploads (AI photo analysis)
+static/uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+!static/icon-192.png
+!static/icon-512.png
+!static/favicon.ico
+
+# Temp/scratch files
+tmp/
+full_file_structure.txt
+mental.html
+
+# Pytest
+.pytest_cache/
+.coverage
+
+# Build artifacts
+dist/
+build/

@@ -155,15 +155,15 @@
 
         <!-- Sheet Header -->
         <div class="sheet-header">
-            <span class="sheet-title">✦ AI Health Assistant</span>
-            <button class="sheet-clear-btn" id="sheet-clear-btn">Clear</button>
+            <span class="sheet-title" data-i18n="swa_assistant_title">AI Health Assistant</span>
+            <button class="sheet-clear-btn" id="sheet-clear-btn" data-i18n="clear_chat">Clear chat</button>
             <button class="sheet-close-btn" id="sheet-close-btn">✕</button>
         </div>
 
         <!-- Sheet Tabs -->
         <div class="sheet-tabs">
-            <button class="sheet-tab active" data-tab="features">Features</button>
-            <button class="sheet-tab" data-tab="chat">Chat</button>
+            <button class="sheet-tab active" data-tab="features" data-i18n="features_tab">Features</button>
+            <button class="sheet-tab" data-tab="chat" data-i18n="chat_tab">Chat</button>
         </div>
 
         <!-- Tab: Features -->
@@ -171,18 +171,18 @@
             <!-- Hero tip -->
             <div class="sheet-hero">
                 <span class="sheet-hero-icon">💡</span>
-                <p id="sheet-daily-tip">Loading tip...</p>
+                <p id="sheet-daily-tip" data-i18n="loading_tip">Loading tip...</p>
             </div>
 
             <!-- 6 Feature items -->
             <div class="sheet-feature-grid">
                 <div class="sheet-feat-item" data-action="chat">
                     <div class="feat-icon feat-icon-chat">💬</div>
-                    <div class="feat-text"><strong>Ask Health Questions</strong><span>AI-powered guidance</span></div>
+                    <div class="feat-text"><strong data-i18n="ask_health_questions">Ask Health Questions</strong><span data-i18n="ai_powered_guidance">AI-powered guidance</span></div>
                 </div>
                 <div class="sheet-feat-item" data-action="photo">
                     <div class="feat-icon feat-icon-photo">📷</div>
-                    <div class="feat-text"><strong>Photo Analysis</strong><span>Upload for visual check</span></div>
+                    <div class="feat-text"><strong data-i18n="photo_analysis_short">Photo Analysis</strong><span data-i18n="upload_visual_check">Upload for visual check</span></div>
                 </div>
                 <div class="sheet-feat-item" data-action="symptoms">
                     <div class="feat-icon feat-icon-symptoms">🩺</div>
@@ -190,24 +190,24 @@
                 </div>
                 <div class="sheet-feat-item" data-action="facilities">
                     <div class="feat-icon feat-icon-fac">🏥</div>
-                    <div class="feat-text"><strong>Find Facilities</strong><span>Nearest PHC & hospitals</span></div>
+                    <div class="feat-text"><strong data-i18n="find_facilities">Find Facilities</strong><span data-i18n="nearest_phc_hospitals">Nearest PHC & hospitals</span></div>
                 </div>
                 <div class="sheet-feat-item" data-action="medicine">
                     <div class="feat-icon feat-icon-med">💊</div>
-                    <div class="feat-text"><strong>Medicine Info</strong><span>Ask about any medicine</span></div>
+                    <div class="feat-text"><strong data-i18n="medicine_info">Medicine Info</strong><span data-i18n="ask_about_any_medicine">Ask about any medicine</span></div>
                 </div>
                 <div class="sheet-feat-item" data-action="history">
                     <div class="feat-icon feat-icon-history">📋</div>
-                    <div class="feat-text"><strong>My Health History</strong><span>Past check results</span></div>
+                    <div class="feat-text"><strong data-i18n="my_health_history">My Health History</strong><span data-i18n="past_check_results">Past check results</span></div>
                 </div>
             </div>
 
             <!-- Mood row -->
             <div class="mood-row">
-                <label>How are you feeling?</label>
-                <button class="mood-btn" data-mood="great">😊 Great</button>
-                <button class="mood-btn" data-mood="okay">😐 Okay</button>
-                <button class="mood-btn" data-mood="unwell">😔 Unwell</button>
+                <label data-i18n="how_are_you_feeling">How are you feeling?</label>
+                <button class="mood-btn" data-mood="great">😊 <span data-i18n="feeling_great">Great</span></button>
+                <button class="mood-btn" data-mood="okay">😐 <span data-i18n="feeling_okay">Okay</span></button>
+                <button class="mood-btn" data-mood="unwell">😔 <span data-i18n="feeling_unwell">Unwell</span></button>
             </div>
         </div>
 
@@ -221,10 +221,10 @@
                 </div>
             </div>
             <div class="chat-input-row">
-                <textarea class="chat-input" id="sheet-chat-input" placeholder="Ask about health..." rows="1"></textarea>
+                <textarea class="chat-input" id="sheet-chat-input" data-i18n-placeholder="ask_about_health_placeholder" placeholder="Ask about health..." rows="1"></textarea>
                 <button class="chat-send-btn" id="sheet-send-btn">➤</button>
             </div>
-            <p class="chat-disclaimer">Not a substitute for professional medical advice.</p>
+            <p class="chat-disclaimer" data-i18n="not_substitute_medical_advice">Not a substitute for professional medical advice.</p>
         </div>
     </div>
 
@@ -248,7 +248,7 @@
             sheetOverlay.classList.add('open');
             sheet.classList.add('open');
             if (!hasOpened && chatHistory.length === 0) {
-                appendBubble("Hello! I'm SwaHealthy Assistant 👋 Ask me anything about health, medicines, or wellness!", 'asst');
+                appendBubble(t('swa_assistant_welcome'), 'asst');
                 hasOpened = true;
             }
             // By default focus input if Chat tab is active
@@ -268,11 +268,11 @@
 
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                if (confirm('Clear chat history?')) {
+                if (confirm(t('clear_chat_confirm'))) {
                     chatHistory = [];
                     // Keep only the typing indicator
                     chatMessages.querySelectorAll('.chat-bubble').forEach(b => b.remove());
-                    appendBubble("Hello! I'm SwaHealthy Assistant 👋 Ask me anything about health, medicines, or wellness!", 'asst');
+                    appendBubble(t('swa_assistant_welcome'), 'asst');
                 }
             });
         }
@@ -334,7 +334,7 @@
                     document.querySelector('.facilities-card, #fac-map')?.scrollIntoView({ behavior: 'smooth' });
                 } else if (action === 'medicine') {
                     document.querySelector('.sheet-tab[data-tab="chat"]').click();
-                    chatInput.value = 'Tell me about: ';
+                    chatInput.value = t('tell_me_about_prefix');
                     chatInput.focus();
                 } else if (action === 'history') {
                     window.location.href = '/history';
@@ -348,9 +348,9 @@
                 document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 const msgs = {
-                    great: "I'm feeling great today!",
-                    okay: "I'm feeling okay, any health tips for me?",
-                    unwell: "I'm not feeling well today."
+                    great: t('feeling_great_today'),
+                    okay: t('feeling_okay_prompt'),
+                    unwell: t('feeling_unwell_today')
                 };
                 document.querySelector('.sheet-tab[data-tab="chat"]').click();
                 sendChatMessage(msgs[btn.dataset.mood]);
@@ -386,7 +386,7 @@
                 typingIndicator.style.display = 'none';
 
                 if (!resp.ok) {
-                    appendBubble("Couldn't connect, try again.", 'asst');
+                    appendBubble(t('couldnt_connect_try_again'), 'asst');
                     return;
                 }
                 const data = await resp.json();
@@ -395,11 +395,11 @@
                     appendBubble(data.reply, 'asst');
                     chatHistory.push({ role: 'assistant', content: data.reply });
                 } else {
-                    appendBubble("Couldn't connect, try again.", 'asst');
+                    appendBubble(t('couldnt_connect_try_again'), 'asst');
                 }
             } catch (err) {
                 typingIndicator.style.display = 'none';
-                appendBubble("Couldn't connect, try again.", 'asst');
+                appendBubble(t('couldnt_connect_try_again'), 'asst');
             }
         }
 

@@ -13,6 +13,171 @@ from backend.services.photo_analyzer import analyze_photo
 
 main_bp = Blueprint('main', __name__)
 
+CURATED_HOSPITALS = [
+    {
+        "name": "Medical College Hospital",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.5735,
+        "longitude": 88.3629,
+        "contact": "+91 33 2212 3000",
+        "ownership": "Government",
+    },
+    {
+        "name": "NRS Medical College and Hospital",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.5645,
+        "longitude": 88.3683,
+        "contact": "+91 33 2286 0033",
+        "ownership": "Government",
+    },
+    {
+        "name": "SSKM Hospital",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.5395,
+        "longitude": 88.3444,
+        "contact": "+91 33 2204 1100",
+        "ownership": "Government",
+    },
+    {
+        "name": "Howrah District Hospital",
+        "type": "Hospital",
+        "district": "Howrah",
+        "latitude": 22.58,
+        "longitude": 88.3299,
+        "contact": "+91 33 2641 3400",
+        "ownership": "Government",
+    },
+    {
+        "name": "Bidhannagar State General Hospital",
+        "type": "Healthcare Facility",
+        "district": "North 24 Parganas",
+        "latitude": 22.5937,
+        "longitude": 88.4206,
+        "contact": "N/A",
+        "ownership": "Government",
+    },
+    {
+        "name": "Salt Lake Sub Divisional Hospital",
+        "type": "Hospital",
+        "district": "North 24 Parganas",
+        "latitude": 22.5866,
+        "longitude": 88.4116,
+        "contact": "+91 33 2321 2323",
+        "ownership": "Government",
+    },
+    {
+        "name": "Barasat District Hospital",
+        "type": "Hospital",
+        "district": "North 24 Parganas",
+        "latitude": 22.7214,
+        "longitude": 88.4735,
+        "contact": "+91 33 2552 2011",
+        "ownership": "Government",
+    },
+    {
+        "name": "Dum Dum Municipal Specialised Hospital",
+        "type": "Healthcare Facility",
+        "district": "North 24 Parganas",
+        "latitude": 22.6241,
+        "longitude": 88.4187,
+        "contact": "+91 33 2551 3241",
+        "ownership": "Government",
+    },
+    {
+        "name": "Apollo Multispeciality Hospitals",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.5122,
+        "longitude": 88.3927,
+        "contact": "+91 33 2320 3040",
+        "ownership": "Private",
+    },
+    {
+        "name": "Fortis Hospital Anandapur",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.5018,
+        "longitude": 88.4011,
+        "contact": "+91 33 6628 4444",
+        "ownership": "Private",
+    },
+    {
+        "name": "Peerless Hospital",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.4965,
+        "longitude": 88.3923,
+        "contact": "+91 33 2462 0071",
+        "ownership": "Private",
+    },
+    {
+        "name": "AMRI Hospital Dhakuria",
+        "type": "Hospital",
+        "district": "Kolkata",
+        "latitude": 22.5132,
+        "longitude": 88.3668,
+        "contact": "+91 33 6626 0000",
+        "ownership": "Private",
+    },
+]
+
+MEDICINE_NAME_MAP = {
+    'Paracetamol': {'bn': 'প্যারাসিটামল', 'hi': 'पैरासिटामोल'},
+    'Paracetamol 500mg': {'bn': 'প্যারাসিটামল ৫০০ মি.গ্রা.', 'hi': 'पैरासिटामोल 500 मि.ग्रा.'},
+    'Cetirizine': {'bn': 'সিটিরিজিন', 'hi': 'सेटिरिज़िन'},
+    'Cetirizine 10mg': {'bn': 'সিটিরিজিন ১০ মি.গ্রা.', 'hi': 'सेटिरिज़िन 10 मि.ग्रा.'},
+    'Guaifenesin Syrup': {'bn': 'গুয়াইফেনেসিন সিরাপ', 'hi': 'गुआइफेनेसिन सिरप'},
+    'Vitamin C 500mg': {'bn': 'ভিটামিন সি ৫০০ মি.গ্রা.', 'hi': 'विटामिन C 500 मि.ग्रा.'},
+    'ORS (Oral Rehydration Salts)': {'bn': 'ওআরএস', 'hi': 'ओआरएस'},
+    'ORS Sachets': {'bn': 'ওআরএস স্যাশে', 'hi': 'ओआरएस सैशे'},
+    'Activated Charcoal': {'bn': 'অ্যাক্টিভেটেড চারকোল', 'hi': 'एक्टिवेटेड चारकोल'},
+    'Domperidone': {'bn': 'ডমপেরিডন', 'hi': 'डोम्पेरिडोन'},
+    'Domperidone 10mg': {'bn': 'ডমপেরিডন ১০ মি.গ্রা.', 'hi': 'डोम्पेरिडोन 10 मि.ग्रा.'},
+    'Electrolyte Powder': {'bn': 'ইলেক্ট্রোলাইট পাউডার', 'hi': 'इलेक्ट्रोलाइट पाउडर'},
+    'Antacid (Gelusil)': {'bn': 'অ্যান্টাসিড (জেলুসিল)', 'hi': 'एंटासिड (जेलुसिल)'},
+    'Loperamide': {'bn': 'লোপেরামাইড', 'hi': 'लोपरामाइड'},
+    'Loperamide 2mg': {'bn': 'লোপেরামাইড ২ মি.গ্রা.', 'hi': 'लोपरामाइड 2 मि.ग्रा.'},
+    'Zinc Sulfate': {'bn': 'জিঙ্ক সালফেট', 'hi': 'जिंक सल्फेट'},
+    'Zinc Sulfate 20mg': {'bn': 'জিঙ্ক সালফেট ২০ মি.গ্রা.', 'hi': 'जिंक सल्फेट 20 मि.ग्रा.'},
+    'Ibuprofen': {'bn': 'আইবুপ্রোফেন', 'hi': 'इबुप्रोफेन'},
+    'Ibuprofen 400mg': {'bn': 'আইবুপ্রোফেন ৪০০ মি.গ্রা.', 'hi': 'इबुप्रोफेन 400 मि.ग्रा.'},
+    'Potassium Citrate': {'bn': 'পটাশিয়াম সাইট্রেট', 'hi': 'पोटैशियम साइट्रेट'},
+    'Potassium Citrate Sachets': {'bn': 'পটাশিয়াম সাইট্রেট স্যাশে', 'hi': 'पोटैशियम साइट्रेट सैशे'},
+    'Cranberry Extract Tablet': {'bn': 'ক্র্যানবেরি এক্সট্র্যাক্ট ট্যাবলেট', 'hi': 'क्रैनबेरी एक्सट्रैक्ट टैबलेट'},
+    'Clotrimazole Cream': {'bn': 'ক্লোট্রিমাজল ক্রিম', 'hi': 'क्लोट्रिमाज़ोल क्रीम'},
+    'Calamine Lotion': {'bn': 'ক্যালামাইন লোশন', 'hi': 'कैलामाइन लोशन'},
+    'Hydrocortisone Cream': {'bn': 'হাইড্রোকর্টিসন ক্রিম', 'hi': 'हाइड्रोकार्टिसोन क्रीम'},
+    'Hydrocortisone 1% Cream': {'bn': 'হাইড্রোকর্টিসন ১% ক্রিম', 'hi': 'हाइड्रोकार्टिसोन 1% क्रीम'},
+    'Betadine Ointment': {'bn': 'বেটাডিন মলম', 'hi': 'बेटाडीन मलहम'},
+    'Povidone Iodine Gargle': {'bn': 'পোভিডোন আয়োডিন গার্গল', 'hi': 'पोविडोन आयोडीन गरारे'},
+    'Strepsils': {'bn': 'স্ট্রেপসিলস', 'hi': 'स्ट्रेप्सिल्स'},
+    'Salbutamol Inhaler': {'bn': 'সালবিউটামল ইনহেলার', 'hi': 'सालब्यूटामोल इनहेलर'},
+    'Sodium Chloride Eye Drops': {'bn': 'সোডিয়াম ক্লোরাইড আই ড্রপ', 'hi': 'सोडियम क्लोराइड आई ड्रॉप्स'},
+    'Chloramphenicol Eye Drops': {'bn': 'ক্লোরামফেনিকল আই ড্রপ', 'hi': 'क्लोरैम्फेनिकोल आई ड्रॉप्स'},
+    'Otocain Ear Drops': {'bn': 'অটোকেইন ইয়ার ড্রপ', 'hi': 'ओटोकैन ईयर ड्रॉप्स'},
+    'Iron + Folic Acid Tablets': {'bn': 'আয়রন + ফলিক অ্যাসিড ট্যাবলেট', 'hi': 'आयरन + फोलिक एसिड टैबलेट'},
+}
+
+
+def localize_medicine_name(name_en, lang, fallback=None):
+    if lang not in ('bn', 'hi'):
+        return fallback or name_en
+    localized = MEDICINE_NAME_MAP.get(name_en, {}).get(lang)
+    return localized or fallback or name_en
+
+
+def with_distance(rows, lat, lng):
+    results = []
+    for row in rows:
+        item = dict(row)
+        item["distance"] = round(haversine(lat, lng, item["latitude"], item["longitude"]), 2)
+        results.append(item)
+    results.sort(key=lambda x: x["distance"])
+    return results
+
 
 @main_bp.before_app_request
 def set_lang():
@@ -40,6 +205,9 @@ def login_required(f):
 @main_bp.route('/')
 def index():
     lang = g.lang
+    user = session.get('user') or {}
+    raw_name = (user.get('name') or '').strip()
+    first_name = raw_name.split()[0] if raw_name else None
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -65,16 +233,20 @@ def index():
     for s in symptoms:
         area = s['body_area']
         if area in grouped:
+            if lang == 'bn':
+                symptom_display = s['name_bn']
+            elif lang == 'hi':
+                symptom_display = s['name_hi']
+            else:
+                symptom_display = s['name_en']
+
             grouped[area].append({
                 'symptom_id': s['symptom_id'],
-                'display': (
-                    f"{s['name_en']} / {s['name_bn']}" if lang == 'bn'
-                    else (f"{s['name_en']} / {s['name_hi']}" if lang == 'hi' else s['name_en'])
-                ),
+                'display': symptom_display,
                 'name_en': s['name_en'],
             })
 
-    return render_template('pages/index.html', symptoms_group=grouped, lang=lang)
+    return render_template('pages/index.html', symptoms_group=grouped, lang=lang, first_name=first_name)
 
 
 @main_bp.route('/chat', methods=['POST'])
@@ -120,55 +292,62 @@ def chat():
 
 @main_bp.route('/diagnose', methods=['POST'])
 def run_diagnosis():
-    data = request.get_json()
-    if not data or 'symptom_ids' not in data:
-        return jsonify({"error": "Invalid payload format"}), 400
-
-    symptom_ids = data['symptom_ids']
-    language = data.get('language', 'en')
-    duration = data.get('duration')
-    age = data.get('age')
-    gender = data.get('gender')
-
-    result = diagnose(symptom_ids, language, duration=duration, age=age, gender=gender)
-
-    # Attach recommended OTC medicines for this condition
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        name_col = f"name_{language}" if language in ('en', 'bn', 'hi') else 'name_en'
-        cursor.execute(
-            f"SELECT {name_col} as medicine_name, name_en FROM medicines WHERE condition_id = ? AND otc_available = 1",
-            (result.get('condition_id'),),
-        )
-        meds = cursor.fetchall()
-        recommended = []
-        for row in meds:
-            recommended.append(row['medicine_name'] if row['medicine_name'] else row['name_en'])
-        result['recommended_medicines'] = recommended
-        conn.close()
-    except Exception:
-        result['recommended_medicines'] = []
+        data = request.get_json()
+        if not data or 'symptom_ids' not in data:
+            return jsonify({"error": "Invalid payload format"}), 400
 
-    # Save to session_log
-    try:
-        user_id = session['user']['user_id'] if 'user' in session else None
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO session_log (user_id, age, gender, symptoms_json, result_condition, severity, language)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, age, gender, json.dumps(symptom_ids), result['condition'], result['severity'], language))
-        conn.commit()
-        
-        log_id = cursor.lastrowid
-        result['log_id'] = log_id
-        
-        conn.close()
+        symptom_ids = data['symptom_ids']
+        language = data.get('language', 'en')
+        duration = data.get('duration')
+        age = data.get('age')
+        gender = data.get('gender')
+
+        result = diagnose(symptom_ids, language, duration=duration, age=age, gender=gender)
+
+        # Attach recommended OTC medicines for this condition
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            name_col = f"name_{language}" if language in ('en', 'bn', 'hi') else 'name_en'
+            cursor.execute(
+                f"SELECT {name_col} as medicine_name, name_en FROM medicines WHERE condition_id = ? AND otc_available = 1",
+                (result.get('condition_id'),),
+            )
+            meds = cursor.fetchall()
+            recommended = []
+            for row in meds:
+                recommended.append(localize_medicine_name(row['name_en'], language, row['medicine_name']))
+            result['recommended_medicines'] = recommended
+            conn.close()
+        except Exception as e:
+            print(f"[WARNING] Error fetching medicines: {e}")
+            result['recommended_medicines'] = []
+
+        # Save to session_log
+        try:
+            user_id = session.get('user', {}).get('user_id') if 'user' in session else None
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO session_log (user_id, age, gender, symptoms_json, result_condition, severity, language)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (user_id, age, gender, json.dumps(symptom_ids), result['condition'], result['severity'], language))
+            conn.commit()
+            
+            log_id = cursor.lastrowid
+            result['log_id'] = log_id
+            
+            conn.close()
+        except Exception as e:
+            print(f"[WARNING] Error logging session: {e}")
+
+        return jsonify(result)
     except Exception as e:
-        print(f"Error logging session: {e}")
-
-    return jsonify(result)
+        print(f"[ERROR] Diagnose endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Failed to analyze symptoms", "details": str(e)}), 500
 
 
 @main_bp.route('/summary/<int:log_id>')
@@ -232,15 +411,27 @@ def summary(log_id):
 @main_bp.route('/analyze-photo', methods=['POST'])
 def run_photo_analysis():
     data = request.get_json()
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    
+    print(f"DEBUG: Received payload keys: {data.keys()}")
+    print(f"DEBUG: Image length: {len(data.get('image', ''))}")
+    print(f"DEBUG: Media type: {data.get('media_type')}")
+    
     if not data or 'image' not in data or 'media_type' not in data:
         return jsonify({"error": "Invalid payload format. Expected base64 image and media_type."}), 400
     
+    image_data = data['image'].strip()
+    if not image_data:
+        return jsonify({"error": "Image data is empty."}), 400
+    
     # Optional size validation (rough check on base64 string length)
     # 2MB is roughly 2.8MB base64 encoded
-    if len(data['image']) > 2.8 * 1024 * 1024:
+    if len(image_data) > 2.8 * 1024 * 1024:
         return jsonify({"error": "Image file too large. Max 2MB allowed."}), 400
         
-    result = analyze_photo(data['image'], data['media_type'])
+    language = data.get('language', g.lang if hasattr(g, 'lang') else 'en')
+    result = analyze_photo(image_data, data['media_type'], language=language)
     return jsonify(result)
 
 
@@ -248,6 +439,7 @@ def run_photo_analysis():
 def facilities():
     lat = request.args.get('lat', type=float)
     lng = request.args.get('lng', type=float)
+    limit = request.args.get('limit', default=10, type=int)
 
     if lat is None or lng is None:
         return jsonify({"error": "Missing lat/lng parameters"}), 400
@@ -258,15 +450,21 @@ def facilities():
     facs = cursor.fetchall()
     conn.close()
 
-    results = []
-    for f in facs:
-        dist = haversine(lat, lng, f['latitude'], f['longitude'])
-        f_dict = dict(f)
-        f_dict['distance'] = round(dist, 2)
-        results.append(f_dict)
+    results = with_distance(facs, lat, lng)
+    return jsonify(results[:max(1, min(limit, 20))])
 
-    results.sort(key=lambda x: x['distance'])
-    return jsonify(results[:5])
+
+@main_bp.route('/nearby-hospitals')
+def nearby_hospitals():
+    lat = request.args.get('lat', type=float)
+    lng = request.args.get('lng', type=float)
+    limit = request.args.get('limit', default=10, type=int)
+
+    if lat is None or lng is None:
+        return jsonify({"error": "Missing lat/lng parameters"}), 400
+
+    hospitals = with_distance(CURATED_HOSPITALS, lat, lng)
+    return jsonify(hospitals[:max(1, min(limit, 20))])
 
 
 @main_bp.route('/ai-analysis')
@@ -427,7 +625,10 @@ def nearby_medicines():
         return jsonify([])
 
     med_ids = [m['medicine_id'] for m in medicines]
-    med_names = {m['medicine_id']: m['medicine_name'] for m in medicines}
+    med_names = {
+        m['medicine_id']: localize_medicine_name(m['medicine_name_en'], lang, m['medicine_name'])
+        for m in medicines
+    }
 
     placeholders = ','.join('?' * len(med_ids))
     cursor.execute(f'''
@@ -439,6 +640,16 @@ def nearby_medicines():
     ''', med_ids)
     fac_rows = cursor.fetchall()
 
+    # Graceful fallback: if medicine rows exist but stock-link rows are missing,
+    # still show the nearest Jan Aushadhi centers with the mapped OTC labels.
+    if not fac_rows:
+        cursor.execute('''
+            SELECT facility_id, name, type, district, latitude, longitude, contact
+            FROM facilities
+            WHERE type = 'Jan Aushadhi'
+        ''')
+        fac_rows = cursor.fetchall()
+
     results = []
     for fac in fac_rows:
         dist = haversine(lat, lng, fac['latitude'], fac['longitude'])
@@ -446,7 +657,10 @@ def nearby_medicines():
             SELECT fm.medicine_id FROM facility_medicines fm
             WHERE fm.facility_id = ? AND fm.medicine_id IN ({placeholders})
         ''', [fac['facility_id']] + med_ids)
-        stocked_meds = [med_names[row['medicine_id']] for row in cursor.fetchall()]
+        stocked_rows = cursor.fetchall()
+        stocked_meds = [med_names[row['medicine_id']] for row in stocked_rows]
+        if not stocked_meds:
+            stocked_meds = [med_names[mid] for mid in med_ids]
 
         results.append({
             'facility_id': fac['facility_id'],
@@ -471,7 +685,10 @@ def admin():
 @main_bp.route('/wellness')
 def wellness():
     lang = request.args.get('lang', session.get('lang', 'en'))
-    return render_template('pages/wellness.html', lang=lang)
+    user = session.get('user') or {}
+    raw_name = (user.get('name') or '').strip()
+    first_name = raw_name.split()[0] if raw_name else None
+    return render_template('pages/wellness.html', lang=lang, first_name=first_name)
 
 @main_bp.route('/wellness/chat', methods=['POST'])
 def wellness_chat():

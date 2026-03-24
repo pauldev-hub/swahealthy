@@ -1,338 +1,1242 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="profile-page-container">
-    <div class="profile-card">
-
-        <!-- ═══ HERO BANNER ═══ -->
-        <div class="profile-hero">
+<div class="profile-page-container profile-dashboard-page">
+    <div class="profile-card profile-dashboard-shell">
+        <section class="profile-hero profile-dashboard-hero">
             <div class="profile-hero-deco1"></div>
             <div class="profile-hero-deco2"></div>
 
-            <!-- Avatar — tap to change photo -->
-            <div class="profile-avatar-wrapper">
-                <div class="profile-avatar-ring" id="avatar-ring"
-                    onclick="document.getElementById('photo-upload-input').click()" style="cursor:pointer;"
-                    title="Tap to change photo">
-
-                    <!-- Priority: uploaded photo > Google photo > default SVG -->
-                    <img id="avatar-img" src="" alt="Profile"
-                        style="display:none;width:100%;height:100%;border-radius:50%;object-fit:cover;">
-
-                    <!-- Fallback Google photo -->
-                    {% if session.get('user') and session['user'].get('picture') %}
-                    <img id="avatar-google" src="{{ session['user']['picture'] }}" alt="Profile"
-                        style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
-                    {% else %}
-                    <svg id="avatar-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="32" cy="22" r="13" fill="rgba(255,255,255,0.92)" />
-                        <ellipse cx="32" cy="54" rx="20" ry="13" fill="rgba(255,255,255,0.92)" />
-                    </svg>
+            <div class="profile-hero-topline">
+                <div class="profile-hero-status-group">
+                    <span class="profile-status-badge">
+                        <span class="profile-status-dot"></span>
+                        {% if session.get('user') %}
+                        <span>Signed in</span>
+                        {% else %}
+                        <span>Guest mode</span>
+                        {% endif %}
+                    </span>
+                    {% if not session.get('user') %}
+                    <a href="/login" class="profile-hero-login-btn" data-i18n="login">Login</a>
                     {% endif %}
-
                 </div>
-
-                <!-- Camera badge -->
-                <div class="avatar-camera-badge" onclick="document.getElementById('photo-upload-input').click()">
-                    📷
-                </div>
-
-                <!-- Hidden file input -->
-                <input type="file" id="photo-upload-input" accept="image/*" style="display:none;"
-                    onchange="handlePhotoUpload(event)">
+                <span class="profile-status-caption" id="profile-last-updated-label">Ready to personalize your care</span>
             </div>
 
-            {% if session.get('user') %}
-            <h2 class="profile-hero-title">{{ session['user']['name'] }}</h2>
-            <p class="profile-hero-sub">{{ session['user']['email'] }}</p>
-            {% else %}
-            <h2 class="profile-hero-title" data-i18n="profile_title">My Health Profile</h2>
-            <p class="profile-hero-sub" data-i18n="profile_subtitle">Enter your age and gender to get more personalized health insights.</p>
-            {% endif %}
-
-            <div class="profile-stats-row">
-                <div class="profile-stat">
-                    <span class="profile-stat-value" id="stat-checks">0</span>
-                    <span class="profile-stat-label">Checks</span>
-                </div>
-                <div class="profile-stat-divider"></div>
-                <div class="profile-stat">
-                    <span class="profile-stat-value" id="stat-age">—</span>
-                    <span class="profile-stat-label">Age</span>
-                </div>
-                <div class="profile-stat-divider"></div>
-                <div class="profile-stat">
-                    <span class="profile-stat-value" id="stat-gender">—</span>
-                    <span class="profile-stat-label">Gender</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══ FORM SECTION ═══ -->
-        <div class="profile-form-section">
-
-            <!-- Photo upload status -->
-            <div id="photo-upload-msg"
-                style="display:none;text-align:center;margin-bottom:1rem;font-size:0.82rem;font-weight:600;color:var(--sev-low);background:var(--sev-low-bg);padding:0.5rem;border-radius:var(--r-md);">
-                ✓ Photo updated!
-            </div>
-
-            <!-- ── VIEW MODE ── -->
-            <div id="profile-view-mode" style="display:none;">
-                <div class="profile-section-label">Health Information</div>
-                <div class="profile-info-card">
-                    <div class="profile-info-row">
-                        <span class="profile-info-icon">🎂</span>
-                        <div class="profile-info-content">
-                            <span class="profile-info-label">Age</span>
-                            <span class="profile-info-value" id="view-age">—</span>
+            <div class="profile-hero-identity">
+                <div class="profile-avatar-wrapper">
+                    <button class="profile-avatar-ring" id="avatar-ring" type="button"
+                        onclick="document.getElementById('photo-upload-input').click()"
+                        title="Update profile photo">
+                        <img id="avatar-img" src="" alt="Profile photo" class="profile-avatar-media" style="display:none;">
+                        {% if session.get('user') and session['user'].get('picture') %}
+                        <img id="avatar-google" src="{{ session['user']['picture'] }}" alt="Profile photo" class="profile-avatar-media">
+                        {% else %}
+                        <div id="avatar-fallback" class="profile-avatar-fallback" aria-hidden="true">
+                            <span>{{ (session['user']['name'][0] if session.get('user') and session['user'].get('name') else 'S')|upper }}</span>
                         </div>
-                    </div>
-                    <div class="profile-info-divider"></div>
-                    <div class="profile-info-row">
-                        <span class="profile-info-icon">👤</span>
-                        <div class="profile-info-content">
-                            <span class="profile-info-label">Gender</span>
-                            <span class="profile-info-value" id="view-gender">—</span>
-                        </div>
-                    </div>
-                    <div class="profile-info-divider"></div>
-                    <div class="profile-info-row">
-                        <span class="profile-info-icon">📞</span>
-                        <div class="profile-info-content">
-                            <span class="profile-info-label">Phone</span>
-                            <span class="profile-info-value" id="view-phone">—</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="switchToEdit()" class="btn btn-secondary btn-block" style="margin-top:1rem;">
-                    ✏️ Edit Profile
-                </button>
-            </div>
-
-            <!-- ── EDIT MODE ── -->
-            <div id="profile-edit-mode">
-                <div class="profile-section-label">Health Information</div>
-                <form id="profile-form" onsubmit="saveProfile(event)">
-
-                    <div class="profile-field-group">
-                        <label class="profile-field-label">Your Age</label>
-                        <div class="profile-input-wrapper">
-                            <span class="profile-input-icon">🎂</span>
-                            <input type="number" id="profile-age" min="1" max="120" required
-                                class="form-control profile-input" placeholder="e.g. 28">
-                        </div>
-                    </div>
-
-                    <div class="profile-field-group">
-                        <label class="profile-field-label">Phone Number</label>
-                        <div class="profile-input-wrapper">
-                            <span class="profile-input-icon">📞</span>
-                            <input type="tel" id="profile-phone" required
-                                class="form-control profile-input" placeholder="e.g. +91 9876543210">
-                        </div>
-                    </div>
-
-                    <div class="profile-field-group">
-                        <label class="profile-field-label">Gender</label>
-                        <div class="gender-options-grid">
-                            <label class="gender-option">
-                                <input type="radio" name="gender" value="Male" checked style="display:none;">
-                                <div class="option-content">
-                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">👨</span>Male
-                                </div>
-                            </label>
-                            <label class="gender-option">
-                                <input type="radio" name="gender" value="Female" style="display:none;">
-                                <div class="option-content">
-                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">👩</span>Female
-                                </div>
-                            </label>
-                            <label class="gender-option">
-                                <input type="radio" name="gender" value="Other" style="display:none;">
-                                <div class="option-content">
-                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">🧑</span>Other
-                                </div>
-                            </label>
-                            <label class="gender-option">
-                                <input type="radio" name="gender" value="Prefer not to say" style="display:none;">
-                                <div class="option-content" style="font-size:0.78rem;">
-                                    <span style="font-size:1.1rem;display:block;margin-bottom:4px;">🤐</span>Prefer not
-                                    to say
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block profile-save-btn">
-                        <span>💾</span>
-                        <span>Save Profile</span>
+                        {% endif %}
                     </button>
-                    <div id="save-msg">✓ Profile saved successfully!</div>
-                </form>
-            </div>
 
-            <!-- ── QUICK ACTIONS ── -->
-            <div class="profile-section-label" style="margin-top:1.5rem;">Quick Actions</div>
-            <div class="profile-actions-grid">
-                <a href="/history" class="profile-action-card">
-                    <span class="profile-action-icon">🕐</span>
-                    <span class="profile-action-label">My History</span>
-                </a>
-                <a href="/appointments" class="profile-action-card">
-                    <span class="profile-action-icon">📅</span>
-                    <span class="profile-action-label">Book Doctor</span>
-                </a>
-                <a href="/ai-analysis" class="profile-action-card">
-                    <span class="profile-action-icon">🤖</span>
-                    <span class="profile-action-label">AI Scan</span>
-                </a>
-                <a href="/" class="profile-action-card">
-                    <span class="profile-action-icon">🩺</span>
-                    <span class="profile-action-label">Check Symptoms</span>
-                </a>
-            </div>
+                    <button class="avatar-camera-badge" type="button"
+                        onclick="document.getElementById('photo-upload-input').click()"
+                        aria-label="Upload profile photo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8 7.5 9.4 6h5.2L16 7.5H19A2.5 2.5 0 0 1 21.5 10v7A2.5 2.5 0 0 1 19 19.5H5A2.5 2.5 0 0 1 2.5 17v-7A2.5 2.5 0 0 1 5 7.5Z" />
+                            <circle cx="12" cy="13.5" r="3.3" />
+                        </svg>
+                    </button>
 
-            <!-- ── APP INFO ── -->
-            <div class="profile-app-info">
-                <div class="profile-app-info-row">
-                    <span>App Version</span><span>SwaHealthy v2.0</span>
+                    <input type="file" id="photo-upload-input" accept="image/*" style="display:none;"
+                        onchange="handlePhotoUpload(event)">
                 </div>
-                <div class="profile-app-info-row">
-                    <span>Language</span><span id="info-lang">English</span>
-                </div>
-                <div class="profile-app-info-row">
-                    <span>Region</span><span>West Bengal, India</span>
+
+                <div class="profile-identity-text">
+                    {% if session.get('user') %}
+                    <h1 class="profile-hero-title">{{ session['user']['name'] }}</h1>
+                    <p class="profile-hero-sub">{{ session['user']['email'] }}</p>
+                    {% else %}
+                    <h1 class="profile-hero-title" data-i18n="profile_title">My Health Profile</h1>
+                    <p class="profile-hero-sub" data-i18n="profile_subtitle">Enter your age and gender to get more personalized health insights.</p>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- ── REMOVE PHOTO (only if custom photo exists) ── -->
-            <button id="remove-photo-btn" onclick="removePhoto()" style="display:none;" class="btn btn-light btn-block"
-                style="margin-bottom:0.5rem;">
-                🗑️ Remove Custom Photo
-            </button>
+            <div class="profile-metrics-grid">
+                <article class="profile-metric-card">
+                    <span class="profile-metric-label" data-i18n="checks">Checks</span>
+                    <strong class="profile-metric-value" id="stat-checks">0</strong>
+                    <span class="profile-metric-note" id="stat-checks-note">health sessions tracked</span>
+                </article>
+                <article class="profile-metric-card">
+                    <span class="profile-metric-label">Completion</span>
+                    <strong class="profile-metric-value" id="stat-completion">0%</strong>
+                    <span class="profile-metric-note" id="stat-completion-note">add your details to unlock insights</span>
+                </article>
+                <article class="profile-metric-card">
+                    <span class="profile-metric-label" data-i18n="age">Age</span>
+                    <strong class="profile-metric-value" id="stat-age">--</strong>
+                    <span class="profile-metric-note" id="stat-age-note">not added yet</span>
+                </article>
+                <article class="profile-metric-card">
+                    <span class="profile-metric-label" data-i18n="gender">Gender</span>
+                    <strong class="profile-metric-value" id="stat-gender">--</strong>
+                    <span class="profile-metric-note" id="stat-gender-note">not added yet</span>
+                </article>
+            </div>
+        </section>
 
-            {% if session.get('user') %}
-            <a href="/logout" class="profile-logout-btn">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                <span data-i18n="logout">Logout from SwaHealthy</span>
-            </a>
-            {% else %}
-            <a href="/login" class="profile-logout-btn" style="background: var(--primary); color: white; border-color: var(--primary);">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                    <polyline points="10 17 15 12 10 7" />
-                    <line x1="15" y1="12" x2="3" y2="12" />
-                </svg>
-                <span data-i18n="login">Login to SwaHealthy</span>
-            </a>
-            {% endif %}
+        <section class="profile-form-section profile-dashboard-main">
+            <div id="photo-upload-msg" class="profile-inline-message profile-inline-message-success" style="display:none;">
+                Photo updated successfully.
+            </div>
 
-        </div>
+            <div class="profile-dashboard-grid">
+                <section class="profile-panel profile-panel-primary">
+                    <div class="profile-panel-head">
+                        <div>
+                            <div class="profile-section-label" data-i18n="health_information">Health Information</div>
+                            <h2 class="profile-panel-title">Personal health snapshot</h2>
+                        </div>
+                        <button id="remove-photo-btn" type="button" onclick="removePhoto()" class="profile-inline-action" style="display:none;">
+                            Remove custom photo
+                        </button>
+                    </div>
+
+                    <div id="profile-view-mode" style="display:none;">
+                        <div class="profile-info-card profile-summary-list">
+                            <div class="profile-info-row">
+                                <span class="profile-info-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M7 2.75v2.5M17 2.75v2.5M3.75 8.25h16.5M5.5 5.25h13A1.75 1.75 0 0 1 20.25 7v11.5A1.75 1.75 0 0 1 18.5 20.25h-13A1.75 1.75 0 0 1 3.75 18.5V7A1.75 1.75 0 0 1 5.5 5.25Z" />
+                                    </svg>
+                                </span>
+                                <div class="profile-info-content">
+                                    <span class="profile-info-label" data-i18n="age">Age</span>
+                                    <span class="profile-info-value" id="view-age">--</span>
+                                </div>
+                            </div>
+                            <div class="profile-info-divider"></div>
+                            <div class="profile-info-row">
+                                <span class="profile-info-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2.25c-4.56 0-8.25 2.02-8.25 4.5v1.5h16.5v-1.5c0-2.48-3.69-4.5-8.25-4.5Z" />
+                                    </svg>
+                                </span>
+                                <div class="profile-info-content">
+                                    <span class="profile-info-label" data-i18n="gender">Gender</span>
+                                    <span class="profile-info-value" id="view-gender">--</span>
+                                </div>
+                            </div>
+                            <div class="profile-info-divider"></div>
+                            <div class="profile-info-row">
+                                <span class="profile-info-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M6.62 10.79a15.46 15.46 0 0 0 6.59 6.59l2.2-2.2a1.5 1.5 0 0 1 1.54-.36 11.36 11.36 0 0 0 3.55.57A1.5 1.5 0 0 1 22 16.89V20A1.5 1.5 0 0 1 20.5 21.5C10.56 21.5 2.5 13.44 2.5 3.5A1.5 1.5 0 0 1 4 2h3.11a1.5 1.5 0 0 1 1.5 1.5 11.36 11.36 0 0 0 .57 3.55 1.5 1.5 0 0 1-.36 1.54Z" />
+                                    </svg>
+                                </span>
+                                <div class="profile-info-content">
+                                    <span class="profile-info-label">Phone</span>
+                                    <span class="profile-info-value" id="view-phone">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-panel-actions">
+                            <button onclick="switchToEdit()" class="profile-primary-btn" type="button">
+                                Edit profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="profile-edit-mode">
+                        <form id="profile-form" onsubmit="saveProfile(event)">
+                            <div class="profile-form-grid">
+                                <div class="profile-field-group">
+                                    <label class="profile-field-label" data-i18n="age_label">Your Age</label>
+                                    <div class="profile-input-wrapper">
+                                        <span class="profile-input-icon">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M7 2.75v2.5M17 2.75v2.5M3.75 8.25h16.5M5.5 5.25h13A1.75 1.75 0 0 1 20.25 7v11.5A1.75 1.75 0 0 1 18.5 20.25h-13A1.75 1.75 0 0 1 3.75 18.5V7A1.75 1.75 0 0 1 5.5 5.25Z" />
+                                            </svg>
+                                        </span>
+                                        <input type="number" id="profile-age" min="1" max="120" required
+                                            class="form-control profile-input" data-i18n-placeholder="age_placeholder" placeholder="e.g. 28">
+                                    </div>
+                                </div>
+
+                                <div class="profile-field-group">
+                                    <label class="profile-field-label" data-i18n="phone_number">Phone Number</label>
+                                    <div class="profile-input-wrapper">
+                                        <span class="profile-input-icon">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M6.62 10.79a15.46 15.46 0 0 0 6.59 6.59l2.2-2.2a1.5 1.5 0 0 1 1.54-.36 11.36 11.36 0 0 0 3.55.57A1.5 1.5 0 0 1 22 16.89V20A1.5 1.5 0 0 1 20.5 21.5C10.56 21.5 2.5 13.44 2.5 3.5A1.5 1.5 0 0 1 4 2h3.11a1.5 1.5 0 0 1 1.5 1.5 11.36 11.36 0 0 0 .57 3.55 1.5 1.5 0 0 1-.36 1.54Z" />
+                                            </svg>
+                                        </span>
+                                        <input type="tel" id="profile-phone" required
+                                            class="form-control profile-input" data-i18n-placeholder="phone_placeholder" placeholder="e.g. +91 9876543210">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="profile-field-group">
+                                <label class="profile-field-label" data-i18n="gender_label">Gender</label>
+                                <div class="gender-options-grid">
+                                    <label class="gender-option">
+                                        <input type="radio" name="gender" value="Male" checked style="display:none;">
+                                        <div class="option-content">
+                                            <span class="option-title">Male</span>
+                                            <span class="option-subtitle">For health record matching</span>
+                                        </div>
+                                    </label>
+                                    <label class="gender-option">
+                                        <input type="radio" name="gender" value="Female" style="display:none;">
+                                        <div class="option-content">
+                                            <span class="option-title">Female</span>
+                                            <span class="option-subtitle">For health record matching</span>
+                                        </div>
+                                    </label>
+                                    <label class="gender-option">
+                                        <input type="radio" name="gender" value="Other" style="display:none;">
+                                        <div class="option-content">
+                                            <span class="option-title">Other</span>
+                                            <span class="option-subtitle">Inclusive profile option</span>
+                                        </div>
+                                    </label>
+                                    <label class="gender-option">
+                                        <input type="radio" name="gender" value="Prefer not to say" style="display:none;">
+                                        <div class="option-content">
+                                            <span class="option-title">Private</span>
+                                            <span class="option-subtitle">Keep this undisclosed</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block profile-save-btn">
+                                <span>Save profile</span>
+                            </button>
+                            <div id="save-msg" class="profile-inline-message profile-inline-message-success">Profile saved successfully.</div>
+                        </form>
+                    </div>
+                </section>
+
+                <aside class="profile-panel profile-panel-secondary">
+                    <div class="profile-panel-head">
+                        <div>
+                            <div class="profile-section-label">Profile Insights</div>
+                            <h2 class="profile-panel-title">Readiness and preferences</h2>
+                        </div>
+                    </div>
+
+                    <div class="profile-progress-card">
+                        <div class="profile-progress-head">
+                            <div>
+                                <span class="profile-progress-label">Profile completion</span>
+                                <strong class="profile-progress-value" id="completion-title">0% complete</strong>
+                            </div>
+                            <span class="profile-progress-pill" id="completion-pill">Needs setup</span>
+                        </div>
+                        <div class="profile-progress-track" aria-hidden="true">
+                            <span class="profile-progress-fill" id="completion-bar"></span>
+                        </div>
+                        <p class="profile-progress-copy" id="completion-copy">Add age, gender, phone, and a photo to make your profile more useful.</p>
+                    </div>
+
+                    <div class="profile-insight-stack">
+                        <article class="profile-insight-card">
+                            <span class="profile-insight-label">Care focus</span>
+                            <strong class="profile-insight-value" id="care-focus-value">Complete your profile</strong>
+                            <p class="profile-insight-copy" id="care-focus-copy">The app will use your details to make symptom guidance more relevant.</p>
+                        </article>
+                        <article class="profile-insight-card">
+                            <span class="profile-insight-label">Last profile update</span>
+                            <strong class="profile-insight-value" id="profile-last-updated">Not available</strong>
+                            <p class="profile-insight-copy">Saved locally on this device for quick access.</p>
+                        </article>
+                        <article class="profile-insight-card">
+                            <span class="profile-insight-label">Language preference</span>
+                            <strong class="profile-insight-value" id="info-lang-card">English</strong>
+                            <p class="profile-insight-copy">Used for labels, results, and guided flows.</p>
+                        </article>
+                    </div>
+                </aside>
+            </div>
+
+            <section class="profile-panel">
+                <div class="profile-panel-head">
+                    <div>
+                        <div class="profile-section-label" data-i18n="quick_actions">Quick Actions</div>
+                        <h2 class="profile-panel-title">Continue from where you left off</h2>
+                    </div>
+                </div>
+
+                <div class="profile-actions-grid profile-actions-grid-enhanced">
+                    <a href="/history" class="profile-action-card profile-action-card-enhanced">
+                        <span class="profile-action-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 6.5v5l3 1.8M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" />
+                            </svg>
+                        </span>
+                        <span class="profile-action-copy">
+                            <span class="profile-action-title" data-i18n="my_history">My History</span>
+                            <span class="profile-action-subtitle">Review previous checks and results.</span>
+                        </span>
+                    </a>
+                    <a href="/appointments" class="profile-action-card profile-action-card-enhanced">
+                        <span class="profile-action-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M7 2.75v2.5M17 2.75v2.5M3.75 8.25h16.5M5.5 5.25h13A1.75 1.75 0 0 1 20.25 7v11.5A1.75 1.75 0 0 1 18.5 20.25h-13A1.75 1.75 0 0 1 3.75 18.5V7A1.75 1.75 0 0 1 5.5 5.25Z" />
+                            </svg>
+                        </span>
+                        <span class="profile-action-copy">
+                            <span class="profile-action-title" data-i18n="book_doctor">Book Doctor</span>
+                            <span class="profile-action-subtitle">Schedule a consultation when needed.</span>
+                        </span>
+                    </a>
+                    <a href="/ai-analysis" class="profile-action-card profile-action-card-enhanced">
+                        <span class="profile-action-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M8 9V6.75A2.75 2.75 0 0 1 10.75 4h2.5A2.75 2.75 0 0 1 16 6.75V9M7.5 20h9A2.5 2.5 0 0 0 19 17.5v-6A2.5 2.5 0 0 0 16.5 9h-9A2.5 2.5 0 0 0 5 11.5v6A2.5 2.5 0 0 0 7.5 20Zm2-5.5h5" />
+                            </svg>
+                        </span>
+                        <span class="profile-action-copy">
+                            <span class="profile-action-title" data-i18n="ai_scan">AI Scan</span>
+                            <span class="profile-action-subtitle">Run a visual symptom review with AI.</span>
+                        </span>
+                    </a>
+                    <a href="/" class="profile-action-card profile-action-card-enhanced">
+                        <span class="profile-action-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M20.25 11.25A8.25 8.25 0 1 1 12 3a8.17 8.17 0 0 1 4.64 1.43M15 8.25h5.25V3" />
+                                <path d="m20.25 3-6 6" />
+                            </svg>
+                        </span>
+                        <span class="profile-action-copy">
+                            <span class="profile-action-title" data-i18n="check_symptoms">Check Symptoms</span>
+                            <span class="profile-action-subtitle">Start a new guided symptom check.</span>
+                        </span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="profile-dashboard-grid profile-dashboard-bottom">
+                <section class="profile-panel">
+                    <div class="profile-panel-head">
+                        <div>
+                            <div class="profile-section-label">Preferences</div>
+                            <h2 class="profile-panel-title">App and account details</h2>
+                        </div>
+                    </div>
+
+                    <div class="profile-app-info profile-app-info-enhanced">
+                        <div class="profile-app-info-row">
+                            <span data-i18n="app_version">App Version</span>
+                            <span>SwaHealthy v2.0</span>
+                        </div>
+                        <div class="profile-app-info-row">
+                            <span data-i18n="language">Language</span>
+                            <span id="info-lang">English</span>
+                        </div>
+                        <div class="profile-app-info-row">
+                            <span data-i18n="region">Region</span>
+                            <span data-i18n="region_value">Kolkata, West Bengal</span>
+                        </div>
+                        <div class="profile-app-info-row">
+                            <span>Account</span>
+                            <span>{% if session.get('user') %}Connected{% else %}Local device{% endif %}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="profile-panel">
+                    <div class="profile-panel-head">
+                        <div>
+                            <div class="profile-section-label">Next Best Step</div>
+                            <h2 class="profile-panel-title">What to do next</h2>
+                        </div>
+                    </div>
+
+                    <div class="profile-next-step-card">
+                        <strong class="profile-next-step-title" id="next-step-title">Complete your profile details</strong>
+                        <p class="profile-next-step-copy" id="next-step-copy">Adding your age, gender, phone, and photo helps the app tailor future guidance.</p>
+                    </div>
+
+                    {% if session.get('user') %}
+                    <a href="/logout" class="profile-logout-btn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span data-i18n="logout">Logout</span>
+                    </a>
+                    {% else %}
+                    <a href="/login" class="profile-logout-btn profile-login-btn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                            <polyline points="10 17 15 12 10 7" />
+                            <line x1="15" y1="12" x2="3" y2="12" />
+                        </svg>
+                        <span data-i18n="login">Login</span>
+                    </a>
+                    {% endif %}
+                </section>
+            </section>
+        </section>
     </div>
 </div>
 
 <style>
-    .profile-info-card {
-        background: var(--bg);
-        border: 1.5px solid var(--border-mid);
-        border-radius: var(--r-lg);
-        overflow: hidden;
+    .profile-dashboard-page {
+        background:
+            radial-gradient(circle at top right, rgba(192, 132, 252, 0.28), transparent 28%),
+            radial-gradient(circle at top left, rgba(139, 92, 246, 0.16), transparent 32%),
+            linear-gradient(180deg, #f6f1ff 0%, #f3efff 46%, #eef2ff 100%);
     }
 
-    .profile-info-row {
+    .profile-dashboard-shell {
+        min-height: calc(100vh - 64px);
+        background: transparent !important;
+    }
+
+    .profile-dashboard-hero {
+        background:
+            radial-gradient(circle at top left, rgba(255, 255, 255, 0.24), transparent 24%),
+            radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.14), transparent 26%),
+            linear-gradient(135deg, #7c3aed 0%, #8b5cf6 42%, #c084fc 100%);
+        padding: 1.4rem 1rem 7.5rem;
+    }
+
+    .profile-hero-topline,
+    .profile-hero-identity {
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-hero-status-group {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1rem 1.25rem;
+        gap: 0.6rem;
     }
 
-    .profile-info-icon {
-        font-size: 1.3rem;
-        flex-shrink: 0;
+    .profile-hero-login-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        border-radius: 999px;
+        border: 1px solid rgba(20, 184, 166, 0.24);
+        background: rgba(255, 255, 255, 0.88);
+        color: #0f766e;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-decoration: none;
     }
 
-    .profile-info-content {
+    .profile-hero-login-btn:hover {
+        background: rgba(240, 253, 250, 0.96);
+        border-color: rgba(20, 184, 166, 0.4);
+    }
+
+    .profile-hero-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        font-size: 0.74rem;
+        font-weight: 700;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(14px);
+    }
+
+    .profile-status-dot {
+        width: 0.48rem;
+        height: 0.48rem;
+        border-radius: 50%;
+        background: #5eead4;
+        box-shadow: 0 0 0 0.24rem rgba(94, 234, 212, 0.2);
+    }
+
+    .profile-status-caption {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.72rem;
+        text-align: right;
+    }
+
+    .profile-hero-identity {
         display: flex;
         flex-direction: column;
-        gap: 0.15rem;
+        align-items: center;
+        text-align: center;
     }
 
-    .profile-info-label {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-    }
-
-    .profile-info-value {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--text);
-    }
-
-    .profile-info-divider {
-        height: 1px;
-        background: var(--border);
-        margin: 0 1.25rem;
-    }
-
-    /* Avatar wrapper for badge positioning */
     .profile-avatar-wrapper {
         position: relative;
-        width: 90px;
+        width: 6rem;
         margin: 0 auto 1rem;
     }
 
-    .avatar-camera-badge {
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
-        width: 26px;
-        height: 26px;
-        background: var(--surface);
+    .profile-avatar-ring {
+        width: 6rem !important;
+        height: 6rem !important;
+        margin: 0 !important;
+        padding: 0;
+        border: 3px solid rgba(255, 255, 255, 0.42);
+        box-shadow: 0 20px 42px rgba(88, 28, 135, 0.28);
+        background: rgba(255, 255, 255, 0.22);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        backdrop-filter: blur(14px);
+    }
+
+    .profile-avatar-ring:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 22px 46px rgba(8, 47, 73, 0.32);
+    }
+
+    .profile-avatar-media {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+    }
+
+    .profile-avatar-fallback {
+        width: 100%;
+        height: 100%;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.85rem;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+    }
+
+    .avatar-camera-badge {
+        position: absolute;
+        right: -0.15rem;
+        bottom: -0.05rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        border: none;
+        background: #fff;
+        color: #7c3aed;
+        box-shadow: 0 10px 22px rgba(124, 58, 237, 0.22);
         cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        transition: transform var(--ease);
     }
 
-    .avatar-camera-badge:hover {
-        transform: scale(1.15);
+    .avatar-camera-badge svg,
+    .profile-info-icon svg,
+    .profile-input-icon svg,
+    .profile-action-icon svg,
+    .profile-logout-btn svg {
+        width: 1rem;
+        height: 1rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
-    .profile-avatar-ring {
-        margin: 0 !important;
-        width: 90px !important;
-        height: 90px !important;
+    .profile-hero-title {
+        font-size: 1.55rem;
+        line-height: 1.15;
+        margin-bottom: 0.35rem;
+        color: #fff !important;
+        text-shadow: 0 10px 30px rgba(76, 29, 149, 0.28);
+    }
+
+    .profile-hero-sub {
+        max-width: 22rem;
+        color: rgba(255, 255, 255, 0.94) !important;
+        font-size: 0.88rem;
+        margin-bottom: 0;
+    }
+
+    .profile-metrics-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .profile-metric-card {
+        padding: 0.95rem;
+        border-radius: 1.15rem;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        backdrop-filter: blur(20px);
+        text-align: left;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.18),
+            0 18px 34px rgba(76, 29, 149, 0.16);
+    }
+
+    .profile-metric-label {
+        display: block;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .profile-metric-value {
+        display: block;
+        margin-top: 0.35rem;
+        color: #fff;
+        font-size: 1.5rem;
+        line-height: 1;
+        text-shadow: 0 8px 24px rgba(76, 29, 149, 0.22);
+    }
+
+    .profile-metric-note {
+        display: block;
+        margin-top: 0.3rem;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 0.72rem;
+        line-height: 1.45;
+    }
+
+    .profile-dashboard-main {
+        margin-top: -5.5rem;
+        border-radius: 1.8rem 1.8rem 0 0;
+        padding: 1.2rem 1rem 7rem;
+        background: linear-gradient(180deg, rgba(248, 245, 255, 0.96) 0%, rgba(244, 241, 255, 0.98) 100%);
+        box-shadow: 0 -18px 38px rgba(88, 28, 135, 0.12);
+    }
+
+    .profile-dashboard-grid {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .profile-panel {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(255, 255, 255, 0.64) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.46);
+        border-radius: 1.5rem;
+        padding: 1.15rem;
+        box-shadow: 0 18px 36px rgba(88, 28, 135, 0.08);
+        backdrop-filter: blur(22px);
+    }
+
+    .profile-panel-primary,
+    .profile-panel-secondary {
+        min-width: 0;
+    }
+
+    .profile-panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .profile-panel-title {
+        margin: 0.28rem 0 0;
+        color: #1f1b4d;
+        font-size: 1.14rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.22;
+    }
+
+    .profile-section-label {
+        color: #746e9d;
+        letter-spacing: 0.12em;
+    }
+
+    .profile-panel-head .profile-section-label {
+        margin-bottom: 0.42rem;
+    }
+
+    .profile-inline-action {
+        display: inline-flex;
+        align-items: center;
+        border: none;
+        background: rgba(139, 92, 246, 0.12);
+        color: #6d28d9;
+        padding: 0.55rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .profile-summary-list,
+    .profile-progress-card,
+    .profile-insight-card,
+    .profile-next-step-card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 245, 255, 0.74) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.12);
+        border-radius: 1.25rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .profile-info-card {
+        overflow: hidden;
+    }
+
+    .profile-info-row {
+        gap: 0.85rem;
+        padding: 1rem;
+    }
+
+    .profile-info-icon,
+    .profile-input-icon {
+        color: #7c3aed;
+    }
+
+    .profile-info-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(139, 92, 246, 0.12);
+        flex-shrink: 0;
+    }
+
+    .profile-info-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .profile-info-label {
+        color: #6b6f97;
+        letter-spacing: 0.08em;
+        font-size: 0.69rem;
+    }
+
+    .profile-info-value {
+        color: #1f1b4d;
+        font-size: 1rem;
+    }
+
+    .profile-panel-actions {
+        margin-top: 1rem;
+    }
+
+    .profile-primary-btn {
+        width: 100%;
+        border: none;
+        border-radius: 1rem;
+        padding: 0.95rem 1rem;
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        box-shadow: 0 16px 30px rgba(124, 58, 237, 0.2);
+    }
+
+    .profile-form-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .profile-field-label {
+        margin-bottom: 0.55rem;
+        color: #1f1b4d;
+    }
+
+    .profile-input-wrapper {
+        position: relative;
+    }
+
+    .profile-input-icon {
+        position: absolute;
+        left: 0.95rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-input {
+        height: 3.2rem;
+        padding-left: 2.9rem !important;
+        border-radius: 1rem !important;
+        border: 1px solid rgba(139, 92, 246, 0.16) !important;
+        background: rgba(255, 255, 255, 0.78) !important;
+        color: #1f1b4d !important;
+    }
+
+    .profile-input:focus {
+        border-color: #8b5cf6 !important;
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12) !important;
+        background: #fff !important;
+    }
+
+    .gender-options-grid {
+        gap: 0.75rem !important;
+    }
+
+    .option-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.28rem;
+        min-height: 5rem;
+        padding: 0.9rem !important;
+        border-radius: 1rem !important;
+        background: rgba(255, 255, 255, 0.78) !important;
+        border: 1px solid rgba(139, 92, 246, 0.14) !important;
+    }
+
+    .option-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1f1b4d;
+    }
+
+    .option-subtitle {
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: #6b6f97;
+        text-align: left;
+    }
+
+    .gender-option input:checked + .option-content {
+        background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+        border-color: transparent !important;
+        box-shadow: 0 16px 30px rgba(124, 58, 237, 0.16) !important;
+    }
+
+    .gender-option input:checked + .option-content .option-title,
+    .gender-option input:checked + .option-content .option-subtitle {
+        color: #fff;
+    }
+
+    .profile-save-btn {
+        margin-top: 1rem !important;
+        border-radius: 1rem !important;
+        background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+        border: none !important;
+        box-shadow: 0 18px 30px rgba(124, 58, 237, 0.18);
+    }
+
+    .profile-inline-message {
+        padding: 0.85rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.84rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .profile-inline-message-success {
+        color: #065f46;
+        background: rgba(167, 243, 208, 0.42);
+        border: 1px solid rgba(16, 185, 129, 0.18);
+    }
+
+    .profile-progress-card,
+    .profile-next-step-card {
+        padding: 1rem;
+    }
+
+    .profile-progress-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .profile-progress-label,
+    .profile-insight-label {
+        display: block;
+        color: #6b6f97;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .profile-progress-value,
+    .profile-insight-value,
+    .profile-next-step-title {
+        display: block;
+        color: #1f1b4d;
+        font-size: 1.05rem;
+        line-height: 1.25;
+        margin-top: 0.3rem;
+    }
+
+    .profile-progress-pill {
+        padding: 0.36rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(139, 92, 246, 0.12);
+        color: #6d28d9;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .profile-progress-track {
+        width: 100%;
+        height: 0.62rem;
+        background: rgba(139, 92, 246, 0.12);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .profile-progress-fill {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #8b5cf6, #c084fc);
+        transition: width 0.28s ease;
+    }
+
+    .profile-progress-copy,
+    .profile-insight-copy,
+    .profile-next-step-copy {
+        margin: 0.7rem 0 0;
+        font-size: 0.8rem;
+        line-height: 1.55;
+        color: #5b608f;
+    }
+
+    .profile-insight-stack {
+        display: grid;
+        gap: 0.8rem;
+        margin-top: 0.9rem;
+    }
+
+    .profile-insight-card {
+        padding: 0.95rem;
+    }
+
+    .profile-actions-grid-enhanced {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .profile-action-card-enhanced {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.9rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 245, 255, 0.72) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.12);
+        border-radius: 1.2rem;
+        box-shadow: 0 14px 26px rgba(88, 28, 135, 0.06);
+        backdrop-filter: blur(18px);
+    }
+
+    .profile-action-card-enhanced:hover {
+        border-color: rgba(139, 92, 246, 0.26);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(243, 232, 255, 0.8) 100%);
+    }
+
+    .profile-action-icon {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(139, 92, 246, 0.12);
+        color: #7c3aed;
+        flex-shrink: 0;
+    }
+
+    .profile-action-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.22rem;
+        min-width: 0;
+    }
+
+    .profile-action-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1f1b4d;
+    }
+
+    .profile-action-subtitle {
+        font-size: 0.76rem;
+        line-height: 1.5;
+        color: #5b608f;
+        text-align: left;
+    }
+
+    .profile-app-info-enhanced {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(139, 92, 246, 0.12);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 245, 255, 0.74) 100%);
+        backdrop-filter: blur(18px);
+    }
+
+    .profile-app-info-row {
+        padding: 0.95rem 1rem;
+        font-size: 0.84rem;
+    }
+
+    .profile-app-info-row span:first-child {
+        color: #6b6f97;
+        font-weight: 700;
+    }
+
+    .profile-app-info-row span:last-child {
+        color: #1f1b4d;
+        font-weight: 700;
+    }
+
+    .profile-next-step-card {
+        margin-bottom: 1rem;
+    }
+
+    .profile-logout-btn {
+        border-radius: 1rem;
+        border: 1px solid rgba(239, 68, 68, 0.22);
+        background: rgba(255, 255, 255, 0.84);
+        color: #dc2626 !important;
+        margin-top: 0;
+    }
+
+    .profile-login-btn {
+        border-color: rgba(20, 184, 166, 0.24);
+        color: #0f766e !important;
+    }
+
+    .profile-login-btn:hover {
+        background: rgba(240, 253, 250, 0.92);
+        border-color: rgba(20, 184, 166, 0.4);
+    }
+
+    @media (min-width: 768px) {
+        .profile-dashboard-hero {
+            padding: 1.8rem 1.6rem 8rem;
+        }
+
+        .profile-dashboard-main {
+            padding: 1.4rem 1.4rem 7.5rem;
+        }
+
+        .profile-dashboard-grid {
+            grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.95fr);
+            align-items: start;
+        }
+
+        .profile-dashboard-bottom {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .profile-form-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .profile-actions-grid-enhanced {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .profile-metrics-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
     }
 </style>
 
 <script>
-    const GENDER_ICONS = { 'Male': '👨 Male', 'Female': '👩 Female', 'Other': '🧑 Other', 'Prefer not to say': '🤐 Private' };
-    const GENDER_SYMBOL = { 'Male': '♂', 'Female': '♀', 'Other': '⚧', 'Prefer not to say': '—' };
-    const PHOTO_KEY = 'swahealthy_profile_photo';
+    const GENDER_LABELS = {
+        'Male': 'Male',
+        'Female': 'Female',
+        'Other': 'Other',
+        'Prefer not to say': 'Private'
+    };
 
-    /* ── Photo upload ── */
+    const PHOTO_KEY = 'swahealthy_profile_photo';
+    const PROFILE_UPDATED_KEY = 'swahealthy_profile_updated_at';
+
+    function getProfileState() {
+        const age = document.getElementById('profile-age').value || '';
+        const gender = document.querySelector('input[name="gender"]:checked')?.value || '';
+        const phone = document.getElementById('profile-phone').value || '';
+        return { age, gender, phone };
+    }
+
+    function getCompletionPercentage(age, gender, phone, hasPhoto) {
+        const parts = [Boolean(age), Boolean(gender), Boolean(phone), Boolean(hasPhoto)];
+        const completed = parts.filter(Boolean).length;
+        return Math.round((completed / parts.length) * 100);
+    }
+
+    function formatGender(value) {
+        return GENDER_LABELS[value] || value || '--';
+    }
+
+    function formatAge(value) {
+        return value ? `${value} yrs` : '--';
+    }
+
+    function formatLastUpdated(value) {
+        if (!value) return 'Not available';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'Not available';
+        return date.toLocaleString(undefined, {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    }
+
+    function setMetricText(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    }
+
+    function updateStatusCopy(completion, checkCount, age, gender, phone) {
+        const hasCoreProfile = Boolean(age && gender && phone);
+        let statusText = 'Ready to personalize your care';
+        let careFocusValue = 'Complete your profile';
+        let careFocusCopy = 'The app will use your details to make symptom guidance more relevant.';
+        let nextStepTitle = 'Complete your profile details';
+        let nextStepCopy = 'Adding your age, gender, phone, and photo helps the app tailor future guidance.';
+        let completionPill = 'Needs setup';
+        let completionCopy = 'Add age, gender, phone, and a photo to make your profile more useful.';
+
+        if (completion >= 100) {
+            statusText = 'Profile dashboard is fully set up';
+            careFocusValue = checkCount > 0 ? 'Keep monitoring your health' : 'Run your first health check';
+            careFocusCopy = checkCount > 0
+                ? 'Your profile is ready for follow-up checks, appointments, and AI scans.'
+                : 'You have a complete profile, so new symptom checks will be more personalized.';
+            nextStepTitle = checkCount > 0 ? 'Review your recent health activity' : 'Start a guided symptom check';
+            nextStepCopy = checkCount > 0
+                ? 'Open your history or book a doctor if you want to follow up on past results.'
+                : 'Start from the symptom checker to generate your first personalized result.';
+            completionPill = 'Complete';
+            completionCopy = 'All profile essentials are in place.';
+        } else if (hasCoreProfile) {
+            statusText = 'Profile is almost complete';
+            careFocusValue = 'Add a profile photo';
+            careFocusCopy = 'A photo makes your account feel finished and easier to recognize on shared devices.';
+            nextStepTitle = checkCount > 0 ? 'Continue with your care workflow' : 'Run a first symptom check';
+            nextStepCopy = checkCount > 0
+                ? 'Use quick actions to review history, book a doctor, or launch an AI scan.'
+                : 'Now that your health details are saved, you can start a symptom check with better context.';
+            completionPill = 'Almost there';
+            completionCopy = 'Core health details are saved. A photo is the final touch.';
+        } else if (checkCount > 0) {
+            statusText = 'Past checks found on this device';
+            careFocusValue = 'Finish your health profile';
+            careFocusCopy = 'You already have history in the app. Completing the profile will improve future recommendations.';
+            nextStepTitle = 'Add the missing health details';
+            nextStepCopy = 'Complete age, gender, and phone so future guidance can use your profile context.';
+            completionPill = 'In progress';
+            completionCopy = 'You have some activity already. Completing the profile will make the dashboard more useful.';
+        }
+
+        setMetricText('profile-last-updated-label', statusText);
+        setMetricText('care-focus-value', careFocusValue);
+        setMetricText('care-focus-copy', careFocusCopy);
+        setMetricText('next-step-title', nextStepTitle);
+        setMetricText('next-step-copy', nextStepCopy);
+        setMetricText('completion-pill', completionPill);
+        setMetricText('completion-copy', completionCopy);
+    }
+
+    function renderDashboard(age, gender, phone, checkCount, hasPhoto, languageCode) {
+        const completion = getCompletionPercentage(age, gender, phone, hasPhoto);
+        const langMap = { en: 'English', bn: 'Bangla', hi: 'Hindi' };
+        const updatedAt = localStorage.getItem(PROFILE_UPDATED_KEY);
+
+        setMetricText('stat-checks', String(checkCount));
+        setMetricText('stat-checks-note', checkCount === 1 ? 'health session tracked' : 'health sessions tracked');
+        setMetricText('stat-age', age || '--');
+        setMetricText('stat-age-note', age ? `${age} years saved` : 'not added yet');
+        setMetricText('stat-gender', gender ? formatGender(gender) : '--');
+        setMetricText('stat-gender-note', gender ? 'saved to your profile' : 'not added yet');
+        setMetricText('stat-completion', `${completion}%`);
+        setMetricText('stat-completion-note', completion >= 100 ? 'dashboard fully set up' : 'finish setup for better guidance');
+
+        setMetricText('view-age', formatAge(age));
+        setMetricText('view-gender', formatGender(gender));
+        setMetricText('view-phone', phone || '--');
+
+        setMetricText('completion-title', `${completion}% complete`);
+        setMetricText('profile-last-updated', formatLastUpdated(updatedAt));
+        setMetricText('info-lang', langMap[languageCode] || 'English');
+        setMetricText('info-lang-card', langMap[languageCode] || 'English');
+
+        const completionBar = document.getElementById('completion-bar');
+        if (completionBar) completionBar.style.width = `${completion}%`;
+
+        updateStatusCopy(completion, checkCount, age, gender, phone);
+    }
+
+    function applyPhoto(base64) {
+        const img = document.getElementById('avatar-img');
+        const google = document.getElementById('avatar-google');
+        const fallback = document.getElementById('avatar-fallback');
+        const removeBtn = document.getElementById('remove-photo-btn');
+
+        img.src = base64;
+        img.style.display = 'block';
+        if (google) google.style.display = 'none';
+        if (fallback) fallback.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'inline-flex';
+    }
+
+    function clearPhotoToDefault() {
+        const img = document.getElementById('avatar-img');
+        const google = document.getElementById('avatar-google');
+        const fallback = document.getElementById('avatar-fallback');
+        const removeBtn = document.getElementById('remove-photo-btn');
+
+        img.src = '';
+        img.style.display = 'none';
+        if (google) google.style.display = 'block';
+        if (fallback) fallback.style.display = 'flex';
+        if (removeBtn) removeBtn.style.display = 'none';
+    }
+
+    function showPhotoMsg() {
+        const msg = document.getElementById('photo-upload-msg');
+        msg.style.display = 'block';
+        setTimeout(() => {
+            msg.style.display = 'none';
+        }, 2000);
+    }
+
     function handlePhotoUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Warn if too large (>1.5MB)
         if (file.size > 1.5 * 1024 * 1024) {
-            alert('Photo is too large. Please choose an image under 1.5MB.');
+            alert(t('photo_too_large'));
             return;
         }
 
@@ -341,131 +1245,98 @@
             const base64 = e.target.result;
             try {
                 localStorage.setItem(PHOTO_KEY, base64);
+                localStorage.setItem(PROFILE_UPDATED_KEY, new Date().toISOString());
                 applyPhoto(base64);
+                const { age, gender, phone } = getProfileState();
+                const languageCode = localStorage.getItem('swahealthy_lang') || 'en';
+                const checkCount = Number(document.getElementById('stat-checks').textContent || 0);
+                renderDashboard(age, gender, phone, checkCount, true, languageCode);
                 showPhotoMsg();
             } catch (err) {
-                alert('Could not save photo — storage may be full. Try a smaller image.');
+                alert(t('photo_save_failed'));
             }
         };
         reader.readAsDataURL(file);
     }
 
-    function applyPhoto(base64) {
-        const img = document.getElementById('avatar-img');
-        img.src = base64;
-        img.style.display = 'block';
-
-        // Hide Google photo and SVG fallback
-        const google = document.getElementById('avatar-google');
-        const svg = document.getElementById('avatar-svg');
-        if (google) google.style.display = 'none';
-        if (svg) svg.style.display = 'none';
-
-        // Show remove button
-        const removeBtn = document.getElementById('remove-photo-btn');
-        if (removeBtn) removeBtn.style.display = 'flex';
-    }
-
     function removePhoto() {
         localStorage.removeItem(PHOTO_KEY);
-        const img = document.getElementById('avatar-img');
-        img.src = '';
-        img.style.display = 'none';
+        localStorage.setItem(PROFILE_UPDATED_KEY, new Date().toISOString());
+        clearPhotoToDefault();
 
-        // Restore Google photo or SVG
-        const google = document.getElementById('avatar-google');
-        const svg = document.getElementById('avatar-svg');
-        if (google) google.style.display = 'block';
-        else if (svg) svg.style.display = 'block';
-
-        const removeBtn = document.getElementById('remove-photo-btn');
-        if (removeBtn) removeBtn.style.display = 'none';
+        const { age, gender, phone } = getProfileState();
+        const languageCode = localStorage.getItem('swahealthy_lang') || 'en';
+        const checkCount = Number(document.getElementById('stat-checks').textContent || 0);
+        renderDashboard(age, gender, phone, checkCount, false, languageCode);
     }
 
-    function showPhotoMsg() {
-        const msg = document.getElementById('photo-upload-msg');
-        msg.style.display = 'block';
-        setTimeout(() => { msg.style.display = 'none'; }, 2000);
-    }
-
-    /* ── View / Edit toggle ── */
     function switchToEdit() {
         document.getElementById('profile-view-mode').style.display = 'none';
         document.getElementById('profile-edit-mode').style.display = 'block';
     }
 
     function switchToView(age, gender, phone) {
-        document.getElementById('view-age').textContent = age ? age + ' yrs' : '—';
-        document.getElementById('view-gender').textContent = GENDER_ICONS[gender] || gender || '—';
-        document.getElementById('view-phone').textContent = phone || '—';
+        setMetricText('view-age', formatAge(age));
+        setMetricText('view-gender', formatGender(gender));
+        setMetricText('view-phone', phone || '--');
         document.getElementById('profile-edit-mode').style.display = 'none';
         document.getElementById('profile-view-mode').style.display = 'block';
     }
 
-    /* ── On load ── */
     document.addEventListener('DOMContentLoaded', () => {
-        // Use server-side values if provided, else fallback to localStorage
         const serverAge = {{ age|tojson if age is not none else 'null' }};
         const serverGender = {{ gender|tojson if gender is not none else 'null' }};
         const serverCheckCount = {{ check_count|tojson if check_count is not none else 'null' }};
 
-        const savedAge = serverAge || localStorage.getItem('swahealthy_age');
-        const savedGender = serverGender || localStorage.getItem('swahealthy_gender');
-        const savedPhone = localStorage.getItem('swahealthy_phone');
+        const savedAge = serverAge || localStorage.getItem('swahealthy_age') || '';
+        const savedGender = serverGender || localStorage.getItem('swahealthy_gender') || '';
+        const savedPhone = localStorage.getItem('swahealthy_phone') || '';
         const savedPhoto = localStorage.getItem(PHOTO_KEY);
         const savedLang = localStorage.getItem('swahealthy_lang') || 'en';
 
-        // Apply saved photo
-        if (savedPhoto) applyPhoto(savedPhoto);
+        if (savedAge) document.getElementById('profile-age').value = savedAge;
+        if (savedPhone) document.getElementById('profile-phone').value = savedPhone;
+        if (savedGender) {
+            const radio = document.querySelector(`input[name="gender"][value="${savedGender}"]`);
+            if (radio) radio.checked = true;
+        }
 
-        // Check count
         let checkCount = 0;
         if (serverCheckCount !== null) {
             checkCount = serverCheckCount;
         } else {
             try {
-                const h = localStorage.getItem('swahealthy_history');
-                checkCount = h ? JSON.parse(h).length : 0;
-            } catch (e) { }
+                const history = localStorage.getItem('swahealthy_history');
+                checkCount = history ? JSON.parse(history).length : 0;
+            } catch (e) {
+                checkCount = 0;
+            }
         }
-        document.getElementById('stat-checks').textContent = checkCount;
 
-        // Language
-        const langMap = { en: 'English', bn: 'বাংলা', hi: 'हिंदी' };
-        const infoLang = document.getElementById('info-lang');
-        if (infoLang) infoLang.textContent = langMap[savedLang] || 'English';
+        if (savedPhoto) {
+            applyPhoto(savedPhoto);
+        } else {
+            clearPhotoToDefault();
+        }
 
-        // Pre-fill and decide mode
+        renderDashboard(savedAge, savedGender, savedPhone, checkCount, Boolean(savedPhoto), savedLang);
+
         if (savedAge || savedGender || savedPhone) {
-            if (savedAge) {
-                document.getElementById('profile-age').value = savedAge;
-                document.getElementById('stat-age').textContent = savedAge;
-            }
-            if (savedPhone) {
-                document.getElementById('profile-phone').value = savedPhone;
-            }
-            if (savedGender) {
-                const radio = document.querySelector(`input[name="gender"][value="${savedGender}"]`);
-                if (radio) radio.checked = true;
-                document.getElementById('stat-gender').textContent = GENDER_SYMBOL[savedGender] || '—';
-            }
             switchToView(savedAge, savedGender, savedPhone);
         }
     });
 
-    // Update saveProfile to sync with backend if logged in
     async function saveProfile(event) {
         event.preventDefault();
         const age = document.getElementById('profile-age').value;
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const phone = document.getElementById('profile-phone').value;
 
-        // Save locally
         localStorage.setItem('swahealthy_age', age);
         localStorage.setItem('swahealthy_gender', gender);
         localStorage.setItem('swahealthy_phone', phone);
+        localStorage.setItem(PROFILE_UPDATED_KEY, new Date().toISOString());
 
-        // Sync with backend if logged in
         {% if session.get('user') %}
         try {
             await fetch('/update-profile', {
@@ -474,12 +1345,14 @@
                 body: JSON.stringify({ age, gender, phone })
             });
         } catch (e) {
-            console.error("Failed to sync profile to server:", e);
+            console.error('Failed to sync profile to server:', e);
         }
         {% endif %}
 
-        document.getElementById('stat-age').textContent = age;
-        document.getElementById('stat-gender').textContent = GENDER_SYMBOL[gender] || '—';
+        const savedPhoto = localStorage.getItem(PHOTO_KEY);
+        const savedLang = localStorage.getItem('swahealthy_lang') || 'en';
+        const checkCount = Number(document.getElementById('stat-checks').textContent || 0);
+        renderDashboard(age, gender, phone, checkCount, Boolean(savedPhoto), savedLang);
 
         const msg = document.getElementById('save-msg');
         msg.style.display = 'block';

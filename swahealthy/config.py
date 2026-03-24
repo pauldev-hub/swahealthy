@@ -18,6 +18,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'default-secret-key'
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
     GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
+    OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
 
     # Google OAuth (Stripping whitespace to prevent invalid_client errors from hidden chars)
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '').strip()

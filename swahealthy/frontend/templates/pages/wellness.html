@@ -31,20 +31,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hero-sub{font-size:0.82rem;color:rgba(255,255,255,.85);line-height:1.5}
 
 /* AI CHAT BAR */
-.chat-bar-wrap{margin-bottom:1.25rem;position:relative}
-.chat-bar{display:flex;align-items:center;gap:0.75rem;background:var(--surface);border:1.5px solid var(--border-mid);border-radius:50px;padding:0.7rem 1rem;box-shadow:var(--sh-md);cursor:text;transition:all var(--ease)}
+.chat-bar-wrap{margin-bottom:1rem;position:relative}
+.chat-bar{display:flex;align-items:center;gap:0.75rem;background:var(--surface);border:1.5px solid var(--border-mid);border-radius:50px;padding:0.7rem 1rem;box-shadow:var(--sh-md);cursor:pointer;transition:all var(--ease)}
 .chat-bar:hover,.chat-bar.focused{border-color:var(--primary);box-shadow:0 4px 20px rgba(13,148,136,.18)}
 .chat-bar-icon{font-size:1.1rem;flex-shrink:0}
-.chat-bar input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:0.9rem;color:var(--text)}
+.chat-bar input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:0.9rem;color:var(--text);pointer-events:none}
 .chat-bar input::placeholder{color:var(--text-muted)}
 .chat-send{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.8rem;flex-shrink:0;transition:all var(--ease)}
 .chat-send:hover{transform:scale(1.08)}
 
-/* Expanded chat panel */
-.chat-panel{background:var(--surface);border:1.5px solid var(--border-mid);border-radius:var(--r-xl);margin-top:0.5rem;overflow:hidden;box-shadow:var(--sh-lg);animation:slideDown .25s ease}
+/* Full-screen chat */
+.chat-overlay{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;padding:72px 8px 88px;z-index:1200}
+.chat-overlay.is-open{display:flex}
+.chat-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.52);backdrop-filter:blur(4px)}
+.chat-panel{position:relative;background:var(--surface);border:1.5px solid var(--border-mid);border-radius:28px;width:min(100%,520px);height:min(calc(100dvh - 160px),760px);margin-top:0;overflow:hidden;box-shadow:var(--sh-lg);animation:slideDown .25s ease;display:flex;flex-direction:column}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.chat-panel-header{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.9rem 1rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,.96)}
+.chat-panel-title{display:flex;align-items:center;gap:0.75rem}
+.chat-panel-badge{display:grid;place-items:center;width:40px;height:40px;border-radius:15px;background:linear-gradient(135deg,rgba(124,92,255,.14),rgba(236,72,153,.15));font-size:1.1rem}
+.chat-panel-copy strong{display:block;font-size:0.96rem;color:var(--text)}
+.chat-panel-copy span{display:block;font-size:0.76rem;color:var(--text-muted)}
+.chat-panel-actions{display:flex;align-items:center;gap:0.45rem}
+.chat-clear-btn{border:none;background:rgba(139,92,246,.1);color:#7c3aed;min-height:34px;padding:0.45rem 0.8rem;border-radius:999px;font-size:0.76rem;font-weight:700;cursor:pointer;transition:all var(--ease)}
+.chat-clear-btn:hover{background:rgba(139,92,246,.16)}
+.chat-close-btn{border:none;background:rgba(148,163,184,.12);color:var(--text);width:36px;height:36px;border-radius:50%;font-size:1.15rem;cursor:pointer;transition:all var(--ease)}
+.chat-close-btn:hover{background:rgba(139,92,246,.14);color:var(--primary)}
 .chat-disclaimer{background:#FFF7ED;border-bottom:1px solid #FED7AA;padding:0.5rem 1rem;font-size:0.72rem;color:#92400E;text-align:center}
-.chat-messages{padding:1rem;display:flex;flex-direction:column;gap:0.75rem;max-height:220px;overflow-y:auto}
+.chat-messages{padding:1rem;display:flex;flex-direction:column;gap:0.75rem;flex:1;min-height:0;overflow-y:auto}
 .msg{max-width:80%;padding:0.65rem 0.9rem;border-radius:var(--r-lg);font-size:0.88rem;line-height:1.5}
 .msg.ai{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px var(--r-lg) var(--r-lg) var(--r-lg);align-self:flex-start}
 .msg.user{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:var(--r-lg) 4px var(--r-lg) var(--r-lg);align-self:flex-end}
@@ -57,8 +70,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .chat-input-row{display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid var(--border);background:var(--surface)}
 .chat-input-row input{flex:1;border:1.5px solid var(--border-mid);border-radius:50px;padding:0.55rem 1rem;font-size:0.88rem;font-family:var(--font);outline:none;color:var(--text)}
 .chat-input-row input:focus{border-color:var(--primary)}
-.chat-close{text-align:center;padding:0.4rem;font-size:0.75rem;color:var(--text-muted);cursor:pointer;border-top:1px solid var(--border);background:var(--surface2,#f8fffe)}
-.chat-close:hover{color:var(--primary)}
+body.chat-open{overflow:hidden}
+body.chat-open .bottom-nav,
+body.chat-open .brain-fab,
+body.chat-open .sos-fab{opacity:0;pointer-events:none}
 
 /* TABS */
 .tab-bar{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:4px;gap:3px;margin-bottom:1.25rem;box-shadow:var(--sh-sm)}
@@ -74,9 +89,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .section-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:0.85rem}
 
 /* MOOD JOURNAL */
-.mood-emojis{display:flex;justify-content:space-around;margin-bottom:1rem}
-.mood-btn{background:none;border:2px solid var(--border-mid);border-radius:var(--r-md);padding:0.6rem 0.75rem;cursor:pointer;font-size:1.5rem;transition:all var(--ease);display:flex;flex-direction:column;align-items:center;gap:3px}
-.mood-btn span{font-size:0.6rem;font-weight:600;color:var(--text-muted)}
+.mood-emojis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.65rem;margin-bottom:1rem}
+.mood-btn{background:none;border:2px solid var(--border-mid);border-radius:18px;padding:0.8rem 0.55rem;cursor:pointer;font-size:1.5rem;transition:all var(--ease);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.35rem;min-height:78px}
+.mood-btn span{font-size:0.72rem;font-weight:700;color:var(--text-muted);line-height:1.1}
+.mood-btn span:first-child{font-size:1.45rem;line-height:1}
 .mood-btn:hover,.mood-btn.selected{border-color:var(--primary);background:var(--primary-light);transform:scale(1.08)}
 .mood-btn.selected{box-shadow:0 0 0 3px rgba(13,148,136,.2)}
 .mood-response{background:var(--primary-light);border:1px solid var(--border-mid);border-radius:var(--r-md);padding:0.65rem 1rem;font-size:0.85rem;color:var(--primary-dark);font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
@@ -231,6 +247,276 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .gap-sm{gap:0.5rem}
 
 </style>
+<style>
+.wellness-page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1rem 1rem 7rem;
+}
+
+.wellness-page .wellness-hero {
+  padding: 1.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,.12), transparent 28%),
+    linear-gradient(135deg, #7c5cff 0%, #9a63f3 50%, #ec4899 100%);
+  box-shadow: 0 22px 36px rgba(124, 92, 255, 0.18);
+}
+
+.wellness-page .hero-title {
+  font-size: 1.7rem;
+  line-height: 1.15;
+}
+
+.wellness-page .hero-sub {
+  max-width: 26rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.wellness-page .chat-bar-wrap {
+  margin-bottom: 0.85rem;
+}
+
+.wellness-page .chat-launch-copy {
+  margin: 0.55rem 0 0.2rem;
+  padding-left: 0.3rem;
+  font-size: 0.78rem;
+  color: #7c3aed;
+}
+
+
+.wellness-page .chat-bar {
+  padding: 0.85rem 0.95rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 28px rgba(139, 92, 246, 0.08);
+}
+
+.wellness-page .chat-bar-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(236, 72, 153, 0.15));
+}
+
+.wellness-page .chat-send {
+  width: 38px;
+  height: 38px;
+  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2);
+}
+
+.wellness-page .chat-panel {
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(139, 92, 246, 0.18);
+  box-shadow: 0 22px 42px rgba(15, 23, 42, 0.12);
+}
+
+.wellness-page .chat-panel-header {
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,.7), transparent 30%),
+    linear-gradient(135deg, rgba(124,92,255,.1), rgba(236,72,153,.08));
+  padding: 0.75rem 0.9rem;
+}
+
+.wellness-page .chat-disclaimer {
+  background: linear-gradient(180deg, #fff7ed, #fffbeb);
+  color: #b45309;
+}
+
+.wellness-page .chat-messages {
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.72), rgba(255,255,255,0));
+}
+
+.wellness-page .chat-disclaimer {
+  padding: 0.45rem 0.85rem;
+}
+
+.wellness-page .msg.ai {
+  background: #fff;
+  border: 1px solid rgba(139, 92, 246, 0.14);
+  border-radius: 18px 18px 18px 6px;
+  box-shadow: 0 10px 22px rgba(148, 163, 184, 0.08);
+}
+
+.wellness-page .msg.user {
+  border-radius: 18px 18px 6px 18px;
+  box-shadow: 0 12px 22px rgba(139, 92, 246, 0.16);
+}
+
+.wellness-page .chat-input-row {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.wellness-page .chat-input-row input {
+  min-height: 44px;
+  border-radius: 16px;
+}
+
+.wellness-page .tab-bar {
+  padding: 5px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 26px rgba(148, 163, 184, 0.1);
+}
+
+.wellness-page .tab-btn {
+  min-height: 58px;
+  border-radius: 18px;
+}
+
+.wellness-page .tab-btn.active {
+  background: linear-gradient(135deg, #7c5cff, #8b5cf6);
+  box-shadow: 0 12px 22px rgba(124, 92, 255, 0.22);
+}
+
+.wellness-page .card {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+}
+
+.wellness-page .section-label {
+  color: #64748b;
+  letter-spacing: 0.08em;
+}
+
+.wellness-page .mood-emojis {
+  gap: 0.6rem;
+}
+
+.wellness-page .mood-btn {
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.92);
+  border-color: rgba(139, 92, 246, 0.18);
+  min-width: 0;
+}
+
+.wellness-page .mood-btn.selected {
+  background: linear-gradient(180deg, rgba(124,92,255,.08), rgba(236,72,153,.08));
+}
+
+.wellness-page .mood-response,
+.wellness-page .streak,
+.wellness-page .encouragement {
+  border-radius: 18px;
+}
+
+.wellness-page .day-bubble .emoji-circle {
+  width: 40px;
+  height: 40px;
+}
+
+.wellness-page .reflection-card,
+.wellness-page .result-body,
+.wellness-page .groq-analysis,
+.wellness-page .sleep-card-slide {
+  border-radius: 20px;
+}
+
+.wellness-page .assess-card,
+.wellness-page .helpline-card {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 22px rgba(148, 163, 184, 0.08);
+}
+
+.wellness-page .result-top {
+  background: linear-gradient(135deg, #7c5cff, #ec4899);
+}
+
+.wellness-page .btn-primary,
+.wellness-page .btn-chat-handoff {
+  background: linear-gradient(135deg, #7c5cff, #ec4899);
+  box-shadow: 0 12px 22px rgba(139, 92, 246, 0.2);
+}
+
+.wellness-page .btn-ghost {
+  border-color: rgba(139, 92, 246, 0.18);
+}
+
+@media (max-width: 640px) {
+  .wellness-page {
+    padding: 0.85rem 0.9rem 7rem;
+  }
+
+  .chat-overlay {
+    align-items: flex-start;
+    padding: 66px 8px 84px;
+  }
+
+  .chat-panel {
+    width: 100%;
+    height: calc(100dvh - 150px);
+    min-height: 0;
+    border-radius: 24px;
+  }
+
+  .chat-panel-header {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .chat-panel-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 13px;
+  }
+
+  .chat-panel-copy strong {
+    font-size: 0.9rem;
+  }
+
+  .chat-panel-copy span {
+    font-size: 0.72rem;
+  }
+
+  .chat-panel-actions {
+    gap: 0.35rem;
+  }
+
+  .chat-clear-btn {
+    min-height: 32px;
+    padding: 0.4rem 0.68rem;
+    font-size: 0.72rem;
+  }
+
+  .chat-disclaimer {
+    font-size: 0.68rem;
+    line-height: 1.4;
+  }
+
+  .chat-messages {
+    padding: 0.85rem;
+  }
+
+  .chat-input-row {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .wellness-page .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .wellness-page .tab-btn {
+    min-height: 54px;
+    font-size: 0.72rem;
+  }
+
+  .wellness-page .mood-emojis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wellness-page .mood-btn {
+    min-height: 74px;
+    padding: 0.72rem 0.45rem;
+  }
+}
+</style>
 <div class="wellness-page">
 
   <!-- HERO -->
@@ -242,36 +528,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- AI CHAT BAR -->
   <div class="chat-bar-wrap">
-    <div class="chat-bar focused" id="chatBar" onclick="toggleChat()">
+    <div class="chat-bar" id="chatBar" onclick="openChat()" role="button" tabindex="0" aria-label="Open MindCare AI chat">
       <span class="chat-bar-icon">🧠</span>
-      <input type="text" id="chatBarInput" placeholder="How are you feeling today?" data-i18n-ph="chat_placeholder" />
-      <button class="chat-send" data-i18n="chat_send">➤</button>
+      <input type="text" id="chatBarInput" placeholder="How are you feeling today?" data-i18n-placeholder="chat_placeholder" readonly />
+      <button class="chat-send" type="button" onclick="event.stopPropagation(); openChat();" data-i18n="chat_send">➤</button>
     </div>
+    <div class="chat-launch-copy" data-i18n="mindcare_launch_copy">Tap the search bar to open MindCare in full screen.</div>
+  </div>
 
-    <!-- Expanded chat panel -->
-    <div class="chat-panel" id="chatPanel">
+  <div class="chat-overlay" id="chatOverlay" aria-hidden="true">
+    <div class="chat-backdrop" onclick="closeChat()"></div>
+    <div class="chat-panel" id="chatPanel" role="dialog" aria-modal="true" aria-labelledby="chatPanelTitle">
+      <div class="chat-panel-header">
+        <div class="chat-panel-title">
+          <div class="chat-panel-badge">🧠</div>
+          <div class="chat-panel-copy">
+            <strong id="chatPanelTitle">MindCare AI</strong>
+            <span data-i18n="mindcare_private_space">Private space for check-ins and support</span>
+          </div>
+        </div>
+        <div class="chat-panel-actions">
+          <button class="chat-clear-btn" type="button" onclick="clearMindCareChat()" data-i18n="clear_chat">Clear chat</button>
+          <button class="chat-close-btn" type="button" onclick="closeChat()" aria-label="Close chat">✕</button>
+        </div>
+      </div>
       <div class="chat-disclaimer" data-i18n="chat_disclaimer">⚠️ MindCare AI is not a substitute for professional help</div>
       <div class="chat-messages" id="chatMessages">
         <div class="msg ai">
           <div class="msg-name">MindCare AI 🧠</div>
-          Hi! I'm here to listen and support you. You can ask me anything about mental health, or just tell me how you're feeling today. 💙
-        </div>
-        <div class="msg user">
-          I've been feeling really anxious lately and can't sleep well
-        </div>
-        <div class="msg ai">
-          <div class="msg-name">MindCare AI 🧠</div>
-          I hear you — anxiety and poor sleep often feed into each other, making both feel worse. You're not alone in this. A few things that can help right now: try the 4-7-8 breathing in the Tips tab, limit screen time 30 mins before bed, and write down your worries before sleeping. Would you like to talk more about what's causing the anxiety?
+          <span data-i18n="mindcare_welcome">Hi! I'm here to listen and support you. Tell me how you're feeling, what's been heavy lately, or what kind of help you want right now.</span>
         </div>
         <div class="typing">
           <div class="dot"></div><div class="dot"></div><div class="dot"></div>
         </div>
       </div>
       <div class="chat-input-row">
-        <input type="text" placeholder="Type your message..." />
-        <button class="btn btn-primary btn-sm" data-i18n="chat_send">Send</button>
+        <input type="text" id="chatMessageInput" data-i18n-placeholder="type_your_message" placeholder="Type your message..." />
+        <button class="btn btn-primary btn-sm" id="chatSendBtn" data-i18n="chat_send">Send</button>
       </div>
-      <div class="chat-close" onclick="toggleChat()" data-i18n="chat_close">✕ Close chat</div>
     </div>
   </div>
 
@@ -623,8 +917,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 const STORAGE_LANG = 'swahealthy_lang';
 const STORAGE_PREFIX = 'swahealthy_';
 
-// State
-let currentLang = 'en';
+// State - Initialize global lang from server or localStorage
+currentLang = '{{ lang }}' || localStorage.getItem(STORAGE_LANG) || 'en';
 let chatOpen = false;
 let breathStage = 0;
 let breathInterval = null;
@@ -680,14 +974,40 @@ function switchTab(name, btnEl) {
   if(name === 'summary') renderSummary();
 }
 
-function toggleChat() {
-  const panel = document.getElementById('chatPanel');
-  chatOpen = !chatOpen;
-  panel.style.display = chatOpen ? 'block' : 'none';
-  if(chatOpen) {
-    document.querySelector('.chat-input-row input').focus();
-    scrollChat();
+function syncChatLauncherState() {
+  const overlay = document.getElementById('chatOverlay');
+  const bar = document.getElementById('chatBar');
+  if(overlay) {
+    overlay.classList.toggle('is-open', chatOpen);
+    overlay.setAttribute('aria-hidden', chatOpen ? 'false' : 'true');
   }
+  if(bar) {
+    bar.classList.toggle('focused', chatOpen);
+    bar.setAttribute('aria-expanded', chatOpen ? 'true' : 'false');
+  }
+  document.body.classList.toggle('chat-open', chatOpen);
+}
+
+function openChat(prefill = '') {
+  chatOpen = true;
+  syncChatLauncherState();
+  const input = document.getElementById('chatMessageInput');
+  if(input) {
+    if(prefill) input.value = prefill;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  scrollChat();
+}
+
+function closeChat() {
+  chatOpen = false;
+  syncChatLauncherState();
+}
+
+function toggleChat() {
+  if(chatOpen) closeChat();
+  else openChat();
 }
 
 function scrollChat() {
@@ -1022,9 +1342,7 @@ function renderResult(data) {
 }
 
 window.handoffToChat = function(severityTxt, snippet) {
-  if(!chatOpen) toggleChat();
-  document.getElementById('chatBarInput').value = `I just completed a ${currentAssessment} and scored ${severityTxt}. ${snippet}...`;
-  document.getElementById('chatBarInput').focus();
+  openChat(`I just completed a ${currentAssessment} and scored ${severityTxt}. ${snippet}...`);
 }
 
 // ------ TAB 3: TIPS ------
@@ -1274,9 +1592,26 @@ window.clearAssessments = function() {
 
 // ------ CHAT / AI LOGIC ------
 let chatHistory = [];
+const mindCareWelcomeHtml = () => `<div class="msg ai"><div class="msg-name">MindCare AI 🧠</div>${t('mindcare_welcome')}</div>`;
+
+function resetMindCareMessages() {
+  const msgs = document.getElementById('chatMessages');
+  if(!msgs) return;
+  msgs.innerHTML = `${mindCareWelcomeHtml()}<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  const typing = msgs.querySelector('.typing');
+  if(typing) typing.style.display = 'none';
+  scrollChat();
+}
+
+window.clearMindCareChat = function() {
+  chatHistory = [];
+  resetMindCareMessages();
+  const input = document.getElementById('chatMessageInput');
+  if(input) input.value = '';
+}
 
 window.sendMsg = async function() {
-  const inp = document.querySelector('.chat-input-row input');
+  const inp = document.getElementById('chatMessageInput');
   const txt = inp.value.trim();
   if(!txt) return;
   inp.value = '';
@@ -1316,7 +1651,7 @@ window.sendMsg = async function() {
     typing.style.display = 'none';
     const errdiv = document.createElement('div');
     errdiv.className = 'msg ai';
-    errdiv.innerHTML = `<div class="msg-name">MindCare AI 🧠</div>I'm unable to connect right now. Please try again later.`;
+    errdiv.innerHTML = `<div class="msg-name">MindCare AI 🧠</div>${t('mindcare_connect_error')}`;
     msgs.insertBefore(errdiv, typing);
     scrollChat();
   }
@@ -1324,13 +1659,16 @@ window.sendMsg = async function() {
 
 // ------ INIT ------
 document.addEventListener('DOMContentLoaded', () => {
+  // Apply translations based on current language
+  applyTranslations();
+  
   renderStreak();
   loadReflection();
   renderGrounding();
   updateSleepSlide();
+  syncChatLauncherState();
   
-  const typingEls = document.querySelectorAll('.typing');
-  typingEls.forEach(el => el.style.display='none');
+  resetMindCareMessages();
   
   const sr = document.getElementById('summaryResults');
   if(sr) sr.style.display = 'none';
@@ -1341,43 +1679,52 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="assess-card" onclick="startAssessment('PHQ-9')">
            <div class="assess-icon depression">😔</div>
            <div class="assess-info">
-             <div class="assess-name">PHQ-9 — Depression</div>
-             <div class="assess-meta">9 questions · ~3 minutes</div>
+             <div class="assess-name">${t('assess_phq9')}</div>
+             <div class="assess-meta">${t('assess_phq9_meta')}</div>
            </div>
            <span class="assess-badge badge-purple">Depression</span>
         </div>
         <div class="assess-card" onclick="startAssessment('GAD-7')">
            <div class="assess-icon anxiety">😰</div>
            <div class="assess-info">
-             <div class="assess-name">GAD-7 — Anxiety</div>
-             <div class="assess-meta">7 questions · ~2 minutes</div>
+             <div class="assess-name">${t('assess_gad7')}</div>
+             <div class="assess-meta">${t('assess_gad7_meta')}</div>
            </div>
            <span class="assess-badge badge-yellow">Anxiety</span>
         </div>
       `;
   }
   
-  const sendBtn = document.querySelector('.chat-input-row button');
+  const sendBtn = document.getElementById('chatSendBtn');
   if(sendBtn) sendBtn.addEventListener('click', window.sendMsg);
   
-  const chatInput = document.querySelector('.chat-input-row input');
+  const chatInput = document.getElementById('chatMessageInput');
   if(chatInput) {
     chatInput.addEventListener('keypress', function(e){
       if(e.key === 'Enter') window.sendMsg();
     });
   }
 
-  const barInput = document.getElementById('chatBarInput');
-  if(barInput) {
-      barInput.addEventListener('keypress', function(e){
-        if(e.key === 'Enter') {
-           const v = this.value; this.value='';
-           if(!chatOpen) toggleChat();
-           document.querySelector('.chat-input-row input').value = v;
-           window.sendMsg();
+  const chatBar = document.getElementById('chatBar');
+  if(chatBar) {
+      chatBar.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' ') {
+           e.preventDefault();
+           openChat();
         }
       });
   }
+
+  const barInput = document.getElementById('chatBarInput');
+  if(barInput) {
+      barInput.addEventListener('focus', function(){
+        openChat();
+      });
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && chatOpen) closeChat();
+  });
   
   const shBtn = document.querySelector('.share-btn');
   if(shBtn) {

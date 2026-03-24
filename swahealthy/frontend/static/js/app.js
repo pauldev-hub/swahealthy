@@ -1,5 +1,15 @@
 let currentLang = localStorage.getItem('swahealthy_lang') || 'en';
 
+function humanizeTranslationKey(key) {
+    if (!key) return '';
+    if (!key.includes('_')) return key.charAt(0).toUpperCase() + key.slice(1);
+    return key
+        .split('_')
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
 /**
  * Translation helper
  * @param {string} key 
@@ -13,7 +23,7 @@ function t(key) {
     if (window.translations && window.translations['en'] && window.translations['en'][key]) {
         return window.translations['en'][key];
     }
-    return key;
+    return humanizeTranslationKey(key);
 }
 
 function applyTranslations() {
@@ -62,6 +72,22 @@ function applyTranslations() {
         }
     });
 
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+    });
+
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+    });
+
+    document.querySelectorAll('[data-i18n-alt]').forEach(el => {
+        el.setAttribute('alt', t(el.getAttribute('data-i18n-alt')));
+    });
+
     // 4. Sync with cookie for backend
     document.cookie = `swahealthy_lang=${currentLang}; path=/; max-age=${30 * 24 * 60 * 60}`;
 }
@@ -87,13 +113,13 @@ function setLang(lang) {
     });
 
     applyTranslations();
-
-    // If on home page, update URL for consistency
+    const url = new URL(window.location);
+    url.searchParams.set('lang', lang);
     if (window.location.pathname === '/') {
-        const url = new URL(window.location);
-        url.searchParams.set('lang', lang);
         window.history.replaceState({}, '', url);
+        return;
     }
+    window.location.href = url.toString();
 }
 
 function toggleGroup(areaId) {
@@ -121,14 +147,14 @@ function handleStandalonePhotoSelect(e) {
 
     // Validate type
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        alert("Please upload a JPG or PNG image.");
+        alert(t('upload_jpg_png'));
         e.target.value = "";
         return;
     }
 
     // Validate size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-        alert("Image must be smaller than 2MB.");
+        alert(t('image_under_2mb'));
         e.target.value = "";
         return;
     }
@@ -137,6 +163,13 @@ function handleStandalonePhotoSelect(e) {
     reader.onload = function (evt) {
         const result = evt.target.result;
         const parts = result.split(',');
+        
+        if (parts.length < 2) {
+            console.error("Invalid image data format");
+            alert(t('failed_process_image'));
+            return;
+        }
+
         _standalonePhotoBase64 = parts[1];
         _standalonePhotoType = file.type;
 
@@ -166,7 +199,7 @@ function submitSymptoms(e) {
     e.preventDefault();
     const checked = document.querySelectorAll('input[name="symptoms"]:checked');
     if (checked.length === 0) {
-        alert("Please select at least one symptom.");
+        alert(t('select_at_least_one_symptom'));
         return;
     }
 
@@ -198,9 +231,15 @@ if (window.location.pathname === '/results') {
     });
 }
 
+if (window.location.pathname === '/') {
+    document.addEventListener("DOMContentLoaded", () => {
+        loadHomeNearbyHospitals();
+    });
+}
+
 function analyzeStandalonePhoto() {
     if (!_standalonePhotoBase64 || !_standalonePhotoType) {
-        alert("Please select a photo first.");
+        alert(t('select_photo_first'));
         return;
     }
 
@@ -208,10 +247,16 @@ function analyzeStandalonePhoto() {
     document.getElementById('ai-loading-state').style.display = 'flex';
     document.getElementById('ai-assessment-card').style.display = 'none';
 
+    const payload = {
+        image: _standalonePhotoBase64,
+        media_type: _standalonePhotoType,
+        language: currentLang
+    };
+
     fetch('/analyze-photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: _standalonePhotoBase64, media_type: _standalonePhotoType })
+        body: JSON.stringify(payload)
     })
         .then(res => res.json())
         .then(data => {
@@ -221,7 +266,7 @@ function analyzeStandalonePhoto() {
         .catch(err => {
             console.error("Photo analysis failed:", err);
             document.getElementById('ai-loading-state').style.display = 'none';
-            alert("Failed to analyze photo. Please try again.");
+            alert(t('failed_analyze_photo'));
             document.getElementById('ai-action-buttons').style.display = 'flex';
         });
 }
@@ -232,19 +277,19 @@ function renderStandaloneAssessment(data) {
 
     if (data.error) {
         document.getElementById('ai-photo-observed').textContent = "Error: " + data.error;
-        document.getElementById('ai-photo-urgency').textContent = "ERROR";
+        document.getElementById('ai-photo-urgency').textContent = t('error_label');
         document.getElementById('ai-photo-urgency').className = "severity-badge high mini";
-        document.getElementById('ai-photo-recommendation').textContent = "Check terminal/logs for details.";
+        document.getElementById('ai-photo-recommendation').textContent = t('check_logs_details');
         document.getElementById('ai-photo-conditions').innerHTML = "";
         return;
     }
 
-    document.getElementById('ai-photo-observed').textContent = data.observed || "N/A";
+    document.getElementById('ai-photo-observed').textContent = data.observed || t('not_available');
 
     const badge = document.getElementById('ai-photo-urgency');
     const urgency = (data.urgency || "low").toLowerCase();
     badge.className = `severity-badge ${urgency} mini`;
-    badge.textContent = `${urgency.toUpperCase()} URGENCY`;
+    badge.textContent = t(`${urgency}_urgency`);
 
     const condList = document.getElementById('ai-photo-conditions');
     condList.innerHTML = '';
@@ -256,7 +301,10 @@ function renderStandaloneAssessment(data) {
             condList.appendChild(span);
         });
     } else {
-        condList.textContent = 'None identified.';
+        const span = document.createElement('span');
+        span.className = 'med-pill';
+        span.textContent = t('none_identified');
+        condList.appendChild(span);
     }
 
     document.getElementById('ai-photo-recommendation').textContent = data.recommendation || "";
@@ -270,6 +318,8 @@ function resetStandaloneAnalysis() {
 let _diagnosedConditionId = null;
 /** Snapshot for re-rendering the medicines drawer (fixed inside transformed main would clip; see promoteMedicinesDrawerToBody). */
 let _cachedDrawerMedicines = [];
+let _homeNearbyLoaded = false;
+let _homeNearbyRequestInFlight = false;
 
 function promoteMedicinesDrawerToBody() {
     const overlay = document.getElementById('medicines-overlay');
@@ -301,7 +351,7 @@ function fillMedicinesDrawerList(medicines) {
     if (labels.length === 0) {
         const p = document.createElement('p');
         p.className = 'drawer-medicines-empty';
-        p.textContent = 'Consult a pharmacist for suitable OTC options.';
+        p.textContent = t('consult_pharmacist_otc');
         container.appendChild(p);
         return;
     }
@@ -328,8 +378,19 @@ function analyzeSymptoms(symptomIds, lang, duration = '< 1 day') {
             gender: gender
         })
     })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(err => Promise.reject(err));
+            }
+            return res.json();
+        })
         .then(data => {
+            if (data.error) {
+                console.error("API Error:", data);
+                alert(`${t('error_analyzing_symptoms')}: ${data.error}`);
+                return;
+            }
+
             _diagnosedConditionId = data.condition_id || null;
 
             // For guest users, save to local history so profile dashboard shows check count
@@ -347,12 +408,19 @@ function analyzeSymptoms(symptomIds, lang, duration = '< 1 day') {
                 }
             }
 
+            // Render the result and show facilities
+            console.log('[analyzeSymptoms] Rendering result on /results page...');
             renderResult(data);
             getLocationAndFacilities();
+            
+            // Clear pending data from localStorage
+            localStorage.removeItem('pending_symptoms');
+            localStorage.removeItem('pending_duration');
         })
         .catch(err => {
-            console.error(err);
-            alert("Error analyzing symptoms. Are you offline?");
+            console.error("Fetch error:", err);
+            const errMsg = err.error || err.message || "Unknown error";
+            alert(`${t('error_analyzing_symptoms')}: ${errMsg}`);
         });
 }
 
@@ -375,7 +443,7 @@ function renderResult(data) {
     const sevBadge = document.getElementById('res-severity');
     const severityStr = data.severity.toLowerCase();
     sevBadge.className = `severity-badge ${severityStr}`;
-    sevBadge.textContent = `${data.severity.toUpperCase()} SEVERITY`;
+    sevBadge.textContent = t(`${severityStr}_severity`);
 
     // Set severity on root for SOS widget logic
     const resultRoot = document.getElementById('result-root');
@@ -392,11 +460,15 @@ function renderResult(data) {
         document.getElementById('emergency-text').textContent = data.emergency_note;
     }
 
-    if (data.duration_note) {
-        document.getElementById('res-duration-container').style.display = 'flex';
-        document.getElementById('res-duration-text').textContent = data.duration_note;
-    } else {
-        document.getElementById('res-duration-container').style.display = 'none';
+    const durationContainer = document.getElementById('res-duration-container');
+    const durationText = document.getElementById('res-duration-text');
+    if (durationContainer && durationText) {
+        if (data.duration_note) {
+            durationContainer.style.display = 'flex';
+            durationText.textContent = data.duration_note;
+        } else {
+            durationContainer.style.display = 'none';
+        }
     }
 
     const faList = document.getElementById('res-first-aid');
@@ -425,6 +497,23 @@ function renderResult(data) {
     }
     fillMedicinesDrawerList(meds);
 
+    const inlineMedsWidget = document.getElementById('recommended-meds-widget');
+    const inlineMedsList = document.getElementById('recommended-meds-inline');
+    if (inlineMedsWidget && inlineMedsList) {
+        if (labels.length > 0) {
+            inlineMedsWidget.style.display = 'block';
+            inlineMedsList.innerHTML = '';
+            labels.forEach(text => {
+                const span = document.createElement('span');
+                span.className = 'med-pill';
+                span.textContent = text;
+                inlineMedsList.appendChild(span);
+            });
+        } else {
+            inlineMedsWidget.style.display = 'none';
+        }
+    }
+
     if (data.alternates && data.alternates.length > 0) {
         document.getElementById('alternates-section').style.display = 'block';
         const altContainer = document.getElementById('res-alternates');
@@ -452,6 +541,136 @@ function renderResult(data) {
 // Helper for dynamic condition names - we'll keep the server-provided translated name 
 // as it comes from the DB, but for static strings we use t()
 
+let _lastFacilityMapState = null;
+
+function formatDistance(distance) {
+    const numeric = Number(distance);
+    if (!Number.isFinite(numeric)) return '';
+    return `${numeric.toFixed(numeric >= 10 ? 0 : 1)} km`;
+}
+
+function getFallbackCoordinates() {
+    return { lat: 22.5726, lng: 88.3639, label: 'Kolkata' };
+}
+
+function loadHomeNearbyHospitals(force = false) {
+    const list = document.getElementById('home-nearby-list');
+    const status = document.getElementById('home-nearby-status');
+    const loading = document.getElementById('home-nearby-loading');
+
+    if (!list || !status || !loading) return;
+    if (_homeNearbyLoaded && !force) return;
+    if (_homeNearbyRequestInFlight) return;
+
+    _homeNearbyRequestInFlight = true;
+    loading.style.display = 'block';
+    status.textContent = t('detecting');
+
+    const loadHospitals = (lat, lng, locationLabel, statusMessage) => {
+        status.textContent = statusMessage || t('location_detected');
+
+        fetch(`/nearby-hospitals?lat=${lat}&lng=${lng}&limit=10`)
+            .then(res => res.json())
+            .then(data => {
+                renderHomeNearbyHospitals(Array.isArray(data) ? data : []);
+                _homeNearbyLoaded = true;
+            })
+            .catch(err => {
+                console.error('Failed fetching nearby hospitals', err);
+                renderHomeNearbyHospitals([]);
+                status.textContent = t('nearby_hospitals_unavailable');
+            })
+            .finally(() => {
+                loading.style.display = 'none';
+                _homeNearbyRequestInFlight = false;
+            });
+    };
+
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => loadHospitals(position.coords.latitude, position.coords.longitude, '', t('location_detected')),
+            () => {
+                const fallback = getFallbackCoordinates();
+                loadHospitals(fallback.lat, fallback.lng, fallback.label, `${t('location_denied')} ${fallback.label}`);
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 }
+        );
+        return;
+    }
+
+    const fallback = getFallbackCoordinates();
+    loadHospitals(fallback.lat, fallback.lng, fallback.label, `${t('location_unsupported')} ${fallback.label}`);
+}
+
+function renderHomeNearbyHospitals(hospitals) {
+    const list = document.getElementById('home-nearby-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    if (!hospitals.length) {
+        list.innerHTML = `<li class="facility-item">${t('no_hospitals_found')}</li>`;
+        return;
+    }
+
+    hospitals.forEach((hospital) => {
+        const item = document.createElement('li');
+        item.className = 'facility-item';
+        item.innerHTML = `
+            <div>
+                <div class="fac-name">${hospital.name}</div>
+                <div class="fac-meta">${hospital.ownership} • ${hospital.type} • ${hospital.district}</div>
+                <div class="fac-meta">${t('contact_label')}: ${hospital.contact || 'N/A'}</div>
+            </div>
+            <div class="fac-dist">${formatDistance(hospital.distance)}</div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function createMapMarkerIcon(kind) {
+    const icons = {
+        user: `
+            <div class="map-marker map-marker-user">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"></path>
+                    <circle cx="12" cy="10" r="2.5"></circle>
+                </svg>
+            </div>
+        `,
+        aushadhi: `
+            <div class="map-marker map-marker-aushadhi">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 7h6"></path>
+                    <path d="M10 4h4"></path>
+                    <path d="M8 10h8l-1 8H9l-1-8Z"></path>
+                    <path d="M10 14h4"></path>
+                </svg>
+            </div>
+        `,
+        facility: `
+            <div class="map-marker map-marker-facility">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 21V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14"></path>
+                    <path d="M4 21h16"></path>
+                    <path d="M9 10h.01"></path>
+                    <path d="M15 10h.01"></path>
+                    <path d="M9 14h.01"></path>
+                    <path d="M15 14h.01"></path>
+                </svg>
+            </div>
+        `
+    };
+
+    return L.divIcon({
+        html: icons[kind] || icons.facility,
+        className: kind === 'user' ? 'user-location-icon' : 'facility-icon',
+        iconSize: [34, 42],
+        iconAnchor: [17, 38],
+        popupAnchor: [0, -34]
+    });
+}
+
 let map;
 function getLocationAndFacilities() {
     const locStatus = document.getElementById('loc-status');
@@ -476,35 +695,54 @@ function getLocationAndFacilities() {
 function setUpTabs() {
     const tabAushadhi = document.getElementById('tab-aushadhi');
     const tabFacilities = document.getElementById('tab-facilities');
+    const tabMap = document.getElementById('tab-map');
     const contentAushadhi = document.getElementById('tab-content-aushadhi');
     const contentFacilities = document.getElementById('tab-content-facilities');
+    const contentMap = document.getElementById('tab-content-map');
 
-    if (!tabAushadhi || !tabFacilities || !contentAushadhi || !contentFacilities) return;
+    if (!tabAushadhi || !tabFacilities || !tabMap || !contentAushadhi || !contentFacilities || !contentMap) return;
+    if (tabAushadhi.dataset.tabsBound === 'true') return;
 
-    tabAushadhi.addEventListener('click', () => {
+    const activateTab = (selected) => {
         tabAushadhi.classList.add('active');
-        tabFacilities.classList.remove('active');
         contentAushadhi.classList.add('active');
+        tabFacilities.classList.remove('active');
         contentFacilities.classList.remove('active');
-    });
+        tabMap.classList.remove('active');
+        contentMap.classList.remove('active');
 
-    tabFacilities.addEventListener('click', () => {
-        tabFacilities.classList.add('active');
-        tabAushadhi.classList.remove('active');
-        contentFacilities.classList.add('active');
-        contentAushadhi.classList.remove('active');
-        if (map) {
-            setTimeout(() => map.invalidateSize(), 150);
+        if (selected === 'facilities') {
+            tabAushadhi.classList.remove('active');
+            tabFacilities.classList.add('active');
+            contentAushadhi.classList.remove('active');
+            contentFacilities.classList.add('active');
+        } else if (selected === 'map') {
+            tabAushadhi.classList.remove('active');
+            tabMap.classList.add('active');
+            contentAushadhi.classList.remove('active');
+            contentMap.classList.add('active');
+            if (_lastFacilityMapState) {
+                setTimeout(() => {
+                    renderMap(_lastFacilityMapState.lat, _lastFacilityMapState.lng, _lastFacilityMapState.facilities);
+                }, 60);
+            }
         }
-    });
+    };
+
+    tabAushadhi.addEventListener('click', () => activateTab('aushadhi'));
+    tabFacilities.addEventListener('click', () => activateTab('facilities'));
+    tabMap.addEventListener('click', () => activateTab('map'));
+
+    tabAushadhi.dataset.tabsBound = 'true';
 }
 
 function fetchFacilities(lat, lng) {
-    fetch(`/facilities?lat=${lat}&lng=${lng}`)
+    fetch(`/facilities?lat=${lat}&lng=${lng}&limit=10`)
         .then(res => res.json())
         .then(data => {
+            _lastFacilityMapState = { lat, lng, facilities: data };
             renderFacilitiesList(data);
-            if (typeof renderMap === 'function') {
+            if (typeof renderMap === 'function' && isMapTabActive()) {
                 renderMap(lat, lng, data);
             }
         })
@@ -544,7 +782,7 @@ function renderMedicines(facilities) {
 
     if (!facilities || facilities.length === 0) {
         section.style.display = 'block';
-        count.textContent = '0 Jan Aushadhi centers found.';
+        count.textContent = t('aushadhi_centers_found_zero');
         list.innerHTML = '';
         empty.style.display = 'block';
         return;
@@ -552,7 +790,7 @@ function renderMedicines(facilities) {
     section.style.display = 'block';
     empty.style.display = 'none';
     list.innerHTML = '';
-    count.textContent = `${facilities.length} Jan Aushadhi centers found.`;
+    count.textContent = t('aushadhi_centers_found').replace('{count}', facilities.length);
 
     facilities.forEach(f => {
         const card = document.createElement('div');
@@ -666,6 +904,158 @@ function renderFacilitiesList(facilities) {
 
 function clearHistory() {
     if (confirm("Are you sure you want to delete all history?")) {
+        fetch('/history', { method: 'DELETE' })
+            .then(() => window.location.reload());
+    }
+}
+
+function getLocationAndFacilities() {
+    const locStatus = document.getElementById('loc-status');
+    setUpTabs();
+    if (!locStatus) return;
+
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                locStatus.textContent = t('location_detected');
+                fetchFacilities(position.coords.latitude, position.coords.longitude);
+            },
+            () => {
+                const fallback = getFallbackCoordinates();
+                locStatus.textContent = t('location_denied_kolkata');
+                fetchFacilities(fallback.lat, fallback.lng);
+            }
+        );
+    } else {
+        const fallback = getFallbackCoordinates();
+        locStatus.textContent = t('location_unsupported_kolkata');
+        fetchFacilities(fallback.lat, fallback.lng);
+    }
+}
+
+function isMapTabActive() {
+    const tabMap = document.getElementById('tab-map');
+    const mapContent = document.getElementById('tab-content-map');
+    return Boolean(tabMap?.classList.contains('active') && mapContent?.classList.contains('active'));
+}
+
+function renderMedicines(facilities) {
+    console.log('renderMedicines called with', facilities);
+    const section = document.getElementById('medicines-section');
+    const list = document.getElementById('medicines-list');
+    const empty = document.getElementById('medicines-empty');
+    const count = document.getElementById('medicines-count');
+
+    if (!section || !list || !empty || !count) return;
+
+    if (!facilities || facilities.length === 0) {
+        section.style.display = 'block';
+        count.textContent = t('aushadhi_centers_found_zero');
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+
+    section.style.display = 'block';
+    empty.style.display = 'none';
+    list.innerHTML = '';
+    count.textContent = t('aushadhi_centers_found').replace('{count}', facilities.length);
+
+    facilities.forEach((f) => {
+        const card = document.createElement('div');
+        card.className = 'medicine-facility-card';
+
+        const medPills = (f.medicines || []).map((m) =>
+            `<span class="med-pill">${m}</span>`
+        ).join('');
+
+        card.innerHTML = `
+            <div class="med-card-header">
+                <div class="med-card-info">
+                    <div class="med-fac-name">${f.name}</div>
+                    <div class="med-fac-meta">${f.type} • ${f.district}</div>
+                </div>
+                <div class="med-fac-dist">${formatDistance(f.distance)}</div>
+            </div>
+            <div class="med-pills-wrap">${medPills}</div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function renderMap(lat, lng, facilities) {
+    const mapContainer = document.getElementById('fac-map');
+    if (!mapContainer || !isMapTabActive()) return;
+
+    if (map) {
+        map.remove();
+        map = null;
+    }
+
+    try {
+        map = L.map('fac-map').setView([lat, lng], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const bounds = L.latLngBounds([[lat, lng]]);
+        L.marker([lat, lng], { icon: createMapMarkerIcon('user') }).addTo(map)
+            .bindPopup(t('you_are_here'));
+
+        (facilities || []).forEach((fac) => {
+            if (fac.latitude && fac.longitude) {
+                const iconKind = fac.type === 'Jan Aushadhi' ? 'aushadhi' : 'facility';
+                L.marker([fac.latitude, fac.longitude], { icon: createMapMarkerIcon(iconKind) }).addTo(map)
+                    .bindPopup(`<b>${fac.name}</b><br>${fac.type}${fac.district ? `<br>${fac.district}` : ''}`);
+                bounds.extend([fac.latitude, fac.longitude]);
+            }
+        });
+
+        if ((facilities || []).length > 0) {
+            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+        }
+
+        setTimeout(() => {
+            if (!map) return;
+            map.invalidateSize();
+            if ((facilities || []).length > 0) {
+                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+            }
+        }, 100);
+    } catch (e) {
+        console.error("Map initialization failed", e);
+    }
+}
+
+function renderFacilitiesList(facilities) {
+    const list = document.getElementById('facilities-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+    const hospitals = (facilities || []).filter((f) => f.type !== 'Jan Aushadhi');
+
+    hospitals.forEach((f) => {
+        const li = document.createElement('li');
+        li.className = 'facility-item';
+        li.innerHTML = `
+            <div>
+                <div class="fac-name">${f.name}</div>
+                <div class="fac-meta">${f.type} • ${f.district || getFallbackCoordinates().label}</div>
+                <div class="fac-meta">${t('contact_label')}: ${f.contact || 'N/A'}</div>
+            </div>
+            <div class="fac-dist">${formatDistance(f.distance)}</div>
+        `;
+        list.appendChild(li);
+    });
+
+    if (hospitals.length === 0) {
+        list.innerHTML = `<li class="facility-item">${t('no_hospitals_found')}</li>`;
+    }
+}
+
+function clearHistory() {
+    if (confirm(t('confirm_clear_history'))) {
         fetch('/history', { method: 'DELETE' })
             .then(() => window.location.reload());
     }
