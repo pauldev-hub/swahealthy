@@ -17,25 +17,37 @@
             <div class="card history-card">
                 <div class="history-meta">
                     <span class="history-date">
-                        🕐 {{ log.session_date | replace('T', ' ') | truncate(16, True, '') }}
+                        {{ log.session_date | replace('T', ' ') | truncate(16, True, '') }}
                     </span>
                     <span class="severity-badge {{ log.severity|default('')|lower }} mini">{{ log.severity|default('')|upper }}</span>
                 </div>
-                
-                <h3 class="history-condition">{{ log.result_condition }}</h3>
 
-                <!-- Symptoms display -->
+                <h3 class="history-condition"
+                    data-condition-en="{{ log.result_condition_en }}"
+                    data-condition-bn="{{ log.result_condition_bn }}"
+                    data-condition-hi="{{ log.result_condition_hi }}">{{ log.result_condition }}</h3>
+
                 <div class="history-symptoms">
-                    <span class="history-sym-label" data-i18n="symptoms_label">📋 Symptoms:</span>
-                    <span class="history-sym-names">{{ log.symptom_names }}</span>
+                    <span class="history-sym-label" data-i18n="symptoms_label">Symptoms:</span>
+                    <span class="history-sym-names"
+                        data-symptoms-en="{{ log.symptom_names_en }}"
+                        data-symptoms-bn="{{ log.symptom_names_bn }}"
+                        data-symptoms-hi="{{ log.symptom_names_hi }}">{{ log.symptom_names }}</span>
                 </div>
-                
+
                 <div class="history-footer">
                     <span class="history-lang">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l6 6"></path><path d="M4 14l6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="M22 22l-5-10-5 10"></path><path d="M14 18h6"></path></svg>
-                        <span data-i18n="language_label">Language:</span> {% if log.language == 'en' %}English{% elif log.language == 'bn' %}Bangla{% else %}Hindi{% endif %}
+                        <span data-i18n="language_label">Language:</span>
+                        {% if log.language == 'en' %}
+                        <span data-i18n="lang_english">English</span>
+                        {% elif log.language == 'bn' %}
+                        <span data-i18n="lang_bangla">Bangla</span>
+                        {% else %}
+                        <span data-i18n="lang_hindi">Hindi</span>
+                        {% endif %}
                     </span>
-                    <a href="/summary/{{ log.log_id }}?lang={{ log.language }}" class="view-details-link" data-i18n="view_summary">📄 View Summary →</a>
+                    <a href="/summary/{{ log.log_id }}?lang={{ lang }}" class="view-details-link" data-i18n="view_summary">View Summary</a>
                 </div>
             </div>
             {% endfor %}
@@ -49,7 +61,7 @@
 
         {% else %}
             <div class="empty-state">
-                <div class="empty-icon">📁</div>
+                <div class="empty-icon"></div>
                 <h3 data-i18n="no_history">No History Found</h3>
                 <p data-i18n="no_history_subtitle">Your past diagnoses will appear here.</p>
                 <a href="/" class="btn btn-primary mt-4" data-i18n="check_symptoms_today">Check Symptoms Today</a>
@@ -57,20 +69,4 @@
         {% endif %}
     </div>
 </div>
-
-<script>
-// Resolve symptom IDs to names from the page's embedded symptom data
-document.addEventListener('DOMContentLoaded', function() {
-    // Build a quick lookup from the global symptom data embedded in index
-    // Instead, just display the IDs nicely — names are already stored in results.
-    document.querySelectorAll('.history-sym-ids').forEach(el => {
-        try {
-            const ids = JSON.parse(el.dataset.ids);
-            el.textContent = ids.length > 0 ? ids.join(', ') + ' (symptom IDs)' : 'None recorded';
-        } catch(e) {
-            el.textContent = el.dataset.ids || '—';
-        }
-    });
-});
-</script>
 {% endblock %}

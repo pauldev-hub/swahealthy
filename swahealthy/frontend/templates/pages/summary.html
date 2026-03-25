@@ -7,7 +7,7 @@
         padding: 0;
         background: linear-gradient(180deg, #d3f0ef 0%, #9adbd9 100%) !important;
         background-attachment: fixed !important;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Noto Sans Bengali', 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
         min-height: 100vh;
     }
     
@@ -228,7 +228,7 @@
         <button onclick="history.back()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
-        <h1>Patient Medical Summary</h1>
+        <h1 data-i18n="patient_medical_summary">Patient Medical Summary</h1>
     </div>
 
     <!-- Paper Slot Effect -->
@@ -240,7 +240,7 @@
         <!-- User/Doctor Info -->
         <div class="hero-block">
             <div class="avatar">
-                {% if doctor %}👩‍⚕️{% else %}👤{% endif %}
+                {% if doctor %}&#128105;&#8205;&#9877;&#65039;{% else %}&#128100;{% endif %}
             </div>
             <div class="hero-info">
                 <h2>{% if doctor %}Dr. {{ doctor.name }}{% else %}{{ patient.name if patient and patient.name else "Guest Patient" }}{% endif %}</h2>
@@ -249,7 +249,7 @@
                         {{ doctor.specialisation }}<br>
                         <span id="patient-date" class="header-date-formatted" data-raw="{{ log.session_date }}">{{ log.session_date }}</span>
                     {% else %}
-                        Age: <span id="patient-age">--</span> &middot; Gender: <span id="patient-gender">--</span><br>
+                        <span data-i18n="age_word">Age</span>: <span id="patient-age">--</span> &middot; <span data-i18n="gender_word">Gender</span>: <span id="patient-gender">--</span><br>
                         <span id="patient-date" class="header-date-formatted" data-raw="{{ log.session_date }}">{{ log.session_date }}</span>
                     {% endif %}
                 </p>
@@ -257,61 +257,61 @@
         </div>
         
         <!-- Diagnosis Core -->
-        <h3 class="section-title"><div class="section-dot"></div> Diagnosis</h3>
+        <h3 class="section-title"><div class="section-dot"></div> <span data-i18n="diagnosis">Diagnosis</span></h3>
         <p class="section-text" style="font-weight: 500; color: #1a2f33;">{{ condition.translated_name if condition else log.result_condition }} <span style="font-size:0.75rem; background: {% if log.severity|lower == 'high' %}#ffebee{% elif log.severity|lower == 'medium' %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if log.severity|lower == 'high' %}#c62828{% elif log.severity|lower == 'medium' %}#ef6c00{% else %}#2e7d32{% endif %}; padding:2px 6px; border-radius:8px; margin-left:5px;">{{ log.severity|upper }} SEVERITY</span></p>
-        <p class="section-text" style="margin-top: 5px;">
+        <p class="section-text" style="margin-top: 5px;" id="summary-main-line" data-symptoms="{{ symptoms | join(', ') }}">
             The patient exhibits symptoms of {{ symptoms | join(', ') }}. Suspected condition treated symptomatically. Please review first aid and continue close monitoring for complications.
         </p>
 
         <div class="separator"></div>
         
         <!-- Prescriptions/OTC -->
-        <h3 class="section-title"><div class="section-dot"></div> Prescriptions & Care</h3>
+        <h3 class="section-title"><div class="section-dot"></div> <span data-i18n="prescriptions_care">Prescriptions & Care</span></h3>
         <div class="grid-2">
             {% if medicines %}
                 {% for med in medicines %}
                     <div class="rx-item">
-                        <span class="rx-name">OTC Remedy</span>
+                        <span class="rx-name" data-i18n="otc_remedy">OTC Remedy</span>
                         <span class="rx-dosage">{{ med }}</span>
                     </div>
                 {% endfor %}
             {% else %}
                 <div class="rx-item" style="grid-column: 1 / -1;">
-                    <span class="rx-name">General Care</span>
-                    <span class="rx-dosage">Symptomatic Relief</span>
+                    <span class="rx-name" data-i18n="general_care">General Care</span>
+                    <span class="rx-dosage" data-i18n="symptomatic_relief">Symptomatic Relief</span>
                 </div>
             {% endif %}
             <div class="rx-item" style="grid-column: 1 / -1; margin-top: 8px;">
-                <span class="rx-name" style="color:#d32f2f;">Urgent Needs</span>
-                <span class="rx-dosage" style="font-size:0.85rem;">If symptoms worsen rapidly, consult a doctor immediately for clinical prescription.</span>
+                <span class="rx-name" style="color:#d32f2f;" data-i18n="urgent_needs">Urgent Needs</span>
+                <span class="rx-dosage" style="font-size:0.85rem;" data-i18n="urgent_needs_text">If symptoms worsen rapidly, consult a doctor immediately for clinical prescription.</span>
             </div>
         </div>
         
         <div class="separator"></div>
 
         <!-- First Aid (Using as notes in receipt) -->
-        <h3 class="section-title"><div class="section-dot"></div> Medical Notes</h3>
+        <h3 class="section-title"><div class="section-dot"></div> <span data-i18n="medical_notes">Medical Notes</span></h3>
         <ul class="section-text" style="padding-left: 20px; list-style-type: disc; margin: 0;">
             {% for step in first_aid_steps %}
                 <li style="margin-bottom: 6px;">{{ step }}</li>
             {% else %}
-                <li style="color: #7b8f96; list-style: none; margin-left: -20px;">No additional notes available.</li>
+                <li style="color: #7b8f96; list-style: none; margin-left: -20px;" data-i18n="no_additional_notes">No additional notes available.</li>
             {% endfor %}
         </ul>
         
         <div class="separator"></div>
 
         <!-- Health Tips -->
-        <h3 class="section-title"><div class="section-dot" style="background:#ffb300;"></div> Health Tips</h3>
-        <p class="section-text">
+        <h3 class="section-title"><div class="section-dot" style="background:#ffb300;"></div> <span data-i18n="health_tips">Health Tips</span></h3>
+        <p class="section-text" data-i18n="health_tips_text">
             Stay hydrated with plenty of water, ensure proper rest (7-8 hours), and maintain a balanced diet rich in essential vitamins. Mild exercise is recommended unless symptomatic.
         </p>
 
         <div class="separator"></div>
 
         <!-- Disclaimer -->
-        <h3 class="section-title"><div class="section-dot" style="background:#cfd8dc;"></div> Disclaimer</h3>
-        <p class="section-text" style="font-size: 0.75rem; color: #7b8f96; line-height: 1.4;">
+        <h3 class="section-title"><div class="section-dot" style="background:#cfd8dc;"></div> <span data-i18n="disclaimer">Disclaimer</span></h3>
+        <p class="section-text" style="font-size: 0.75rem; color: #7b8f96; line-height: 1.4;" data-i18n="medical_disclaimer_text">
             SwaHealthy AI provides automated symptom assessments for informational and educational purposes only. This is not a clinical diagnosis. Always seek the advice of a qualified healthcare provider for any medical condition or treatment.
         </p>
 
@@ -323,19 +323,19 @@
             <button class="fab-btn" onclick="window.print()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             </button>
-            <span class="fab-label">Print</span>
+            <span class="fab-label" data-i18n="print">Print</span>
         </div>
         <div class="fab-btn-group">
             <button class="fab-btn" onclick="downloadPDF(event)" id="pdfBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </button>
-            <span class="fab-label">Save PDF</span>
+            <span class="fab-label" data-i18n="save_pdf">Save PDF</span>
         </div>
         <div class="fab-btn-group">
             <button class="fab-btn" onclick="shareSummary()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
             </button>
-            <span class="fab-label">Share</span>
+            <span class="fab-label" data-i18n="share">Share</span>
         </div>
     </div>
 </div>
@@ -345,30 +345,55 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
+    function summaryT(key, lang) {
+        const activeLang = lang || localStorage.getItem('swahealthy_lang') || 'en';
+        if (window.translations && window.translations[activeLang] && window.translations[activeLang][key]) {
+            const value = window.translations[activeLang][key];
+            return typeof window.decodeMojibake === 'function' ? window.decodeMojibake(value) : value;
+        }
+        if (window.translations && window.translations.en && window.translations.en[key]) {
+            const value = window.translations.en[key];
+            return typeof window.decodeMojibake === 'function' ? window.decodeMojibake(value) : value;
+        }
+        return key;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Extract Age/Gender from local storage and fallback to "Not set"
+        if (typeof window.applyTranslations === 'function') {
+            window.applyTranslations();
+        }
+
+        if (typeof window.decodeMojibake === 'function') {
+            document.querySelectorAll('.rx-dosage, .section-text, .hero-info h2, .hero-info p, .receipt-card li').forEach(node => {
+                node.textContent = window.decodeMojibake(node.textContent);
+            });
+        }
+
+        const activeLang = localStorage.getItem('swahealthy_lang') || 'en';
+
         let swaHealthyAge = localStorage.getItem('swahealthy_age');
         let swaHealthyGender = localStorage.getItem('swahealthy_gender');
 
-        const age = (swaHealthyAge && swaHealthyAge.trim() !== '') ? swaHealthyAge : 'Not set';
-        const gender = (swaHealthyGender && swaHealthyGender.trim() !== '') ? swaHealthyGender : 'Not set';
-        
+        const age = (swaHealthyAge && swaHealthyAge.trim() !== '') ? swaHealthyAge : summaryT('not_set', activeLang);
+        const gender = (swaHealthyGender && swaHealthyGender.trim() !== '') ? swaHealthyGender : summaryT('not_set', activeLang);
+
         const patientAgeNode = document.getElementById('patient-age');
-        if (patientAgeNode) {
-            patientAgeNode.textContent = age;
-        }
-        
+        if (patientAgeNode) patientAgeNode.textContent = age;
+
         const patientGenderNode = document.getElementById('patient-gender');
-        if (patientGenderNode) {
-            patientGenderNode.textContent = gender;
+        if (patientGenderNode) patientGenderNode.textContent = gender;
+
+        const summaryMainLine = document.getElementById('summary-main-line');
+        if (summaryMainLine) {
+            const symptomsText = summaryMainLine.getAttribute('data-symptoms') || '';
+            summaryMainLine.textContent = `${summaryT('summary_line_prefix', activeLang)} ${symptomsText}. ${summaryT('summary_line_suffix', activeLang)}`;
         }
 
-        // Date format fix: parse raw datetime and prettify
         const dateElements = document.querySelectorAll('.header-date-formatted');
         dateElements.forEach(el => {
-            const raw = el.getAttribute('data-raw');
-            if (raw) {
-                const isoStr = raw.replace(' ', 'T'); 
+            const rawDate = el.getAttribute('data-raw');
+            if (rawDate) {
+                const isoStr = rawDate.replace(' ', 'T');
                 const d = new Date(isoStr);
                 if (!isNaN(d.valueOf())) {
                     const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -382,33 +407,31 @@
         const element = document.getElementById('summary-content');
         const btn = event.currentTarget || document.getElementById('pdfBtn');
         const originalText = btn.innerHTML;
-        
-        // Prevent clicking twice
-        if(btn.disabled) return;
-        
+
+        if (btn.disabled) return;
+
         btn.innerHTML = '...';
         btn.disabled = true;
 
-        // Temporarily hide the jagged bottom for cleaner PDF edge
         const style = document.createElement('style');
         style.innerHTML = '.receipt-card::after { display: none !important; }';
         document.head.appendChild(style);
 
-        html2canvas(element, { 
-            scale: 2, 
+        html2canvas(element, {
+            scale: 2,
             useCORS: true,
             backgroundColor: '#ffffff'
         }).then(canvas => {
             const imgData = canvas.toDataURL('image/png');
             const { jsPDF } = window.jspdf;
-            
+
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            
+
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save('Patient_Medical_Summary.pdf');
-            
+
             btn.innerHTML = originalText;
             btn.disabled = false;
             style.remove();
@@ -417,7 +440,7 @@
             btn.innerHTML = originalText;
             btn.disabled = false;
             style.remove();
-            alert('Could not generate PDF.');
+            alert(summaryT('pdf_error'));
         });
     }
 
@@ -429,19 +452,19 @@
 
         if (navigator.share) {
             navigator.share({
-                title: 'My Health Summary — SwaHealthy',
+                title: 'My Health Summary - SwaHealthy',
                 text: text,
                 url: url
             }).catch((error) => console.log('Error sharing', error));
         } else {
             navigator.clipboard.writeText(url).then(() => {
                 let toast = document.createElement('div');
-                toast.textContent = "Link copied!";
+                toast.textContent = summaryT('link_copied');
                 toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1a2f33;color:#fff;padding:10px 20px;border-radius:20px;z-index:9999;font-size:0.85rem;';
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 2000);
-            }).catch(err => {
-                prompt("Copy this link:", url);
+            }).catch(() => {
+                prompt('Copy this link:', url);
             });
         }
     }

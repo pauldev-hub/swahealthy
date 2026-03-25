@@ -113,24 +113,51 @@
     ═══════════════════════════════════════ -->
     {% set path = request.path %}
     <nav class="bottom-nav">
-      <a href="/" class="nav-item {% if path == '/' %}active{% endif %}">
-        <span class="nav-bubble"><span class="nav-icon">🏠</span></span>
+      <a href="/" class="nav-item {% if path == '/' %}active{% endif %}" aria-label="Home">
+        <span class="nav-bubble">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4.5 9.75 12 4l7.5 5.75V19a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4.5 19Z" />
+            <path d="M9.5 20.5v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5" />
+          </svg>
+        </span>
         <span class="nav-label" data-i18n="home">Home</span>
       </a>
-      <a href="/history" class="nav-item {% if path == '/history' %}active{% endif %}">
-        <span class="nav-bubble"><span class="nav-icon">📋</span></span>
+      <a href="/history" class="nav-item {% if path == '/history' %}active{% endif %}" aria-label="History">
+        <span class="nav-bubble">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="4.5" width="14" height="15" rx="2.2" />
+            <path d="M9 9h6M9 13h6M9 17h4" />
+          </svg>
+        </span>
         <span class="nav-label" data-i18n="history">History</span>
       </a>
-      <button type="button" class="nav-item" id="ai-assistant-btn">
-        <span class="nav-bubble"><span class="nav-icon">✨</span></span>
+      <button type="button" class="nav-item nav-item-center" id="ai-assistant-btn" aria-label="AI Assistant">
+        <span class="nav-bubble">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6.5 8.25h11a2.75 2.75 0 0 1 2.75 2.75v4.5a2.75 2.75 0 0 1-2.75 2.75h-5.1l-3.55 2.5v-2.5H6.5A2.75 2.75 0 0 1 3.75 15.5V11A2.75 2.75 0 0 1 6.5 8.25Z" />
+            <path d="M10.2 12.2h3.6M10.2 14.8h2.2" />
+            <path d="M16.9 4.3v2.1M15.85 5.35H18" />
+            <path d="M7.2 4.9v1.5M6.45 5.65h1.5" />
+          </svg>
+        </span>
         <span class="nav-label">AI</span>
       </button>
-      <a href="/appointments" class="nav-item {% if path == '/appointments' %}active{% endif %}">
-        <span class="nav-bubble"><span class="nav-icon">📅</span></span>
+      <a href="/appointments" class="nav-item {% if path == '/appointments' %}active{% endif %}" aria-label="Appointments">
+        <span class="nav-bubble">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="4.5" width="14" height="15" rx="2.2" />
+            <path d="M8 3.5v2M16 3.5v2M5 9h14M9 13h3M12 13v3" />
+          </svg>
+        </span>
         <span class="nav-label" data-i18n="appointments">Appts</span>
       </a>
-      <a href="/profile" class="nav-item {% if path == '/profile' %}active{% endif %}">
-        <span class="nav-bubble"><span class="nav-icon">👤</span></span>
+      <a href="/profile" class="nav-item {% if path == '/profile' %}active{% endif %}" aria-label="Profile">
+        <span class="nav-bubble">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="9" r="3.2" />
+            <path d="M5.5 19.5c1.65-2.65 3.76-4 6.5-4s4.85 1.35 6.5 4" />
+          </svg>
+        </span>
         <span class="nav-label" data-i18n="profile">Profile</span>
       </a>
     </nav>
@@ -188,8 +215,8 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- App JS -->
-    <script src="/static/js/translations.js?v=9"></script>
-    <script src="/static/js/app.js?v=9"></script>
+    <script src="/static/js/translations.js?v=10"></script>
+    <script src="/static/js/app.js?v=10"></script>
 
     <!-- ═══════════════════════════════════════
          AI ASSISTANT SHEET

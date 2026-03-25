@@ -1,6 +1,55 @@
 let currentLang = localStorage.getItem('swahealthy_lang') || 'en';
 let _splashReleaseRequested = false;
 
+function looksMojibake(value) {
+    return typeof value === 'string' && /Ã|Â|â|à¦|à¤|ðŸ/.test(value);
+}
+
+function decodeMojibake(value) {
+    if (!looksMojibake(value)) return value;
+
+    let current = value;
+    for (let i = 0; i < 3; i += 1) {
+        try {
+            const bytes = Uint8Array.from(Array.from(current), ch => ch.charCodeAt(0) & 0xff);
+            const decoded = new TextDecoder('utf-8').decode(bytes);
+            if (!decoded || decoded === current) break;
+            current = decoded;
+            if (!looksMojibake(current)) break;
+        } catch (err) {
+            break;
+        }
+    }
+
+    return current;
+}
+
+function sanitizeLocaleObject(localeObject) {
+    if (!localeObject || typeof localeObject !== 'object') return localeObject;
+
+    Object.keys(localeObject).forEach(key => {
+        const value = localeObject[key];
+        if (typeof value === 'string') {
+            localeObject[key] = decodeMojibake(value);
+        } else if (value && typeof value === 'object') {
+            sanitizeLocaleObject(value);
+        }
+    });
+
+    return localeObject;
+}
+
+function sanitizeLocaleMaps() {
+    if (window.translations) {
+        sanitizeLocaleObject(window.translations);
+    }
+    if (window.APPT_LOCALE) {
+        sanitizeLocaleObject(window.APPT_LOCALE);
+    }
+}
+
+window.decodeMojibake = decodeMojibake;
+
 function humanizeTranslationKey(key) {
     if (!key) return '';
     if (!key.includes('_')) return key.charAt(0).toUpperCase() + key.slice(1);
@@ -18,11 +67,11 @@ function humanizeTranslationKey(key) {
  */
 function t(key) {
     if (window.translations && window.translations[currentLang] && window.translations[currentLang][key]) {
-        return window.translations[currentLang][key];
+        return decodeMojibake(window.translations[currentLang][key]);
     }
     // Fallback to English if missing
     if (window.translations && window.translations['en'] && window.translations['en'][key]) {
-        return window.translations['en'][key];
+        return decodeMojibake(window.translations['en'][key]);
     }
     return humanizeTranslationKey(key);
 }
@@ -91,6 +140,60 @@ function applyTranslations() {
 
     // 4. Sync with cookie for backend
     document.cookie = `swahealthy_lang=${currentLang}; path=/; max-age=${30 * 24 * 60 * 60}`;
+}
+
+function syncServerRenderedLanguage() {
+    const url = new URL(window.location.href);
+    const serverRenderedPaths = new Set(['/', '/history', '/profile', '/appointments', '/summary', '/wellness']);
+    const needsServerLang = window.location.pathname === '/' ||
+        window.location.pathname === '/history' ||
+        window.location.pathname === '/profile' ||
+        window.location.pathname === '/appointments' ||
+        window.location.pathname === '/wellness' ||
+        window.location.pathname.startsWith('/summary/');
+
+    document.querySelectorAll('a[href]').forEach(link => {
+        const rawHref = link.getAttribute('href');
+        if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
+        try {
+            const nextUrl = new URL(rawHref, window.location.origin);
+            const nextPath = nextUrl.pathname;
+            if (
+                serverRenderedPaths.has(nextPath) ||
+                nextPath.startsWith('/summary/')
+            ) {
+                nextUrl.searchParams.set('lang', currentLang);
+                link.setAttribute('href', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+            }
+        } catch (err) {
+            // Ignore malformed or special links.
+        }
+    });
+
+    if (!needsServerLang) return;
+
+    if (url.searchParams.get('lang') !== currentLang) {
+        url.searchParams.set('lang', currentLang);
+        window.location.replace(url.toString());
+    }
+}
+
+function syncHistoryLocalizedFields() {
+    document.querySelectorAll('.history-condition[data-condition-en]').forEach(el => {
+        const nextValue =
+            el.getAttribute(`data-condition-${currentLang}`) ||
+            el.getAttribute('data-condition-en') ||
+            el.textContent;
+        el.textContent = decodeMojibake(nextValue);
+    });
+
+    document.querySelectorAll('.history-sym-names[data-symptoms-en]').forEach(el => {
+        const nextValue =
+            el.getAttribute(`data-symptoms-${currentLang}`) ||
+            el.getAttribute('data-symptoms-en') ||
+            el.textContent;
+        el.textContent = decodeMojibake(nextValue);
+    });
 }
 
 function releaseAppSplash() {
@@ -177,7 +280,10 @@ function initAppSplash() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    sanitizeLocaleMaps();
     applyTranslations();
+    syncHistoryLocalizedFields();
+    syncServerRenderedLanguage();
     initAppSplash();
 
     // Register Service Worker
@@ -198,12 +304,19 @@ function setLang(lang) {
     });
 
     applyTranslations();
+
+    document.querySelectorAll('.symptom-name[data-name-en]').forEach(el => {
+        const nextValue =
+            el.getAttribute(`data-name-${lang}`) ||
+            el.getAttribute('data-name-en') ||
+            el.textContent;
+        el.textContent = decodeMojibake(nextValue);
+    });
+
+    syncHistoryLocalizedFields();
+
     const url = new URL(window.location);
     url.searchParams.set('lang', lang);
-    if (window.location.pathname === '/') {
-        window.history.replaceState({}, '', url);
-        return;
-    }
     window.location.href = url.toString();
 }
 

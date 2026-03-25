@@ -602,4 +602,3 @@ def reseed_medicines(cursor):
                 "INSERT OR IGNORE INTO facility_medicines (facility_id, medicine_id) VALUES (?, ?)",
                 (fac_id, med_id),
             )
-

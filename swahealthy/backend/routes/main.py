@@ -162,11 +162,35 @@ MEDICINE_NAME_MAP = {
 }
 
 
+def decode_mojibake_text(value):
+    if not isinstance(value, str) or not value:
+        return value
+    if not any(marker in value for marker in ('Ã', 'Â', 'â', 'à¦', 'à¤', 'ðŸ')):
+        return value
+
+    current = value
+    for _ in range(3):
+        try:
+            decoded = current.encode('latin1').decode('utf-8')
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            break
+        if decoded == current:
+            break
+        current = decoded
+    return current
+
+
+def normalize_i18n_key(value):
+    if not isinstance(value, str):
+        return ''
+    return decode_mojibake_text(value).strip().lower()
+
+
 def localize_medicine_name(name_en, lang, fallback=None):
     if lang not in ('bn', 'hi'):
-        return fallback or name_en
+        return decode_mojibake_text(fallback or name_en)
     localized = MEDICINE_NAME_MAP.get(name_en, {}).get(lang)
-    return localized or fallback or name_en
+    return decode_mojibake_text(localized or fallback or name_en)
 
 
 def with_distance(rows, lat, lng):
@@ -244,6 +268,8 @@ def index():
                 'symptom_id': s['symptom_id'],
                 'display': symptom_display,
                 'name_en': s['name_en'],
+                'name_bn': s['name_bn'],
+                'name_hi': s['name_hi'],
             })
 
     return render_template('pages/index.html', symptoms_group=grouped, lang=lang, first_name=first_name)
@@ -352,14 +378,21 @@ def run_diagnosis():
 
 @main_bp.route('/summary/<int:log_id>')
 def summary(log_id):
-    lang = request.args.get('lang', g.lang)
+    req_lang = request.args.get('lang')
+    if req_lang in ('en', 'bn', 'hi'):
+        lang = req_lang
+    else:
+        lang = g.lang if g.lang in ('en', 'bn', 'hi') else 'en'
     log = get_log_by_id(log_id)
     if not log:
         return "Summary not found", 404
         
     symptom_ids = json.loads(log['symptoms_json']) if log['symptoms_json'] else []
-    symptoms = get_symptoms_by_ids(symptom_ids, lang)
+    symptoms = [decode_mojibake_text(item) for item in get_symptoms_by_ids(symptom_ids, lang)]
     condition = get_condition_by_name(log['result_condition'], lang)
+    if condition:
+        condition['translated_name'] = decode_mojibake_text(condition.get('translated_name'))
+        condition['first_aid_text'] = decode_mojibake_text(condition.get('first_aid_text'))
     
     first_aid_steps = []
     if condition and condition.get('first_aid_text'):
@@ -390,10 +423,12 @@ def summary(log_id):
                     doctor = dict(d_row)
                     
     if condition and condition.get('condition_id'):
-        name_col = f'name_{lang}' if lang in ('en', 'bn', 'hi') else 'name_en'
-        cursor.execute(f"SELECT {name_col} as name FROM medicines WHERE condition_id = ? AND otc_available = 1", (condition['condition_id'],))
+        cursor.execute(
+            "SELECT name_en FROM medicines WHERE condition_id = ? AND otc_available = 1",
+            (condition['condition_id'],),
+        )
         m_rows = cursor.fetchall()
-        medicines = [r['name'] for r in m_rows]
+        medicines = [localize_medicine_name(row['name_en'], lang, row['name_en']) for row in m_rows]
         
     conn.close()
         
@@ -485,28 +520,100 @@ def history():
     user_id = session['user']['user_id']
 
     if request.method == 'GET':
+        ui_lang = request.args.get('lang')
+        if ui_lang not in ('en', 'bn', 'hi'):
+            ui_lang = g.lang if getattr(g, 'lang', None) in ('en', 'bn', 'hi') else 'en'
         cursor.execute(
             "SELECT * FROM session_log WHERE user_id = ? ORDER BY session_date DESC LIMIT 10",
             (user_id,),
         )
         logs = cursor.fetchall()
-        cursor.execute("SELECT symptom_id, name_en FROM symptoms")
-        symptom_lookup = {str(row['symptom_id']): row['name_en'] for row in cursor.fetchall()}
+        cursor.execute("SELECT symptom_id, name_en, name_bn, name_hi FROM symptoms")
+        symptom_rows = cursor.fetchall()
+        supported_langs = ('en', 'bn', 'hi')
+        symptom_lookup = {lang: {} for lang in supported_langs}
+        symptom_alias_lookup = {lang: {} for lang in supported_langs}
+        for s in symptom_rows:
+            en_name = decode_mojibake_text((s['name_en'] or '').strip())
+            bn_name = decode_mojibake_text((s['name_bn'] or '').strip())
+            hi_name = decode_mojibake_text((s['name_hi'] or '').strip())
+            localized_names = {'en': en_name, 'bn': bn_name, 'hi': hi_name}
+            for lang_code in supported_langs:
+                target_name = localized_names.get(lang_code, en_name) or en_name or str(s['symptom_id'])
+                symptom_lookup[lang_code][str(s['symptom_id'])] = target_name
+            for key in (en_name, bn_name, hi_name):
+                if key:
+                    normalized_key = normalize_i18n_key(key)
+                    for lang_code in supported_langs:
+                        symptom_alias_lookup[lang_code][normalized_key] = (
+                            localized_names.get(lang_code, en_name) or en_name or key
+                        )
+
+        cursor.execute("SELECT name_en, name_bn, name_hi FROM conditions")
+        condition_rows = cursor.fetchall()
+        condition_lookup = {lang: {} for lang in supported_langs}
+        for c in condition_rows:
+            en_name = decode_mojibake_text((c['name_en'] or '').strip())
+            bn_name = decode_mojibake_text((c['name_bn'] or '').strip())
+            hi_name = decode_mojibake_text((c['name_hi'] or '').strip())
+            localized_names = {'en': en_name, 'bn': bn_name, 'hi': hi_name}
+            for key in (en_name, bn_name, hi_name):
+                if key:
+                    normalized_key = normalize_i18n_key(key)
+                    for lang_code in supported_langs:
+                        condition_lookup[lang_code][normalized_key] = (
+                            localized_names.get(lang_code, en_name) or en_name or key
+                        )
         conn.close()
 
         resolved_logs = []
         for log in logs:
             row = dict(log)
+            symptom_names_by_lang = {lang: [] for lang in supported_langs}
             try:
-                ids = json.loads(row.get('symptoms_json') or '[]')
-                row['symptom_names'] = ', '.join(
-                    symptom_lookup.get(str(i), str(i)) for i in ids
-                ) or '—'
+                raw_items = json.loads(row.get('symptoms_json') or '[]')
+                for item in raw_items:
+                    item_text = str(item).strip()
+                    if not item_text:
+                        continue
+                    decoded_item = decode_mojibake_text(item_text)
+                    normalized_item = normalize_i18n_key(decoded_item)
+                    for lang_code in supported_langs:
+                        if item_text in symptom_lookup[lang_code]:
+                            symptom_names_by_lang[lang_code].append(symptom_lookup[lang_code][item_text])
+                        else:
+                            symptom_names_by_lang[lang_code].append(
+                                symptom_alias_lookup[lang_code].get(normalized_item, decoded_item)
+                            )
             except Exception:
-                row['symptom_names'] = row.get('symptoms_json', '—')
+                fallback_symptom_text = decode_mojibake_text(row.get('symptoms_json', '-'))
+                for lang_code in supported_langs:
+                    symptom_names_by_lang[lang_code] = [fallback_symptom_text]
+
+            for lang_code in supported_langs:
+                row[f'symptom_names_{lang_code}'] = decode_mojibake_text(
+                    ', '.join(symptom_names_by_lang[lang_code]) or '-'
+                )
+            row['symptom_names'] = row[f'symptom_names_{ui_lang}']
+
+            condition_name = decode_mojibake_text((row.get('result_condition') or '').strip())
+            if condition_name:
+                matched_by_lang = {
+                    lang_code: get_condition_by_name(condition_name, lang_code)
+                    for lang_code in supported_langs
+                }
+                for lang_code in supported_langs:
+                    row[f'result_condition_{lang_code}'] = decode_mojibake_text(
+                        (matched_by_lang[lang_code] or {}).get('translated_name')
+                        or condition_lookup[lang_code].get(normalize_i18n_key(condition_name), condition_name)
+                    )
+                row['result_condition'] = row[f'result_condition_{ui_lang}']
+            else:
+                for lang_code in supported_langs:
+                    row[f'result_condition_{lang_code}'] = ''
             resolved_logs.append(row)
 
-        return render_template('pages/history.html', logs=resolved_logs, lang=g.lang)
+        return render_template('pages/history.html', logs=resolved_logs, lang=ui_lang)
 
     if request.method == 'POST':
         data = request.get_json()

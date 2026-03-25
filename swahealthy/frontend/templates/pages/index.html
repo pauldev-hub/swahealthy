@@ -58,7 +58,12 @@
                             <label class="symptom-item">
                                 <input type="checkbox" name="symptoms" value="{{ item.symptom_id }}" class="custom-checkbox">
                                 <div class="checkbox-box"></div>
-                                <span class="symptom-name">{{ item.display }}</span>
+                                <span
+                                    class="symptom-name"
+                                    data-name-en="{{ item.name_en }}"
+                                    data-name-bn="{{ item.name_bn }}"
+                                    data-name-hi="{{ item.name_hi }}"
+                                >{{ item.display }}</span>
                             </label>
                             {% endfor %}
                         </div>

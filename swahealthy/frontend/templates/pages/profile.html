@@ -341,26 +341,76 @@
                         </div>
                         <div class="profile-app-info-row">
                             <span data-i18n="region">Region</span>
-                            <span data-i18n="region_value">Kolkata, West Bengal</span>
+                            <span id="profile-region-value">{{ profile_region }}</span>
                         </div>
                         <div class="profile-app-info-row">
                             <span>Account</span>
                             <span>{% if session.get('user') %}Connected{% else %}Local device{% endif %}</span>
                         </div>
                     </div>
+
+                    <article class="profile-about-card">
+                        <div class="profile-panel-head profile-about-head">
+                            <div>
+                                <div class="profile-section-label">About SwaHealthy</div>
+                                <h2 class="profile-panel-title">Simple health help, made local</h2>
+                            </div>
+                        </div>
+
+                        <div class="profile-app-info profile-app-info-enhanced profile-about-info">
+                            <div class="profile-app-info-row profile-about-brand-row">
+                                <span>App identity</span>
+                                <span class="profile-about-brand">
+                                    <span class="profile-about-logo" aria-hidden="true">🌿</span>
+                                    <span class="profile-about-brand-copy">
+                                        <strong>SwaHealthy</strong>
+                                        <small>v2.0</small>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="profile-app-info-row profile-about-copy-row">
+                                <span>Tagline</span>
+                                <span>Free health guidance for every Bengali household</span>
+                            </div>
+                            <div class="profile-app-info-row profile-about-copy-row">
+                                <span>Developer</span>
+                                <span>
+                                    Developed by Pratyush ·
+                                    <a href="https://github.com/pauldev-hub" class="profile-about-link" target="_blank" rel="noopener noreferrer" aria-label="Visit Pratyush's GitHub profile">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 2C6.48 2 2 6.58 2 12.22c0 4.5 2.87 8.31 6.84 9.66.5.09.68-.22.68-.49 0-.24-.01-1.03-.01-1.86-2.78.62-3.37-1.21-3.37-1.21-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.62.07-.62 1 .08 1.53 1.06 1.53 1.06.9 1.58 2.36 1.12 2.93.86.09-.67.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.03 1.03-2.74-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.3 9.3 0 0 1 12 6.84c.85 0 1.71.12 2.51.36 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.74 0 3.95-2.34 4.82-4.57 5.08.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.23 10.23 0 0 0 22 12.22C22 6.58 17.52 2 12 2Z" />
+                                        </svg>
+                                    </a>
+                                </span>
+                            </div>
+                            <div class="profile-app-info-row profile-about-copy-row profile-about-copy-row-stacked">
+                                <span>App info</span>
+                                <span>
+                                    SwaHealthy is a multilingual, offline-capable symptom checker designed for households across West Bengal.
+                                    It keeps guidance simple, local, and easy to access during everyday health questions, even on lower-connectivity devices.
+                                </span>
+                            </div>
+                            <div class="profile-app-info-row profile-about-copy-row">
+                                <span>Tech credits</span>
+                                <span>Powered by Flask · OpenStreetMap · Leaflet.js · WHO Guidelines</span>
+                            </div>
+                        </div>
+
+                        <div class="disclaimer-block profile-about-disclaimer">
+                            <div class="disclaimer-title">Medical disclaimer</div>
+                            <div class="disclaimer-text">
+                                SwaHealthy offers educational guidance only and does not replace a doctor, diagnosis, or emergency care. If symptoms feel severe, sudden, or worrying, seek help from a qualified medical professional immediately.
+                            </div>
+                        </div>
+                    </article>
                 </section>
 
                 <section class="profile-panel">
                     <div class="profile-panel-head">
                         <div>
-                            <div class="profile-section-label">Next Best Step</div>
-                            <h2 class="profile-panel-title">What to do next</h2>
+                            <div class="profile-section-label">Account</div>
+                            <h2 class="profile-panel-title">Quick account access</h2>
                         </div>
-                    </div>
-
-                    <div class="profile-next-step-card">
-                        <strong class="profile-next-step-title" id="next-step-title">Complete your profile details</strong>
-                        <p class="profile-next-step-copy" id="next-step-copy">Adding your age, gender, phone, and photo helps the app tailor future guidance.</p>
                     </div>
 
                     {% if session.get('user') %}
@@ -1013,6 +1063,156 @@
         font-weight: 700;
     }
 
+    .profile-about-card {
+        margin-top: 1rem;
+    }
+
+    .profile-about-head {
+        margin-bottom: 0.8rem;
+    }
+
+    .profile-about-info {
+        margin-bottom: 0;
+        overflow: visible;
+    }
+
+    .profile-about-brand-row,
+    .profile-about-copy-row {
+        align-items: flex-start;
+        gap: 0.9rem;
+    }
+
+    .profile-about-brand-row span:last-child,
+    .profile-about-copy-row span:last-child {
+        text-align: left;
+        line-height: 1.5;
+    }
+
+    .profile-about-brand {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.7rem;
+    }
+
+    .profile-about-logo {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #0f766e;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.18), rgba(168, 85, 247, 0.2));
+        border: 1px solid rgba(139, 92, 246, 0.18);
+        box-shadow: 0 10px 24px rgba(109, 40, 217, 0.12);
+    }
+
+    .profile-about-brand-copy {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.08rem;
+    }
+
+    .profile-about-brand-copy strong {
+        font-size: 0.94rem;
+        color: #1f1b4d;
+    }
+
+    .profile-about-brand-copy small {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #7c3aed;
+        letter-spacing: 0.03em;
+    }
+
+    .profile-about-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.65rem;
+        height: 1.65rem;
+        margin-left: 0.25rem;
+        border-radius: 999px;
+        color: #6d28d9;
+        background: rgba(109, 40, 217, 0.08);
+        border: 1px solid rgba(109, 40, 217, 0.12);
+        transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+        vertical-align: middle;
+    }
+
+    .profile-about-link:hover {
+        color: #0f766e;
+        background: rgba(20, 184, 166, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .profile-about-link svg {
+        width: 0.88rem;
+        height: 0.88rem;
+        fill: currentColor;
+    }
+
+    .profile-about-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+    }
+
+    .profile-about-stack {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.42rem;
+        font-weight: 600;
+    }
+
+    .profile-about-text-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: #0f766e;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .profile-about-text-link:hover {
+        color: #6d28d9;
+    }
+
+    .profile-about-copy-row-stacked {
+        align-items: flex-start;
+    }
+
+    .profile-about-copy-row-stacked span:last-child {
+        max-width: 18rem;
+    }
+
+    .profile-about-copy-row {
+        justify-content: flex-start;
+    }
+
+    .profile-about-copy-row span:first-child {
+        min-width: 5.4rem;
+        flex-shrink: 0;
+    }
+
+    .profile-about-copy-row span:last-child {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .profile-about-disclaimer {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(245, 243, 255, 0.92) 100%);
+        border-color: rgba(139, 92, 246, 0.12);
+    }
+
     .profile-next-step-card {
         margin-bottom: 1rem;
     }
@@ -1063,6 +1263,10 @@
 
         .profile-metrics-grid {
             grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .profile-about-copy-row-stacked span:last-child {
+            max-width: 24rem;
         }
     }
 </style>
@@ -1361,5 +1565,57 @@
             switchToView(age, gender, phone);
         }, 1200);
     }
+</script>
+<script>
+    (function refineAboutCard() {
+        const aboutCard = document.querySelector('.profile-about-card');
+        if (!aboutCard) return;
+
+        const title = aboutCard.querySelector('.profile-panel-title');
+        if (title) {
+            title.textContent = 'Simple health help, made local';
+        }
+
+        const rows = Array.from(aboutCard.querySelectorAll('.profile-app-info-row'));
+        const identityRow = rows.find((row) => {
+            const label = row.querySelector('span:first-child');
+            return label && label.textContent.trim().toLowerCase() === 'app identity';
+        });
+        if (identityRow) {
+            identityRow.remove();
+        }
+
+        Array.from(aboutCard.querySelectorAll('.profile-app-info-row')).forEach((row) => {
+            const label = row.querySelector('span:first-child');
+            const value = row.querySelector('span:last-child');
+            if (!label || !value) return;
+
+            const key = label.textContent.trim().toLowerCase();
+
+            if (key === 'developer') {
+                value.classList.add('profile-about-inline');
+                value.innerHTML = `
+                    <span>Developed by Pratyush Paul</span>
+                    <a href="https://github.com/pauldev-hub" class="profile-about-link" target="_blank" rel="noopener noreferrer" aria-label="Visit Pratyush's GitHub profile">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 2C6.48 2 2 6.58 2 12.22c0 4.5 2.87 8.31 6.84 9.66.5.09.68-.22.68-.49 0-.24-.01-1.03-.01-1.86-2.78.62-3.37-1.21-3.37-1.21-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.62.07-.62 1 .08 1.53 1.06 1.53 1.06.9 1.58 2.36 1.12 2.93.86.09-.67.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.03 1.03-2.74-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.3 9.3 0 0 1 12 6.84c.85 0 1.71.12 2.51.36 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.74 0 3.95-2.34 4.82-4.57 5.08.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.23 10.23 0 0 0 22 12.22C22 6.58 17.52 2 12 2Z" />
+                        </svg>
+                    </a>
+                `;
+            }
+
+            if (key === 'app info') {
+                value.classList.add('profile-about-stack');
+                value.innerHTML = `
+                    <span>Multilingual symptom guidance for West Bengal, built to stay lightweight and accessible.</span>
+                    <a href="https://github.com/pauldev-hub" class="profile-about-text-link" target="_blank" rel="noopener noreferrer">Read more on GitHub</a>
+                `;
+            }
+
+            if (key === 'tech credits') {
+                value.textContent = 'Flask, OpenStreetMap, Leaflet.js, WHO Guidelines';
+            }
+        });
+    })();
 </script>
 {% endblock %}

@@ -102,7 +102,10 @@ def get_symptoms_by_ids(symptom_ids, lang='en'):
 
 
 def get_condition_by_name(name_en, lang='en'):
-    """Fetch condition details matching name_en, returning translated fields if available."""
+    """Fetch condition details by any localized condition name."""
+    if not name_en:
+        return None
+
     name_col = f'name_{lang}' if lang in ('en', 'bn', 'hi') else 'name_en'
     first_aid_col = f'first_aid_{lang}' if lang in ('en', 'bn', 'hi') else 'first_aid_en'
     
@@ -117,8 +120,9 @@ def get_condition_by_name(name_en, lang='en'):
             see_doctor, 
             emergency_note 
         FROM conditions 
-        WHERE name_en = ?
-    """, (name_en,))
+        WHERE name_en = ? OR name_bn = ? OR name_hi = ?
+        LIMIT 1
+    """, (name_en, name_en, name_en))
     row = cursor.fetchone()
     conn.close()
     
