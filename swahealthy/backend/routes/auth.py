@@ -1,10 +1,23 @@
 """
-Authentication routes — Google OAuth login/logout.
+Authentication routes - Google OAuth login/logout.
 """
 
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, current_app, render_template, session, redirect, url_for
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _google_redirect_uri():
+    configured_redirect = current_app.config.get('GOOGLE_REDIRECT_URI')
+    if configured_redirect:
+        return configured_redirect
+
+    app_base_url = current_app.config.get('APP_BASE_URL', '').rstrip('/')
+    if app_base_url:
+        return f"{app_base_url}{url_for('auth.callback')}"
+
+    redirect_uri = url_for('auth.callback', _external=True)
+    return redirect_uri.replace('127.0.0.1', 'localhost')
 
 
 @auth_bp.route('/login')
@@ -15,8 +28,8 @@ def login():
 @auth_bp.route('/google-login')
 def google_login():
     from backend import google
-    redirect_uri = url_for('auth.callback', _external=True).replace('127.0.0.1', 'localhost')
-    return google.authorize_redirect(redirect_uri)
+
+    return google.authorize_redirect(_google_redirect_uri())
 
 
 @auth_bp.route('/callback')
@@ -40,11 +53,12 @@ def logout():
 
 @auth_bp.route('/debug-oauth')
 def debug_oauth():
-    """Debug route — shows first 20 chars of credentials. Remove before deploying."""
+    """Debug route - shows first 20 chars of credentials. Remove before deploying."""
     import os
+
     cid = os.environ.get('GOOGLE_CLIENT_ID', 'NOT SET')
     csecret = os.environ.get('GOOGLE_CLIENT_SECRET', 'NOT SET')
-    redirect_uri = url_for('auth.callback', _external=True).replace('127.0.0.1', 'localhost')
+    redirect_uri = _google_redirect_uri()
     return f"""
     <pre>
     GOOGLE_CLIENT_ID (first 20):   '{cid[:20]}...'

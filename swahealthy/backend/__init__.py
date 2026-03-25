@@ -7,6 +7,7 @@ import json
 
 from flask import Flask
 from authlib.integrations.flask_client import OAuth
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 
@@ -30,6 +31,7 @@ def create_app():
         template_folder=template_dir,
         static_folder=static_dir,
     )
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # Load configuration
     app.config.from_object(Config)

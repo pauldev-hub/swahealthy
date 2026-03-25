@@ -1,0 +1,796 @@
+  455:                 <div class="typing-indicator" id="sheet-typing" style="display:none">
+  456:                     <div class="typing-dot"></div>
+  457:                     <div class="typing-dot"></div>
+  458:                     <div class="typing-dot"></div>
+  459:                 </div>
+  460:             </div>
+  461:             <div class="chat-input-row">
+  462:                 <textarea class="chat-input" id="sheet-chat-input" data-i18n-placeholder="ask_about_health_placeholder" placeholder="Ask about health..." rows="1"></textarea>
+  463:                 <button class="chat-send-btn" id="sheet-send-btn">➤</button>
+  464:             </div>
+  465:             <p class="chat-disclaimer" data-i18n="not_substitute_medical_advice">Not a substitute for professional medical advice.</p>
+  466:         </div>
+  467:     </div>
+  468: 
+  469:     <!-- Bottom sheet JS -->
+  470:     <script>
+  471:     document.addEventListener('DOMContentLoaded', () => {
+  472:         const aiBtn = document.getElementById('ai-assistant-btn');
+  473:         const sheetOverlay = document.getElementById('ai-sheet-overlay');
+  474:         const sheet = document.getElementById('ai-sheet');
+  475:         const featuresPane = document.getElementById('sheet-tab-features');
+  476:         const closeBtn = document.getElementById('sheet-close-btn');
+  477:         const clearBtn = document.getElementById('sheet-clear-btn');
+  478:         const chatInput = document.getElementById('sheet-chat-input');
+  479:         const sendBtn = document.getElementById('sheet-send-btn');
+  480:         const chatMessages = document.getElementById('sheet-chat-messages');
+  481:         const typingIndicator = document.getElementById('sheet-typing');
+  482:         let riskProfileForm = null;
+  483:         let riskProfileCard = null;
+  484:         let riskProfileReset = null;
+  485:         let seasonalAlertGrid = null;
+  486:         let seasonalAlertMonth = null;
+  487:         let bodyGuideCard = null;
+  488:         let modernTipEl = null;
+  489:         
+  490:         let chatHistory = [];
+  491:         let hasOpened = false;
+  492:         const riskProfileStorageKey = 'swahealthy_risk_profile_v1';
+  493:         let lastAssistantLang = localStorage.getItem('swahealthy_lang') || 'en';
+  494: 
+  495:         const districtGroups = {
+  496:             kolkata: 'metro',
+  497:             howrah: 'metro',
+  498:             'north-24-parganas': 'metro',
+  499:             'south-24-parganas': 'coastal',
+  500:             'purba-medinipur': 'coastal',
+  501:             'paschim-medinipur': 'rural',
+  502:             jhargram: 'rural',
+  503:             darjeeling: 'north',
+  504:             jalpaiguri: 'north',
+  505:             alipurduar: 'north',
+  506:             'cooch-behar': 'north',
+  507:             malda: 'north',
+  508:             murshidabad: 'rural',
+  509:             nadia: 'rural',
+  510:             hooghly: 'rural',
+  511:             'purba-bardhaman': 'rural',
+  512:             'paschim-bardhaman': 'rural',
+  513:             bankura: 'rural',
+  514:             purulia: 'rural',
+  515:             birbhum: 'rural'
+  516:         };
+  517: 
+  518:         function renderAssistantFeaturesPane() {
+  519:             if (!featuresPane) return;
+  520:             featuresPane.innerHTML = `
+  521:                 <div class="assistant-shell">
+  522:                     <section class="assistant-hero-panel">
+  523:                         <div class="assistant-hero-copy">
+  524:                             <span class="assistant-kicker" data-i18n="assistant_brand_kicker">SwaHealthy Assistant</span>
+  525:                             <h3 data-i18n="assistant_hero_title">Your quick health brief for West Bengal</h3>
+  526:                             <p data-i18n="assistant_hero_desc">Get a saved personal risk snapshot, live seasonal warnings, and a simple body-area guide before you chat.</p>
+  527:                         </div>
+  528:                         <div class="assistant-hero-meta">
+  529:                             <div class="assistant-hero-tip">
+  530:                                 <span class="sheet-hero-icon">&#128161;</span>
+  531:                                 <p id="sheet-daily-tip-modern">Loading tip...</p>
+  532:                             </div>
+  533:                             <div class="assistant-hero-chip" data-i18n="assistant_hero_chip">Built for faster self-checks</div>
+  534:                         </div>
+  535:                     </section>
+  536: 
+  537:                     <section class="assistant-quick-actions">
+  538:                         <div class="assistant-section-head">
+  539:                             <div>
+  540:                                 <span class="assistant-section-kicker" data-i18n="assistant_quick_actions_kicker">Quick actions</span>
+  541:                                 <h4 data-i18n="assistant_quick_actions_title">Continue with the tools you already use</h4>
+  542:                             </div>
+  543:                         </div>
+  544:                         <div class="sheet-feature-grid assistant-feature-grid-modern">
+  545:                             <div class="sheet-feat-item" data-action="chat">
+  546:                                 <div class="feat-icon feat-icon-chat">&#128172;</div>
+  547:                                 <div class="feat-text"><strong data-i18n="ask_health_questions">Ask Health Questions</strong><span data-i18n="ai_powered_guidance">AI-powered guidance</span></div>
+  548:                             </div>
+  549:                             <div class="sheet-feat-item" data-action="photo">
+  550:                                 <div class="feat-icon feat-icon-photo">&#128247;</div>
+  551:                                 <div class="feat-text"><strong data-i18n="photo_analysis_short">Photo Analysis</strong><span data-i18n="upload_visual_check">Upload for visual check</span></div>
+  552:                             </div>
+  553:                             <div class="sheet-feat-item" data-action="symptoms">
+  554:                                 <div class="feat-icon feat-icon-symptoms">&#129658;</div>
+  555:                                 <div class="feat-text"><strong data-i18n="check_symptoms">Check Symptoms</strong><span data-i18n="rule_based_diagnosis">Rule-based diagnosis</span></div>
+  556:                             </div>
+  557:                             <div class="sheet-feat-item" data-action="facilities">
+  558:                                 <div class="feat-icon feat-icon-fac">&#127973;</div>
+  559:                                 <div class="feat-text"><strong data-i18n="find_facilities">Find Facilities</strong><span data-i18n="nearest_phc_hospitals">Nearest PHC & hospitals</span></div>
+  560:                             </div>
+  561:                             <div class="sheet-feat-item" data-action="medicine">
+  562:                                 <div class="feat-icon feat-icon-med">&#128138;</div>
+  563:                                 <div class="feat-text"><strong data-i18n="medicine_info">Medicine Info</strong><span data-i18n="ask_about_any_medicine">Ask about any medicine</span></div>
+  564:                             </div>
+  565:                             <div class="sheet-feat-item" data-action="history">
+  566:                                 <div class="feat-icon feat-icon-history">&#128203;</div>
+  567:                                 <div class="feat-text"><strong data-i18n="my_health_history">My Health History</strong><span data-i18n="past_check_results">Past check results</span></div>
+  568:                             </div>
+  569:                         </div>
+  570:                     </section>
+  571: 
+  572:                     <section class="assistant-module assistant-risk-module">
+  573:                         <div class="assistant-section-head">
+  574:                             <div>
+  575:                                 <span class="assistant-section-kicker" data-i18n="risk_profile_kicker">Health Risk Profile</span>
+  576:                                 <h4 data-i18n="risk_profile_title">Five quick inputs, one personalized card</h4>
+  577:                             </div>
+  578:                             <span class="assistant-section-badge" data-i18n="saved_on_device">Saved on this device</span>
+  579:                         </div>
+  580:                         <form class="risk-profile-form" id="risk-profile-form">
+  581:                             <label class="risk-field">
+  582:                                 <span data-i18n="risk_age_group">Age group</span>
+  583:                                 <select name="ageGroup" required>
+  584:                                     <option value="" data-i18n="select_label">Select</option>
+  585:                                     <option value="child" data-i18n="risk_age_child">Child (0-12)</option>
+  586:                                     <option value="teen" data-i18n="risk_age_teen">Teen (13-19)</option>
+  587:                                     <option value="adult" data-i18n="risk_age_adult">Adult (20-59)</option>
+  588:                                     <option value="senior" data-i18n="risk_age_senior">Senior (60+)</option>
+  589:                                 </select>
+  590:                             </label>
+  591:                             <label class="risk-field">
+  592:                                 <span data-i18n="risk_district">District</span>
+  593:                                 <select name="district" required>
+  594:                                     <option value="" data-i18n="select_label">Select</option>
+  595:                                     <option value="kolkata" data-i18n="district_kolkata">Kolkata</option>
+  596:                                     <option value="howrah" data-i18n="district_howrah">Howrah</option>
+  597:                                     <option value="north-24-parganas" data-i18n="district_north_24_parganas">North 24 Parganas</option>
+  598:                                     <option value="south-24-parganas" data-i18n="district_south_24_parganas">South 24 Parganas</option>
+  599:                                     <option value="purba-medinipur" data-i18n="district_purba_medinipur">Purba Medinipur</option>
+  600:                                     <option value="paschim-medinipur" data-i18n="district_paschim_medinipur">Paschim Medinipur</option>
+  601:                                     <option value="jhargram" data-i18n="district_jhargram">Jhargram</option>
+  602:                                     <option value="darjeeling" data-i18n="district_darjeeling">Darjeeling</option>
+  603:                                     <option value="jalpaiguri" data-i18n="district_jalpaiguri">Jalpaiguri</option>
+  604:                                     <option value="alipurduar" data-i18n="district_alipurduar">Alipurduar</option>
+  605:                                     <option value="cooch-behar" data-i18n="district_cooch_behar">Cooch Behar</option>
+  606:                                     <option value="malda" data-i18n="district_malda">Malda</option>
+  607:                                     <option value="murshidabad" data-i18n="district_murshidabad">Murshidabad</option>
+  608:                                     <option value="nadia" data-i18n="district_nadia">Nadia</option>
+  609:                                     <option value="hooghly" data-i18n="district_hooghly">Hooghly</option>
+  610:                                     <option value="purba-bardhaman" data-i18n="district_purba_bardhaman">Purba Bardhaman</option>
+  611:                                     <option value="paschim-bardhaman" data-i18n="district_paschim_bardhaman">Paschim Bardhaman</option>
+  612:                                     <option value="bankura" data-i18n="district_bankura">Bankura</option>
+  613:                                     <option value="purulia" data-i18n="district_purulia">Purulia</option>
+  614:                                     <option value="birbhum" data-i18n="district_birbhum">Birbhum</option>
+  615:                                 </select>
+  616:                             </label>
+  617:                             <label class="risk-field">
+  618:                                 <span data-i18n="risk_current_season">Current season</span>
+  619:                                 <select name="season" required>
+  620:                                     <option value="" data-i18n="select_label">Select</option>
+  621:                                     <option value="summer" data-i18n="season_summer">Summer</option>
+  622:                                     <option value="monsoon" data-i18n="season_monsoon">Monsoon</option>
+  623:                                     <option value="winter" data-i18n="season_winter">Winter</option>
+  624:                                     <option value="transition" data-i18n="season_transition">Season change</option>
+  625:                                 </select>
+  626:                             </label>
+  627:                             <label class="risk-field">
+  628:                                 <span data-i18n="risk_chronic_condition">Chronic condition</span>
+  629:                                 <select name="chronic" required>
+  630:                                     <option value="" data-i18n="select_label">Select</option>
+  631:                                     <option value="none" data-i18n="chronic_none">None</option>
+  632:                                     <option value="diabetes" data-i18n="chronic_diabetes">Diabetes</option>
+  633:                                     <option value="hypertension" data-i18n="chronic_hypertension">High blood pressure</option>
+  634:                                     <option value="asthma" data-i18n="chronic_asthma">Asthma / COPD</option>
+  635:                                     <option value="weak-immunity" data-i18n="chronic_weak_immunity">Weak immunity</option>
+  636:                                 </select>
+  637:                             </label>
+  638:                             <label class="risk-field">
+  639:                                 <span data-i18n="risk_lifestyle">Lifestyle</span>
+  640:                                 <select name="lifestyle" required>
+  641:                                     <option value="" data-i18n="select_label">Select</option>
+  642:                                     <option value="active" data-i18n="lifestyle_active">Mostly active</option>
+  643:                                     <option value="outdoor" data-i18n="lifestyle_outdoor">Long outdoor hours</option>
+  644:                                     <option value="sedentary" data-i18n="lifestyle_sedentary">Mostly sedentary</option>
+  645:                                     <option value="smoker" data-i18n="lifestyle_smoker">Smoking / tobacco use</option>
+  646:                                     <option value="crowded-travel" data-i18n="lifestyle_crowded_travel">Crowded public travel</option>
+  647:                                 </select>
+  648:                             </label>
+  649:                             <div class="risk-actions">
+  650:                                 <button type="submit" class="assistant-primary-btn" data-i18n="generate_risk_card">Generate risk card</button>
+  651:                                 <button type="button" class="assistant-secondary-btn" id="risk-profile-reset" data-i18n="reset_label">Reset</button>
+  652:                             </div>
+  653:                         </form>
+  654:                         <div class="risk-profile-card empty" id="risk-profile-card">
+  655:                             <div class="risk-profile-placeholder">
+  656:                                 <strong data-i18n="risk_placeholder_title">Your top 3 likely concerns will appear here.</strong>
+  657:                                 <span data-i18n="risk_placeholder_desc">We use a static rule matrix based on age, district, season, chronic condition, and lifestyle.</span>
+  658:                             </div>
+  659:                         </div>
+  660:                     </section>
+  661: 
+  662:                     <section class="assistant-module assistant-alert-module">
+  663:                         <div class="assistant-section-head">
+  664:                             <div>
+  665:                                 <span class="assistant-section-kicker" data-i18n="seasonal_board_kicker">Seasonal Health Alert Board</span>
+  666:                                 <h4 data-i18n="seasonal_board_title">Auto-updated for the current month in West Bengal</h4>
+  667:                             </div>
+  668:                             <span class="assistant-section-badge" id="seasonal-alert-month" data-i18n="this_month_label">This month</span>
+  669:                         </div>
+  670:                         <div class="seasonal-alert-grid" id="seasonal-alert-grid"></div>
+  671:                     </section>
+  672: 
+  673:                     <section class="assistant-module assistant-body-module">
+  674:                         <div class="assistant-section-head">
+  675:                             <div>
+  676:                                 <span class="assistant-section-kicker" data-i18n="body_guide_kicker">Body Area Health Guide</span>
+  677:                                 <h4 data-i18n="body_guide_title">Tap a region to see what to watch for</h4>
+  678:                             </div>
+  679:                         </div>
+  680:                         <div class="body-guide-layout">
+  681:                             <div class="body-map-panel">
+  682:                                 <svg class="body-map-svg" viewBox="0 0 220 360" role="img" aria-label="Interactive body map">
+  683:                                     <defs>
+  684:                                         <linearGradient id="bodyMapGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+  685:                                             <stop offset="0%" stop-color="#8b5cf6"></stop>
+  686:                                             <stop offset="100%" stop-color="#0f766e"></stop>
+  687:                                         </linearGradient>
+  688:                                     </defs>
+  689:                                     <circle class="body-outline head" cx="110" cy="44" r="30"></circle>
+  690:                                     <rect class="body-outline neck" x="99" y="71" width="22" height="18" rx="10"></rect>
+  691:                                     <path class="body-outline torso" d="M82 86C90 78 101 74 110 74C119 74 130 78 138 86L154 117C159 127 158 142 150 151L138 164C134 169 131 176 130 183L127 300C126 310 119 318 110 318C101 318 94 310 93 300L90 183C89 176 86 169 82 164L70 151C62 142 61 127 66 117L82 86Z"></path>
+  692:                                     <rect class="body-outline arm left" x="41" y="100" width="24" height="124" rx="12" transform="rotate(10 53 162)"></rect>
+  693:                                     <rect class="body-outline arm right" x="155" y="100" width="24" height="124" rx="12" transform="rotate(-10 167 162)"></rect>
+  694:                                     <rect class="body-outline leg left" x="86" y="190" width="25" height="135" rx="12"></rect>
+  695:                                     <rect class="body-outline leg right" x="109" y="190" width="25" height="135" rx="12"></rect>
+  696: 
+  697:                                     <g class="body-area-node active" data-area="head" tabindex="0" role="button">
+  698:                                         <circle cx="110" cy="44" r="27"></circle>
+  699:                                         <text x="110" y="48" data-i18n="body_area_head">Head</text>
+  700:                                     </g>
+  701:                                     <g class="body-area-node" data-area="chest" tabindex="0" role="button">
+  702:                                         <rect x="79" y="92" width="62" height="58" rx="24"></rect>
+  703:                                         <text x="110" y="126" data-i18n="body_area_chest">Chest</text>
+  704:                                     </g>
+  705:                                     <g class="body-area-node" data-area="stomach" tabindex="0" role="button">
+  706:                                         <rect x="84" y="151" width="52" height="48" rx="22"></rect>
+  707:                                         <text x="110" y="180" data-i18n="body_area_stomach">Stomach</text>
+  708:                                     </g>
+  709:                                     <g class="body-area-node" data-area="skin" tabindex="0" role="button">
+  710:                                         <rect x="25" y="132" width="24" height="54" rx="12"></rect>
+  711:                                         <rect x="171" y="132" width="24" height="54" rx="12"></rect>
+  712:                                         <text x="110" y="232" data-i18n="body_area_skin">Skin</text>
+  713:                                     </g>
+  714:                                     <g class="body-area-node body-area-node-general" data-area="general" tabindex="0" role="button">
+  715:                                         <rect x="43" y="328" width="134" height="30" rx="15"></rect>
+  716:                                         <text x="110" y="347" data-i18n="body_area_general">General</text>
+  717:                                     </g>
+  718:                                 </svg>
+  719:                             </div>
+  720:                             <div class="body-guide-card" id="body-guide-card"></div>
+  721:                         </div>
+  722:                     </section>
+  723: 
+  724:                     <div class="mood-row assistant-mood-row">
+  725:                         <label data-i18n="how_are_you_feeling">How are you feeling?</label>
+  726:                         <button class="mood-btn" data-mood="great">&#128522; <span data-i18n="feeling_great">Great</span></button>
+  727:                         <button class="mood-btn" data-mood="okay">&#128528; <span data-i18n="feeling_okay">Okay</span></button>
+  728:                         <button class="mood-btn" data-mood="unwell">&#128532; <span data-i18n="feeling_unwell">Unwell</span></button>
+  729:                     </div>
+  730:                 </div>
+  731:             `;
+  732: 
+  733:             riskProfileForm = document.getElementById('risk-profile-form');
+  734:             riskProfileCard = document.getElementById('risk-profile-card');
+  735:             riskProfileReset = document.getElementById('risk-profile-reset');
+  736:             seasonalAlertGrid = document.getElementById('seasonal-alert-grid');
+  737:             seasonalAlertMonth = document.getElementById('seasonal-alert-month');
+  738:             bodyGuideCard = document.getElementById('body-guide-card');
+  739:             modernTipEl = document.getElementById('sheet-daily-tip-modern');
+  740: 
+  741:             if (typeof applyTranslations === 'function') {
+  742:                 applyTranslations();
+  743:             }
+  744:         }
+  745: 
+  746:         renderAssistantFeaturesPane();
+  747: 
+  748:         function openSheet() {
+  749:             sheetOverlay.classList.add('open');
+  750:             sheet.classList.add('open');
+  751:             if (!hasOpened && chatHistory.length === 0) {
+  752:                 appendBubble(t('swa_assistant_welcome'), 'asst');
+  753:                 hasOpened = true;
+  754:             }
+  755:             // By default focus input if Chat tab is active
+  756:             if (document.querySelector('.sheet-tab[data-tab="chat"]').classList.contains('active')) {
+  757:                 chatInput.focus();
+  758:             }
+  759:         }
+  760:         window.openAISheet = openSheet;
+  761: 
+  762:         function closeSheet() {
+  763:             sheetOverlay.classList.remove('open');
+  764:             sheet.classList.remove('open');
+  765:         }
+  766: 
+  767:         if (aiBtn) aiBtn.addEventListener('click', openSheet);
+  768:         if (sheetOverlay) sheetOverlay.addEventListener('click', closeSheet);
+  769:         if (closeBtn) closeBtn.addEventListener('click', closeSheet);
+  770: 
+  771:         if (clearBtn) {
+  772:             clearBtn.addEventListener('click', () => {
+  773:                 if (confirm(t('clear_chat_confirm'))) {
+  774:                     chatHistory = [];
+  775:                     // Keep only the typing indicator
+  776:                     chatMessages.querySelectorAll('.chat-bubble').forEach(b => b.remove());
+  777:                     appendBubble(t('swa_assistant_welcome'), 'asst');
+  778:                 }
+  779:             });
+  780:         }
+  781: 
+  782:         // Tab switching
+  783:         document.querySelectorAll('.sheet-tab').forEach(btn => {
+  784:             btn.addEventListener('click', () => {
+  785:                 document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+  786:                 document.querySelectorAll('.sheet-tab-pane').forEach(p => p.classList.remove('active'));
+  787:                 btn.classList.add('active');
+  788:                 document.getElementById('sheet-tab-' + btn.dataset.tab).classList.add('active');
+  789:                 if (btn.dataset.tab === 'chat') {
+  790:                     chatInput.focus();
+  791:                     chatMessages.scrollTop = chatMessages.scrollHeight;
+  792:                 }
+  793:             });
+  794:         });
+  795: 
+  796:         // Daily tip
+  797:         const DAILY_TIPS = [
+  798:             "Drink 8 glasses of water daily.",
+  799:             "Wash hands for 20 seconds before meals.",
+  800:             "Sleep 7-8 hours for a strong immune system.",
+  801:             "Eat seasonal fruits like guava and papaya.",
+  802:             "Walk 30 minutes daily for heart health.",
+  803:             "Avoid skipping meals — eat small portions regularly.",
+  804:             "Use mosquito nets at night to prevent malaria.",
+  805:             "Watch for dengue symptoms during monsoon season.",
+  806:             "Store drinking water in covered containers.",
+  807:             "Boil water if unsure about its safety.",
+  808:             "Get children vaccinated at your local PHC.",
+  809:             "Wear slippers outdoors to avoid infections.",
+  810:             "Dry clothes in sunlight to kill bacteria.",
+  811:             "Eat spinach and lentils to prevent anaemia.",
+  812:             "Check blood pressure regularly if over 40.",
+  813:             "Avoid self-medication — consult a doctor.",
+  814:             "Breastfeed infants exclusively for 6 months.",
+  815:             "Keep wounds clean and covered.",
+  816:             "Exercise reduces stress and improves mood.",
+  817:             "Visit your PHC for free health checkups."
+  818:         ];
+  819:         const tipIndex = Math.floor(Date.now() / 86400000) % DAILY_TIPS.length;
+  820:         const tipEl = document.getElementById('sheet-daily-tip');
+  821:         if (tipEl) tipEl.textContent = DAILY_TIPS[tipIndex];
+  822:         if (modernTipEl) modernTipEl.textContent = DAILY_TIPS[tipIndex];
+  823: 
+  824:         const riskLabels = {
+  825:             ageGroup: {
+  826:                 child: 'risk_age_child',
+  827:                 teen: 'risk_age_teen',
+  828:                 adult: 'risk_age_adult',
+  829:                 senior: 'risk_age_senior'
+  830:             },
+  831:             district: {
+  832:                 kolkata: 'district_kolkata',
+  833:                 howrah: 'district_howrah',
+  834:                 'north-24-parganas': 'district_north_24_parganas',
+  835:                 'south-24-parganas': 'district_south_24_parganas',
+  836:                 'purba-medinipur': 'district_purba_medinipur',
+  837:                 'paschim-medinipur': 'district_paschim_medinipur',
+  838:                 jhargram: 'district_jhargram',
+  839:                 darjeeling: 'district_darjeeling',
+  840:                 jalpaiguri: 'district_jalpaiguri',
+  841:                 alipurduar: 'district_alipurduar',
+  842:                 'cooch-behar': 'district_cooch_behar',
+  843:                 malda: 'district_malda',
+  844:                 murshidabad: 'district_murshidabad',
+  845:                 nadia: 'district_nadia',
+  846:                 hooghly: 'district_hooghly',
+  847:                 'purba-bardhaman': 'district_purba_bardhaman',
+  848:                 'paschim-bardhaman': 'district_paschim_bardhaman',
+  849:                 bankura: 'district_bankura',
+  850:                 purulia: 'district_purulia',
+  851:                 birbhum: 'district_birbhum'
+  852:             },
+  853:             season: {
+  854:                 summer: 'season_summer',
+  855:                 monsoon: 'season_monsoon',
+  856:                 winter: 'season_winter',
+  857:                 transition: 'season_transition'
+  858:             },
+  859:             chronic: {
+  860:                 none: 'chronic_none',
+  861:                 diabetes: 'chronic_diabetes',
+  862:                 hypertension: 'chronic_hypertension',
+  863:                 asthma: 'chronic_asthma',
+  864:                 'weak-immunity': 'chronic_weak_immunity'
+  865:             },
+  866:             lifestyle: {
+  867:                 active: 'lifestyle_active',
+  868:                 outdoor: 'lifestyle_outdoor',
+  869:                 sedentary: 'lifestyle_sedentary',
+  870:                 smoker: 'lifestyle_smoker',
+  871:                 'crowded-travel': 'lifestyle_crowded_travel'
+  872:             }
+  873:         };
+  874: 
+  875:         const riskMatrix = {
+  876:             dengue: {
+  877:                 titleKey: 'condition_dengue_title',
+  878:                 summaryKey: 'condition_dengue_summary',
+  879:                 tips: ['condition_dengue_tip_1', 'condition_dengue_tip_2', 'condition_dengue_tip_3'],
+  880:                 weights: {
+  881:                     district: { metro: 2, coastal: 3, north: 1, rural: 2 },
+  882:                     season: { monsoon: 4, summer: 1, winter: 0, transition: 2 },
+  883:                     lifestyle: { outdoor: 3, active: 1, sedentary: 0, smoker: 0, 'crowded-travel': 1 },
+  884:                     ageGroup: { child: 1, teen: 1, adult: 1, senior: 2 },
+  885:                     chronic: { 'weak-immunity': 2, diabetes: 1 }
+  886:                 }
+  887:             },
+  888:             heatstroke: {
+  889:                 titleKey: 'condition_heatstroke_title',
+  890:                 summaryKey: 'condition_heatstroke_summary',
+  891:                 tips: ['condition_heatstroke_tip_1', 'condition_heatstroke_tip_2', 'condition_heatstroke_tip_3'],
+  892:                 weights: {
+  893:                     district: { metro: 2, coastal: 2, north: 1, rural: 2 },
+  894:                     season: { summer: 4, monsoon: 1, winter: 0, transition: 2 },
+  895:                     lifestyle: { outdoor: 4, active: 2, sedentary: 0, smoker: 0, 'crowded-travel': 2 },
+  896:                     ageGroup: { child: 1, teen: 1, adult: 1, senior: 3 },
+  897:                     chronic: { hypertension: 2, diabetes: 2 }
+  898:                 }
+  899:             },
+  900:             respiratory: {
+  901:                 titleKey: 'condition_respiratory_title',
+  902:                 summaryKey: 'condition_respiratory_summary',
+  903:                 tips: ['condition_respiratory_tip_1', 'condition_respiratory_tip_2', 'condition_respiratory_tip_3'],
+  904:                 weights: {
+  905:                     district: { metro: 3, coastal: 1, north: 2, rural: 1 },
+  906:                     season: { winter: 4, monsoon: 1, summer: 1, transition: 3 },
+  907:                     lifestyle: { smoker: 4, 'crowded-travel': 2, sedentary: 1, active: 0, outdoor: 1 },
+  908:                     ageGroup: { child: 2, teen: 1, adult: 1, senior: 3 },
+  909:                     chronic: { asthma: 5, 'weak-immunity': 2 }
+  910:                 }
+  911:             },
+  912:             hypertension: {
+  913:                 titleKey: 'condition_hypertension_title',
+  914:                 summaryKey: 'condition_hypertension_summary',
+  915:                 tips: ['condition_hypertension_tip_1', 'condition_hypertension_tip_2', 'condition_hypertension_tip_3'],
+  916:                 weights: {
+  917:                     district: { metro: 2, coastal: 1, north: 1, rural: 1 },
+  918:                     season: { summer: 2, winter: 1, monsoon: 1, transition: 1 },
+  919:                     lifestyle: { sedentary: 3, smoker: 2, 'crowded-travel': 1, active: 0, outdoor: 1 },
+  920:                     ageGroup: { child: 0, teen: 0, adult: 2, senior: 4 },
+  921:                     chronic: { hypertension: 5, diabetes: 2 }
+  922:                 }
+  923:             },
+  924:             gastric: {
+  925:                 titleKey: 'condition_gastric_title',
+  926:                 summaryKey: 'condition_gastric_summary',
+  927:                 tips: ['condition_gastric_tip_1', 'condition_gastric_tip_2', 'condition_gastric_tip_3'],
+  928:                 weights: {
+  929:                     district: { metro: 1, coastal: 2, north: 1, rural: 2 },
+  930:                     season: { monsoon: 3, summer: 2, winter: 1, transition: 2 },
+  931:                     lifestyle: { outdoor: 2, 'crowded-travel': 2, sedentary: 1, active: 1, smoker: 1 },
+  932:                     ageGroup: { child: 2, teen: 1, adult: 1, senior: 2 },
+  933:                     chronic: { diabetes: 1, 'weak-immunity': 2 }
+  934:                 }
+  935:             },
+  936:             skin: {
+  937:                 titleKey: 'condition_skin_title',
+  938:                 summaryKey: 'condition_skin_summary',
+  939:                 tips: ['condition_skin_tip_1', 'condition_skin_tip_2', 'condition_skin_tip_3'],
+  940:                 weights: {
+  941:                     district: { metro: 1, coastal: 3, north: 1, rural: 2 },
+  942:                     season: { monsoon: 3, summer: 3, winter: 1, transition: 1 },
+  943:                     lifestyle: { outdoor: 2, active: 2, sedentary: 0, smoker: 0, 'crowded-travel': 1 },
+  944:                     ageGroup: { child: 1, teen: 2, adult: 1, senior: 1 },
+  945:                     chronic: { diabetes: 2, 'weak-immunity': 2 }
+  946:                 }
+  947:             }
+  948:         };
+  949: 
+  950:         const seasonalAlertsByRange = [
+  951:             {
+  952:                 months: [2, 3, 4],
+  953:                 labelKey: 'season_window_mar_may',
+  954:                 items: [
+  955:                     { titleKey: 'seasonal_heatstroke_title', tipKey: 'seasonal_heatstroke_tip' },
+  956:                     { titleKey: 'seasonal_dehydration_title', tipKey: 'seasonal_dehydration_tip' },
+  957:                     { titleKey: 'seasonal_food_title', tipKey: 'seasonal_food_tip' }
+  958:                 ]
+  959:             },
+  960:             {
+  961:                 months: [5, 6, 7, 8],
+  962:                 labelKey: 'season_window_jun_sep',
+  963:                 items: [
+  964:                     { titleKey: 'seasonal_dengue_title', tipKey: 'seasonal_dengue_tip' },
+  965:                     { titleKey: 'seasonal_malaria_title', tipKey: 'seasonal_malaria_tip' },
+  966:                     { titleKey: 'seasonal_waterborne_title', tipKey: 'seasonal_waterborne_tip' }
+  967:                 ]
+  968:             },
+  969:             {
+  970:                 months: [10, 11, 0, 1],
+  971:                 labelKey: 'season_window_nov_feb',
+  972:                 items: [
+  973:                     { titleKey: 'seasonal_respiratory_title', tipKey: 'seasonal_respiratory_tip' },
+  974:                     { titleKey: 'seasonal_asthma_title', tipKey: 'seasonal_asthma_tip' },
+  975:                     { titleKey: 'seasonal_cold_title', tipKey: 'seasonal_cold_tip' }
+  976:                 ]
+  977:             },
+  978:             {
+  979:                 months: [9],
+  980:                 labelKey: 'season_window_oct',
+  981:                 items: [
+  982:                     { titleKey: 'seasonal_post_monsoon_title', tipKey: 'seasonal_post_monsoon_tip' },
+  983:                     { titleKey: 'seasonal_viral_title', tipKey: 'seasonal_viral_tip' },
+  984:                     { titleKey: 'seasonal_fungal_title', tipKey: 'seasonal_fungal_tip' }
+  985:                 ]
+  986:             }
+  987:         ];
+  988: 
+  989:         const bodyGuideContent = {
+  990:             head: {
+  991:                 titleKey: 'body_head_title',
+  992:                 watchKey: 'body_head_watch',
+  993:                 selfTreatKey: 'body_head_self_treat',
+  994:                 doctorKey: 'body_head_doctor'
+  995:             },
+  996:             chest: {
+  997:                 titleKey: 'body_chest_title',
+  998:                 watchKey: 'body_chest_watch',
+  999:                 selfTreatKey: 'body_chest_self_treat',
+ 1000:                 doctorKey: 'body_chest_doctor'
+ 1001:             },
+ 1002:             stomach: {
+ 1003:                 titleKey: 'body_stomach_title',
+ 1004:                 watchKey: 'body_stomach_watch',
+ 1005:                 selfTreatKey: 'body_stomach_self_treat',
+ 1006:                 doctorKey: 'body_stomach_doctor'
+ 1007:             },
+ 1008:             skin: {
+ 1009:                 titleKey: 'body_skin_title',
+ 1010:                 watchKey: 'body_skin_watch',
+ 1011:                 selfTreatKey: 'body_skin_self_treat',
+ 1012:                 doctorKey: 'body_skin_doctor'
+ 1013:             },
+ 1014:             general: {
+ 1015:                 titleKey: 'body_general_title',
+ 1016:                 watchKey: 'body_general_watch',
+ 1017:                 selfTreatKey: 'body_general_self_treat',
+ 1018:                 doctorKey: 'body_general_doctor'
+ 1019:             }
+ 1020:         };
+ 1021: 
+ 1022:         function computeRiskProfile(values) {
+ 1023:             const normalizedValues = { ...values };
+ 1024:             if (normalizedValues.district && districtGroups[normalizedValues.district]) {
+ 1025:                 normalizedValues.district = districtGroups[normalizedValues.district];
+ 1026:             }
+ 1027:             return Object.entries(riskMatrix)
+ 1028:                 .map(([key, condition]) => {
+ 1029:                     let score = 0;
+ 1030:                     Object.entries(normalizedValues).forEach(([field, value]) => {
+ 1031:                         const fieldWeights = condition.weights[field];
+ 1032:                         score += (fieldWeights && fieldWeights[value]) || 0;
+ 1033:                     });
+ 1034:                     return { key, score, ...condition };
+ 1035:                 })
+ 1036:                 .sort((a, b) => b.score - a.score)
+ 1037:                 .slice(0, 3);
+ 1038:         }
+ 1039: 
+ 1040:         function renderRiskProfile(savedValues, risks) {
+ 1041:             if (!riskProfileCard) return;
+ 1042:             riskProfileCard.classList.remove('empty');
+ 1043:             const fields = ['ageGroup', 'district', 'season', 'chronic', 'lifestyle'];
+ 1044:             const summaryTags = fields
+ 1045:                 .map(field => `<span>${t(riskLabels[field][savedValues[field]])}</span>`)
+ 1046:                 .join('');
+ 1047: 
+ 1048:             const riskItems = risks.map((risk, index) => `
+ 1049:                 <article class="risk-result-item">
+ 1050:                     <div class="risk-rank">0${index + 1}</div>
+ 1051:                     <div class="risk-result-copy">
+ 1052:                         <h5>${t(risk.titleKey)}</h5>
+ 1053:                         <p>${t(risk.summaryKey)}</p>
+ 1054:                         <ul>
+ 1055:                             ${risk.tips.map(tip => `<li>${t(tip)}</li>`).join('')}
+ 1056:                         </ul>
+ 1057:                     </div>
+ 1058:                 </article>
+ 1059:             `).join('');
+ 1060: 
+ 1061:             riskProfileCard.innerHTML = `
+ 1062:                 <div class="risk-profile-header">
+ 1063:                     <div>
+ 1064:                         <span class="risk-profile-label">${t('personalized_risk_card')}</span>
+ 1065:                         <h5>${t('top_conditions_title')}</h5>
+ 1066:                     </div>
+ 1067:                     <span class="risk-profile-status">${t('saved_label')}</span>
+ 1068:                 </div>
+ 1069:                 <div class="risk-profile-tags">${summaryTags}</div>
+ 1070:                 <div class="risk-result-list">${riskItems}</div>
+ 1071:             `;
+ 1072:         }
+ 1073: 
+ 1074:         function resetRiskProfileCard() {
+ 1075:             if (!riskProfileCard) return;
+ 1076:             riskProfileCard.className = 'risk-profile-card empty';
+ 1077:             riskProfileCard.innerHTML = `
+ 1078:                 <div class="risk-profile-placeholder">
+ 1079:                     <strong>${t('risk_placeholder_title')}</strong>
+ 1080:                     <span>${t('risk_placeholder_desc')}</span>
+ 1081:                 </div>
+ 1082:             `;
+ 1083:         }
+ 1084: 
+ 1085:         function populateRiskForm(values) {
+ 1086:             if (!riskProfileForm || !values) return;
+ 1087:             Object.entries(values).forEach(([key, value]) => {
+ 1088:                 const input = riskProfileForm.elements.namedItem(key);
+ 1089:                 if (input) input.value = value;
+ 1090:             });
+ 1091:         }
+ 1092: 
+ 1093:         function renderSeasonalAlerts() {
+ 1094:             if (!seasonalAlertGrid) return;
+ 1095:             const now = new Date();
+ 1096:             const currentMonth = now.getMonth();
+ 1097:             const locale = currentLang === 'bn' ? 'bn-BD' : currentLang === 'hi' ? 'hi-IN' : 'en-US';
+ 1098:             const currentMonthName = now.toLocaleString(locale, { month: 'long' });
+ 1099:             const selectedSeason = seasonalAlertsByRange.find(entry => entry.months.includes(currentMonth)) || seasonalAlertsByRange[0];
+ 1100: 
+ 1101:             if (seasonalAlertMonth) {
+ 1102:                 seasonalAlertMonth.textContent = `${currentMonthName} ${t('seasonal_in_west_bengal_suffix')}`;
+ 1103:             }
+ 1104: 
+ 1105:             seasonalAlertGrid.innerHTML = selectedSeason.items.map((item, index) => `
+ 1106:                 <article class="seasonal-alert-card">
+ 1107:                     <span class="seasonal-alert-index">0${index + 1}</span>
+ 1108:                     <h5>${t(item.titleKey)}</h5>
+ 1109:                     <p>${t(item.tipKey)}</p>
+ 1110:                     <span class="seasonal-alert-window">${t(selectedSeason.labelKey)}</span>
+ 1111:                 </article>
+ 1112:             `).join('');
+ 1113:         }
+ 1114: 
+ 1115:         function renderBodyGuide(area) {
+ 1116:             if (!bodyGuideCard || !bodyGuideContent[area]) return;
+ 1117:             const content = bodyGuideContent[area];
+ 1118:             bodyGuideCard.innerHTML = `
+ 1119:                 <span class="body-guide-eyebrow">${t(content.titleKey)}</span>
+ 1120:                 <h5>${t(content.watchKey)}</h5>
+ 1121:                 <div class="body-guide-rule">
+ 1122:                     <strong>${t('self_treat_when')}</strong>
+ 1123:                     <p>${t(content.selfTreatKey)}</p>
+ 1124:                 </div>
+ 1125:                 <div class="body-guide-rule alert">
+ 1126:                     <strong>${t('see_doctor_when')}</strong>
+ 1127:                     <p>${t(content.doctorKey)}</p>
+ 1128:                 </div>
+ 1129:             `;
+ 1130:         }
+ 1131: 
+ 1132:         const savedRiskProfile = localStorage.getItem(riskProfileStorageKey);
+ 1133:         if (savedRiskProfile) {
+ 1134:             try {
+ 1135:                 const parsedRiskProfile = JSON.parse(savedRiskProfile);
+ 1136:                 if (parsedRiskProfile.values && parsedRiskProfile.risks) {
+ 1137:                     populateRiskForm(parsedRiskProfile.values);
+ 1138:                     renderRiskProfile(parsedRiskProfile.values, parsedRiskProfile.risks);
+ 1139:                 }
+ 1140:             } catch (error) {
+ 1141:                 localStorage.removeItem(riskProfileStorageKey);
+ 1142:             }
+ 1143:         }
+ 1144: 
+ 1145:         renderSeasonalAlerts();
+ 1146:         renderBodyGuide('head');
+ 1147: 
+ 1148:         if (riskProfileForm) {
+ 1149:             riskProfileForm.addEventListener('submit', (event) => {
+ 1150:                 event.preventDefault();
+ 1151:                 const formData = new FormData(riskProfileForm);
+ 1152:                 const values = Object.fromEntries(formData.entries());
+ 1153:                 const risks = computeRiskProfile(values);
+ 1154:                 renderRiskProfile(values, risks);
+ 1155:                 localStorage.setItem(riskProfileStorageKey, JSON.stringify({ values, risks }));
+ 1156:             });
+ 1157:         }
+ 1158: 
+ 1159:         if (riskProfileReset) {
+ 1160:             riskProfileReset.addEventListener('click', () => {
+ 1161:                 localStorage.removeItem(riskProfileStorageKey);
+ 1162:                 if (riskProfileForm) {
+ 1163:                     riskProfileForm.reset();
+ 1164:                 }
+ 1165:                 resetRiskProfileCard();
+ 1166:             });
+ 1167:         }
+ 1168: 
+ 1169:         document.querySelectorAll('.body-area-node').forEach(node => {
+ 1170:             node.addEventListener('click', () => {
+ 1171:                 document.querySelectorAll('.body-area-node').forEach(item => item.classList.remove('active'));
+ 1172:                 node.classList.add('active');
+ 1173:                 renderBodyGuide(node.dataset.area);
+ 1174:             });
+ 1175: 
+ 1176:             node.addEventListener('keypress', (event) => {
+ 1177:                 if (event.key === 'Enter' || event.key === ' ') {
+ 1178:                     event.preventDefault();
+ 1179:                     node.click();
+ 1180:                 }
+ 1181:             });
+ 1182:         });
+ 1183: 
+ 1184:         window.refreshAssistantFeaturesPane = function () {
+ 1185:             const nextLang = localStorage.getItem('swahealthy_lang') || 'en';
+ 1186:             currentLang = nextLang;
+ 1187:             renderAssistantFeaturesPane();
+ 1188:             if (modernTipEl) modernTipEl.textContent = DAILY_TIPS[tipIndex];
+ 1189: 
+ 1190:             const savedRiskProfileValue = localStorage.getItem(riskProfileStorageKey);
+ 1191:             if (savedRiskProfileValue) {
+ 1192:                 try {
+ 1193:                     const parsedRiskProfile = JSON.parse(savedRiskProfileValue);
+ 1194:                     if (parsedRiskProfile.values && parsedRiskProfile.risks) {
+ 1195:                         populateRiskForm(parsedRiskProfile.values);
+ 1196:                         renderRiskProfile(parsedRiskProfile.values, parsedRiskProfile.risks);
+ 1197:                     }
+ 1198:                 } catch (error) {
+ 1199:                     localStorage.removeItem(riskProfileStorageKey);
+ 1200:                 }
+ 1201:             } else {
+ 1202:                 resetRiskProfileCard();
+ 1203:             }
+ 1204: 
+ 1205:             renderSeasonalAlerts();
+ 1206:             renderBodyGuide('head');
+ 1207: 
+ 1208:             document.querySelectorAll('.body-area-node').forEach(node => {
+ 1209:                 node.addEventListener('click', () => {
+ 1210:                     document.querySelectorAll('.body-area-node').forEach(item => item.classList.remove('active'));
+ 1211:                     node.classList.add('active');
+ 1212:                     renderBodyGuide(node.dataset.area);
+ 1213:                 });
+ 1214:                 node.addEventListener('keypress', (event) => {
+ 1215:                     if (event.key === 'Enter' || event.key === ' ') {
+ 1216:                         event.preventDefault();
+ 1217:                         node.click();
+ 1218:                     }
+ 1219:                 });
+ 1220:             });
+ 1221: 
+ 1222:             document.querySelectorAll('.sheet-feat-item').forEach(item => {
+ 1223:                 item.addEventListener('click', () => {
+ 1224:                     const action = item.dataset.action;
+ 1225:                     if (action === 'chat') {
+ 1226:                         document.querySelector('.sheet-tab[data-tab="chat"]').click();
+ 1227:                     } else if (action === 'photo') {
+ 1228:                         window.location.href = '/ai-analysis';
+ 1229:                     } else if (action === 'symptoms') {
+ 1230:                         closeSheet();
+ 1231:                         const symptomGroups = document.querySelector('.symptom-groups');
+ 1232:                         if (symptomGroups) symptomGroups.scrollIntoView({ behavior: 'smooth' });
+ 1233:                     } else if (action === 'facilities') {
+ 1234:                         closeSheet();
+ 1235:                         const facilitiesTarget = document.querySelector('.facilities-card, #fac-map');
+ 1236:                         if (facilitiesTarget) facilitiesTarget.scrollIntoView({ behavior: 'smooth' });
+ 1237:                     } else if (action === 'medicine') {
+ 1238:                         document.querySelector('.sheet-tab[data-tab="chat"]').click();
+ 1239:                         chatInput.value = t('tell_me_about_prefix');
+ 1240:                         chatInput.focus();
+ 1241:                     } else if (action === 'history') {
+ 1242:                         window.location.href = '/history';
+ 1243:                     }
+ 1244:                 });
+ 1245:             });
+ 1246: 
+ 1247:             document.querySelectorAll('.assistant-mood-row .mood-btn').forEach(btn => {
+ 1248:                 btn.addEventListener('click', () => {
+ 1249:                     document.querySelectorAll('.assistant-mood-row .mood-btn').forEach(b => b.classList.remove('selected'));
+ 1250:                     btn.classList.add('selected');

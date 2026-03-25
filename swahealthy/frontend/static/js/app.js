@@ -1,4 +1,5 @@
 let currentLang = localStorage.getItem('swahealthy_lang') || 'en';
+let _splashReleaseRequested = false;
 
 function humanizeTranslationKey(key) {
     if (!key) return '';
@@ -92,8 +93,92 @@ function applyTranslations() {
     document.cookie = `swahealthy_lang=${currentLang}; path=/; max-age=${30 * 24 * 60 * 60}`;
 }
 
+function releaseAppSplash() {
+    if (_splashReleaseRequested) return;
+
+    const splash = document.getElementById('app-splash');
+    if (!splash) return;
+
+    _splashReleaseRequested = true;
+    document.body.classList.remove('splash-active');
+    splash.classList.add('is-exiting');
+
+    window.setTimeout(() => {
+        splash.hidden = true;
+        splash.remove();
+    }, 560);
+}
+
+function initAppSplash() {
+    const splash = document.getElementById('app-splash');
+    if (!splash) return;
+    if (!window.__showSwahealthySplash) {
+        splash.hidden = true;
+        return;
+    }
+
+    document.body.classList.add('splash-active');
+
+    let minimumElapsed = false;
+    let shellReady = false;
+    let workerReady = !('serviceWorker' in navigator);
+
+    const attemptRelease = () => {
+        if (minimumElapsed && (shellReady || workerReady)) {
+            try {
+                sessionStorage.setItem('swahealthy_boot_splash_seen', '1');
+            } catch (err) {
+                // Ignore storage failures and still release the splash.
+            }
+            releaseAppSplash();
+        }
+    };
+
+    window.setTimeout(() => {
+        minimumElapsed = true;
+        attemptRelease();
+    }, 1800);
+
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            shellReady = true;
+            attemptRelease();
+        });
+    });
+
+    window.addEventListener('load', () => {
+        shellReady = true;
+        attemptRelease();
+    }, { once: true });
+
+    window.setTimeout(() => {
+        workerReady = true;
+        attemptRelease();
+    }, 3200);
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SWAHEALTHY_APP_READY') {
+                workerReady = true;
+                attemptRelease();
+            }
+        });
+
+        navigator.serviceWorker.ready
+            .then(() => {
+                workerReady = true;
+                attemptRelease();
+            })
+            .catch(() => {
+                workerReady = true;
+                attemptRelease();
+            });
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     applyTranslations();
+    initAppSplash();
 
     // Register Service Worker
     if ('serviceWorker' in navigator) {
@@ -211,7 +296,8 @@ function submitSymptoms(e) {
 
 function submitDuration(e) {
     e.preventDefault();
-    const duration = document.querySelector('input[name="duration"]:checked')?.value || '< 1 day';
+    const checkedDuration = document.querySelector('input[name="duration"]:checked');
+    const duration = checkedDuration ? checkedDuration.value : '< 1 day';
     localStorage.setItem('pending_duration', duration);
     window.location.href = '/results';
 }
@@ -550,7 +636,7 @@ function formatDistance(distance) {
 }
 
 function getFallbackCoordinates() {
-    return { lat: 22.5726, lng: 88.3639, label: 'Kolkata' };
+    return { lat: 22.5726, lng: 88.3639, label: t('default_service_area') };
 }
 
 function loadHomeNearbyHospitals(force = false) {
@@ -681,13 +767,15 @@ function getLocationAndFacilities() {
                 fetchFacilities(position.coords.latitude, position.coords.longitude);
             },
             (error) => {
-                locStatus.textContent = "Location denied. Using Kolkata center.";
-                fetchFacilities(22.5726, 88.3639);
+                const fallback = getFallbackCoordinates();
+                locStatus.textContent = `${t('location_denied')} ${fallback.label}`;
+                fetchFacilities(fallback.lat, fallback.lng);
             }
         );
     } else {
-        locStatus.textContent = "Location unsupported. Using Kolkata center.";
-        fetchFacilities(22.5726, 88.3639);
+        const fallback = getFallbackCoordinates();
+        locStatus.textContent = `${t('location_unsupported')} ${fallback.label}`;
+        fetchFacilities(fallback.lat, fallback.lng);
     }
     setUpTabs();
 }
@@ -922,13 +1010,13 @@ function getLocationAndFacilities() {
             },
             () => {
                 const fallback = getFallbackCoordinates();
-                locStatus.textContent = t('location_denied_kolkata');
+                locStatus.textContent = `${t('location_denied')} ${fallback.label}`;
                 fetchFacilities(fallback.lat, fallback.lng);
             }
         );
     } else {
         const fallback = getFallbackCoordinates();
-        locStatus.textContent = t('location_unsupported_kolkata');
+        locStatus.textContent = `${t('location_unsupported')} ${fallback.label}`;
         fetchFacilities(fallback.lat, fallback.lng);
     }
 }
@@ -936,7 +1024,9 @@ function getLocationAndFacilities() {
 function isMapTabActive() {
     const tabMap = document.getElementById('tab-map');
     const mapContent = document.getElementById('tab-content-map');
-    return Boolean(tabMap?.classList.contains('active') && mapContent?.classList.contains('active'));
+    const hasTab = tabMap && tabMap.classList.contains('active');
+    const hasContent = mapContent && mapContent.classList.contains('active');
+    return Boolean(hasTab && hasContent);
 }
 
 function renderMedicines(facilities) {

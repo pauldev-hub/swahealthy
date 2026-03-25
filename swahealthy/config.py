@@ -26,6 +26,8 @@ class Config:
 
     # Allow OAuth over HTTP on localhost (set to '1' in .env for local dev)
     OAUTHLIB_INSECURE_TRANSPORT = os.environ.get('OAUTHLIB_INSECURE_TRANSPORT', '0')
+    APP_BASE_URL = os.environ.get('APP_BASE_URL', '').rstrip('/')
+    GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', '').strip()
 
     # Database
     DB_PATH = os.path.join(BASE_DIR, 'data', 'swahealthy.db')

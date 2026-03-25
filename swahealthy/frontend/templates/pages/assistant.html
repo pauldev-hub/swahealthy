@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container assistant-page">
+    <section class="assistant-shell assistant-page-shell">
+        <section class="assistant-hero-panel">
+            <div class="assistant-hero-copy">
+                <span class="assistant-kicker" data-i18n="assistant_brand_kicker">SwaHealthy Assistant</span>
+                <h1 data-i18n="assistant_hero_title">Your quick health brief for West Bengal</h1>
+                <p data-i18n="assistant_hero_desc">Get a saved personal risk snapshot, live seasonal warnings, and a simple body-area guide before you chat.</p>
+            </div>
+            <div class="assistant-hero-meta">
+                <div class="assistant-hero-tip">
+                    <span class="sheet-hero-icon">&#128161;</span>
+                    <p id="assistant-daily-tip" data-i18n="loading_tip">Loading tip...</p>
+                </div>
+                <div class="assistant-hero-chip" data-i18n="assistant_hero_chip">Built for faster self-checks</div>
+            </div>
+        </section>
+
+        <section class="assistant-quick-actions">
+            <div class="assistant-section-head">
+                <div>
+                    <span class="assistant-section-kicker" data-i18n="assistant_quick_actions_kicker">Quick actions</span>
+                    <h4 data-i18n="assistant_quick_actions_title">Continue with the tools you already use</h4>
+                </div>
+            </div>
+            <div class="sheet-feature-grid assistant-feature-grid-modern">
+                <a href="#assistant-chat-panel" class="sheet-feat-item">
+                    <div class="feat-icon feat-icon-chat">&#128172;</div>
+                    <div class="feat-text"><strong data-i18n="ask_health_questions">Ask Health Questions</strong><span data-i18n="ai_powered_guidance">AI-powered guidance</span></div>
+                </a>
+                <a href="/ai-analysis" class="sheet-feat-item">
+                    <div class="feat-icon feat-icon-photo">&#128247;</div>
+                    <div class="feat-text"><strong data-i18n="photo_analysis_short">Photo Analysis</strong><span data-i18n="upload_visual_check">Upload for visual check</span></div>
+                </a>
+                <a href="/" class="sheet-feat-item">
+                    <div class="feat-icon feat-icon-symptoms">&#129658;</div>
+                    <div class="feat-text"><strong data-i18n="check_symptoms">Check Symptoms</strong><span data-i18n="rule_based_diagnosis">Rule-based diagnosis</span></div>
+                </a>
+                <a href="/?tab=nearby" class="sheet-feat-item">
+                    <div class="feat-icon feat-icon-fac">&#127973;</div>
+                    <div class="feat-text"><strong data-i18n="find_facilities">Find Facilities</strong><span data-i18n="nearest_phc_hospitals">Nearest PHC & hospitals</span></div>
+                </a>
+            </div>
+        </section>
+
+        <section class="assistant-module assistant-risk-module">
+            <div class="assistant-section-head">
+                <div>
+                    <span class="assistant-section-kicker" data-i18n="risk_profile_kicker">Health Risk Profile</span>
+                    <h4 data-i18n="risk_profile_title">Five quick inputs, one personalized card</h4>
+                </div>
+                <span class="assistant-section-badge" data-i18n="saved_on_device">Saved on this device</span>
+            </div>
+            <form class="risk-profile-form" id="assistant-risk-form">
+                <label class="risk-field">
+                    <span data-i18n="risk_age_group">Age group</span>
+                    <select name="ageGroup" required>
+                        <option value="" data-i18n="select_label">Select</option>
+                        <option value="child" data-i18n="risk_age_child">Child (0-12)</option>
+                        <option value="teen" data-i18n="risk_age_teen">Teen (13-19)</option>
+                        <option value="adult" data-i18n="risk_age_adult">Adult (20-59)</option>
+                        <option value="senior" data-i18n="risk_age_senior">Senior (60+)</option>
+                    </select>
+                </label>
+                <label class="risk-field">
+                    <span data-i18n="risk_district">District</span>
+                    <select name="district" required>
+                        <option value="" data-i18n="select_label">Select</option>
+                        <option value="kolkata" data-i18n="district_kolkata">Kolkata</option>
+                        <option value="howrah" data-i18n="district_howrah">Howrah</option>
+                        <option value="north-24-parganas" data-i18n="district_north_24_parganas">North 24 Parganas</option>
+                        <option value="south-24-parganas" data-i18n="district_south_24_parganas">South 24 Parganas</option>
+                        <option value="purba-medinipur" data-i18n="district_purba_medinipur">Purba Medinipur</option>
+                        <option value="paschim-medinipur" data-i18n="district_paschim_medinipur">Paschim Medinipur</option>
+                        <option value="jhargram" data-i18n="district_jhargram">Jhargram</option>
+                        <option value="darjeeling" data-i18n="district_darjeeling">Darjeeling</option>
+                        <option value="jalpaiguri" data-i18n="district_jalpaiguri">Jalpaiguri</option>
+                        <option value="alipurduar" data-i18n="district_alipurduar">Alipurduar</option>
+                        <option value="cooch-behar" data-i18n="district_cooch_behar">Cooch Behar</option>
+                        <option value="malda" data-i18n="district_malda">Malda</option>
+                        <option value="murshidabad" data-i18n="district_murshidabad">Murshidabad</option>
+                        <option value="nadia" data-i18n="district_nadia">Nadia</option>
+                        <option value="hooghly" data-i18n="district_hooghly">Hooghly</option>
+                        <option value="purba-bardhaman" data-i18n="district_purba_bardhaman">Purba Bardhaman</option>
+                        <option value="paschim-bardhaman" data-i18n="district_paschim_bardhaman">Paschim Bardhaman</option>
+                        <option value="bankura" data-i18n="district_bankura">Bankura</option>
+                        <option value="purulia" data-i18n="district_purulia">Purulia</option>
+                        <option value="birbhum" data-i18n="district_birbhum">Birbhum</option>
+                    </select>
+                </label>
+                <label class="risk-field">
+                    <span data-i18n="risk_current_season">Current season</span>
+                    <select name="season" required>
+                        <option value="" data-i18n="select_label">Select</option>
+                        <option value="summer" data-i18n="season_summer">Summer</option>
+                        <option value="monsoon" data-i18n="season_monsoon">Monsoon</option>
+                        <option value="winter" data-i18n="season_winter">Winter</option>
+                        <option value="transition" data-i18n="season_transition">Season change</option>
+                    </select>
+                </label>
+                <label class="risk-field">
+                    <span data-i18n="risk_chronic_condition">Chronic condition</span>
+                    <select name="chronic" required>
+                        <option value="" data-i18n="select_label">Select</option>
+                        <option value="none" data-i18n="chronic_none">None</option>
+                        <option value="diabetes" data-i18n="chronic_diabetes">Diabetes</option>
+                        <option value="hypertension" data-i18n="chronic_hypertension">High blood pressure</option>
+                        <option value="asthma" data-i18n="chronic_asthma">Asthma / COPD</option>
+                        <option value="weak-immunity" data-i18n="chronic_weak_immunity">Weak immunity</option>
+                    </select>
+                </label>
+                <label class="risk-field">
+                    <span data-i18n="risk_lifestyle">Lifestyle</span>
+                    <select name="lifestyle" required>
+                        <option value="" data-i18n="select_label">Select</option>
+                        <option value="active" data-i18n="lifestyle_active">Mostly active</option>
+                        <option value="outdoor" data-i18n="lifestyle_outdoor">Long outdoor hours</option>
+                        <option value="sedentary" data-i18n="lifestyle_sedentary">Mostly sedentary</option>
+                        <option value="smoker" data-i18n="lifestyle_smoker">Smoking / tobacco use</option>
+                        <option value="crowded-travel" data-i18n="lifestyle_crowded_travel">Crowded public travel</option>
+                    </select>
+                </label>
+                <div class="risk-actions">
+                    <button type="submit" class="assistant-primary-btn" data-i18n="generate_risk_card">Generate risk card</button>
+                    <button type="button" class="assistant-secondary-btn" id="assistant-risk-reset" data-i18n="reset_label">Reset</button>
+                </div>
+            </form>
+            <div class="risk-profile-card empty" id="assistant-risk-card">
+                <div class="risk-profile-placeholder">
+                    <strong data-i18n="risk_placeholder_title">Your top 3 likely concerns will appear here.</strong>
+                    <span data-i18n="risk_placeholder_desc">We use a static rule matrix based on age, district, season, chronic condition, and lifestyle.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="assistant-module assistant-alert-module">
+            <div class="assistant-section-head">
+                <div>
+                    <span class="assistant-section-kicker" data-i18n="seasonal_board_kicker">Seasonal Health Alert Board</span>
+                    <h4 data-i18n="seasonal_board_title">Auto-updated for the current month in West Bengal</h4>
+                </div>
+                <span class="assistant-section-badge" id="assistant-season-month" data-i18n="this_month_label">This month</span>
+            </div>
+            <div class="seasonal-alert-grid" id="assistant-season-grid"></div>
+        </section>
+
+        <section class="assistant-module assistant-body-module">
+            <div class="assistant-section-head">
+                <div>
+                    <span class="assistant-section-kicker" data-i18n="body_guide_kicker">Body Area Health Guide</span>
+                    <h4 data-i18n="body_guide_title">Tap a region to see what to watch for</h4>
+                </div>
+            </div>
+            <div class="body-guide-layout">
+                <div class="body-map-panel">
+                    <svg class="body-map-svg" viewBox="0 0 220 360" role="img" aria-label="Interactive body map">
+                        <defs>
+                            <linearGradient id="assistantPageGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#8b5cf6"></stop>
+                                <stop offset="100%" stop-color="#0f766e"></stop>
+                            </linearGradient>
+                        </defs>
+                        <circle class="body-outline head" cx="110" cy="44" r="30"></circle>
+                        <rect class="body-outline neck" x="99" y="71" width="22" height="18" rx="10"></rect>
+                        <path class="body-outline torso" d="M82 86C90 78 101 74 110 74C119 74 130 78 138 86L154 117C159 127 158 142 150 151L138 164C134 169 131 176 130 183L127 300C126 310 119 318 110 318C101 318 94 310 93 300L90 183C89 176 86 169 82 164L70 151C62 142 61 127 66 117L82 86Z"></path>
+                        <rect class="body-outline arm left" x="41" y="100" width="24" height="124" rx="12" transform="rotate(10 53 162)"></rect>
+                        <rect class="body-outline arm right" x="155" y="100" width="24" height="124" rx="12" transform="rotate(-10 167 162)"></rect>
+                        <rect class="body-outline leg left" x="86" y="190" width="25" height="135" rx="12"></rect>
+                        <rect class="body-outline leg right" x="109" y="190" width="25" height="135" rx="12"></rect>
+
+                        <g class="body-area-node active" data-area="head" tabindex="0" role="button">
+                            <circle cx="110" cy="44" r="27" fill="url(#assistantPageGlow)"></circle>
+                            <text x="110" y="48" data-i18n="body_area_head">Head</text>
+                        </g>
+                        <g class="body-area-node" data-area="chest" tabindex="0" role="button">
+                            <rect x="79" y="92" width="62" height="58" rx="24"></rect>
+                            <text x="110" y="126" data-i18n="body_area_chest">Chest</text>
+                        </g>
+                        <g class="body-area-node" data-area="stomach" tabindex="0" role="button">
+                            <rect x="84" y="151" width="52" height="48" rx="22"></rect>
+                            <text x="110" y="180" data-i18n="body_area_stomach">Stomach</text>
+                        </g>
+                        <g class="body-area-node" data-area="skin" tabindex="0" role="button">
+                            <rect x="25" y="132" width="24" height="54" rx="12"></rect>
+                            <rect x="171" y="132" width="24" height="54" rx="12"></rect>
+                            <text x="110" y="232" data-i18n="body_area_skin">Skin</text>
+                        </g>
+                        <g class="body-area-node body-area-node-general" data-area="general" tabindex="0" role="button">
+                            <rect x="43" y="328" width="134" height="30" rx="15"></rect>
+                            <text x="110" y="347" data-i18n="body_area_general">General</text>
+                        </g>
+                    </svg>
+                </div>
+                <div class="body-guide-card" id="assistant-body-card"></div>
+            </div>
+        </section>
+
+        <section class="assistant-module" id="assistant-chat-panel">
+            <div class="assistant-section-head">
+                <div>
+                    <span class="assistant-section-kicker" data-i18n="chat_tab">Chat</span>
+                    <h4 data-i18n="ask_health_questions">Ask Health Questions</h4>
+                </div>
+            </div>
+            <div class="chat-messages" id="assistant-chat-messages" style="min-height: 260px;">
+                <div class="typing-indicator" id="assistant-typing" style="display:none">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            <div class="chat-input-row">
+                <textarea class="chat-input" id="assistant-chat-input" data-i18n-placeholder="ask_about_health_placeholder" placeholder="Ask about health..." rows="1"></textarea>
+                <button class="chat-send-btn" id="assistant-send-btn">&#10148;</button>
+            </div>
+            <p class="chat-disclaimer" data-i18n="not_substitute_medical_advice">Not a substitute for professional medical advice.</p>
+        </section>
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var DAILY_TIPS = [
+        "Drink 8 glasses of water daily.",
+        "Wash hands for 20 seconds before meals.",
+        "Sleep 7-8 hours for a strong immune system.",
+        "Eat seasonal fruits like guava and papaya.",
+        "Walk 30 minutes daily for heart health."
+    ];
+    var tipIndex = Math.floor(Date.now() / 86400000) % DAILY_TIPS.length;
+    var tipEl = document.getElementById('assistant-daily-tip');
+    var riskForm = document.getElementById('assistant-risk-form');
+    var riskCard = document.getElementById('assistant-risk-card');
+    var riskReset = document.getElementById('assistant-risk-reset');
+    var seasonGrid = document.getElementById('assistant-season-grid');
+    var seasonMonth = document.getElementById('assistant-season-month');
+    var bodyCard = document.getElementById('assistant-body-card');
+    var chatMessages = document.getElementById('assistant-chat-messages');
+    var chatInput = document.getElementById('assistant-chat-input');
+    var chatSend = document.getElementById('assistant-send-btn');
+    var chatTyping = document.getElementById('assistant-typing');
+    var storageKey = 'swahealthy_risk_profile_v2';
+    var chatHistory = [];
+    var currentLang = localStorage.getItem('swahealthy_lang') || 'en';
+
+    function tr(key) {
+        if (window.translations && window.translations[currentLang] && window.translations[currentLang][key]) return window.translations[currentLang][key];
+        if (window.translations && window.translations.en && window.translations.en[key]) return window.translations.en[key];
+        return key;
+    }
+
+    if (tipEl) tipEl.textContent = DAILY_TIPS[tipIndex];
+
+    var districtGroups = {
+        kolkata: 'metro',
+        howrah: 'metro',
+        'north-24-parganas': 'metro',
+        'south-24-parganas': 'coastal',
+        'purba-medinipur': 'coastal',
+        'paschim-medinipur': 'rural',
+        jhargram: 'rural',
+        darjeeling: 'north',
+        jalpaiguri: 'north',
+        alipurduar: 'north',
+        'cooch-behar': 'north',
+        malda: 'north',
+        murshidabad: 'rural',
+        nadia: 'rural',
+        hooghly: 'rural',
+        'purba-bardhaman': 'rural',
+        'paschim-bardhaman': 'rural',
+        bankura: 'rural',
+        purulia: 'rural',
+        birbhum: 'rural'
+    };
+
+    var riskLabels = {
+        ageGroup: { child: 'risk_age_child', teen: 'risk_age_teen', adult: 'risk_age_adult', senior: 'risk_age_senior' },
+        district: {
+            kolkata: 'district_kolkata', howrah: 'district_howrah', 'north-24-parganas': 'district_north_24_parganas',
+            'south-24-parganas': 'district_south_24_parganas', 'purba-medinipur': 'district_purba_medinipur',
+            'paschim-medinipur': 'district_paschim_medinipur', jhargram: 'district_jhargram', darjeeling: 'district_darjeeling',
+            jalpaiguri: 'district_jalpaiguri', alipurduar: 'district_alipurduar', 'cooch-behar': 'district_cooch_behar',
+            malda: 'district_malda', murshidabad: 'district_murshidabad', nadia: 'district_nadia', hooghly: 'district_hooghly',
+            'purba-bardhaman': 'district_purba_bardhaman', 'paschim-bardhaman': 'district_paschim_bardhaman',
+            bankura: 'district_bankura', purulia: 'district_purulia', birbhum: 'district_birbhum'
+        },
+        season: { summer: 'season_summer', monsoon: 'season_monsoon', winter: 'season_winter', transition: 'season_transition' },
+        chronic: { none: 'chronic_none', diabetes: 'chronic_diabetes', hypertension: 'chronic_hypertension', asthma: 'chronic_asthma', 'weak-immunity': 'chronic_weak_immunity' },
+        lifestyle: { active: 'lifestyle_active', outdoor: 'lifestyle_outdoor', sedentary: 'lifestyle_sedentary', smoker: 'lifestyle_smoker', 'crowded-travel': 'lifestyle_crowded_travel' }
+    };
+
+    var riskMatrix = {
+        dengue: { titleKey: 'condition_dengue_title', summaryKey: 'condition_dengue_summary', tips: ['condition_dengue_tip_1', 'condition_dengue_tip_2', 'condition_dengue_tip_3'], weights: { district: { metro: 2, coastal: 3, north: 1, rural: 2 }, season: { monsoon: 4, summer: 1, winter: 0, transition: 2 }, lifestyle: { outdoor: 3, active: 1, sedentary: 0, smoker: 0, 'crowded-travel': 1 }, ageGroup: { child: 1, teen: 1, adult: 1, senior: 2 }, chronic: { 'weak-immunity': 2, diabetes: 1 } } },
+        heatstroke: { titleKey: 'condition_heatstroke_title', summaryKey: 'condition_heatstroke_summary', tips: ['condition_heatstroke_tip_1', 'condition_heatstroke_tip_2', 'condition_heatstroke_tip_3'], weights: { district: { metro: 2, coastal: 2, north: 1, rural: 2 }, season: { summer: 4, monsoon: 1, winter: 0, transition: 2 }, lifestyle: { outdoor: 4, active: 2, sedentary: 0, smoker: 0, 'crowded-travel': 2 }, ageGroup: { child: 1, teen: 1, adult: 1, senior: 3 }, chronic: { hypertension: 2, diabetes: 2 } } },
+        respiratory: { titleKey: 'condition_respiratory_title', summaryKey: 'condition_respiratory_summary', tips: ['condition_respiratory_tip_1', 'condition_respiratory_tip_2', 'condition_respiratory_tip_3'], weights: { district: { metro: 3, coastal: 1, north: 2, rural: 1 }, season: { winter: 4, monsoon: 1, summer: 1, transition: 3 }, lifestyle: { smoker: 4, 'crowded-travel': 2, sedentary: 1, active: 0, outdoor: 1 }, ageGroup: { child: 2, teen: 1, adult: 1, senior: 3 }, chronic: { asthma: 5, 'weak-immunity': 2 } } },
+        hypertension: { titleKey: 'condition_hypertension_title', summaryKey: 'condition_hypertension_summary', tips: ['condition_hypertension_tip_1', 'condition_hypertension_tip_2', 'condition_hypertension_tip_3'], weights: { district: { metro: 2, coastal: 1, north: 1, rural: 1 }, season: { summer: 2, winter: 1, monsoon: 1, transition: 1 }, lifestyle: { sedentary: 3, smoker: 2, 'crowded-travel': 1, active: 0, outdoor: 1 }, ageGroup: { child: 0, teen: 0, adult: 2, senior: 4 }, chronic: { hypertension: 5, diabetes: 2 } } },
+        gastric: { titleKey: 'condition_gastric_title', summaryKey: 'condition_gastric_summary', tips: ['condition_gastric_tip_1', 'condition_gastric_tip_2', 'condition_gastric_tip_3'], weights: { district: { metro: 1, coastal: 2, north: 1, rural: 2 }, season: { monsoon: 3, summer: 2, winter: 1, transition: 2 }, lifestyle: { outdoor: 2, 'crowded-travel': 2, sedentary: 1, active: 1, smoker: 1 }, ageGroup: { child: 2, teen: 1, adult: 1, senior: 2 }, chronic: { diabetes: 1, 'weak-immunity': 2 } } },
+        skin: { titleKey: 'condition_skin_title', summaryKey: 'condition_skin_summary', tips: ['condition_skin_tip_1', 'condition_skin_tip_2', 'condition_skin_tip_3'], weights: { district: { metro: 1, coastal: 3, north: 1, rural: 2 }, season: { monsoon: 3, summer: 3, winter: 1, transition: 1 }, lifestyle: { outdoor: 2, active: 2, sedentary: 0, smoker: 0, 'crowded-travel': 1 }, ageGroup: { child: 1, teen: 2, adult: 1, senior: 1 }, chronic: { diabetes: 2, 'weak-immunity': 2 } } }
+    };
+
+    var seasonalAlerts = [
+        { months: [2,3,4], labelKey: 'season_window_mar_may', items: [{ titleKey: 'seasonal_heatstroke_title', tipKey: 'seasonal_heatstroke_tip' }, { titleKey: 'seasonal_dehydration_title', tipKey: 'seasonal_dehydration_tip' }, { titleKey: 'seasonal_food_title', tipKey: 'seasonal_food_tip' }] },
+        { months: [5,6,7,8], labelKey: 'season_window_jun_sep', items: [{ titleKey: 'seasonal_dengue_title', tipKey: 'seasonal_dengue_tip' }, { titleKey: 'seasonal_malaria_title', tipKey: 'seasonal_malaria_tip' }, { titleKey: 'seasonal_waterborne_title', tipKey: 'seasonal_waterborne_tip' }] },
+        { months: [10,11,0,1], labelKey: 'season_window_nov_feb', items: [{ titleKey: 'seasonal_respiratory_title', tipKey: 'seasonal_respiratory_tip' }, { titleKey: 'seasonal_asthma_title', tipKey: 'seasonal_asthma_tip' }, { titleKey: 'seasonal_cold_title', tipKey: 'seasonal_cold_tip' }] },
+        { months: [9], labelKey: 'season_window_oct', items: [{ titleKey: 'seasonal_post_monsoon_title', tipKey: 'seasonal_post_monsoon_tip' }, { titleKey: 'seasonal_viral_title', tipKey: 'seasonal_viral_tip' }, { titleKey: 'seasonal_fungal_title', tipKey: 'seasonal_fungal_tip' }] }
+    ];
+
+    var bodyGuideContent = {
+        head: { titleKey: 'body_head_title', watchKey: 'body_head_watch', selfTreatKey: 'body_head_self_treat', doctorKey: 'body_head_doctor' },
+        chest: { titleKey: 'body_chest_title', watchKey: 'body_chest_watch', selfTreatKey: 'body_chest_self_treat', doctorKey: 'body_chest_doctor' },
+        stomach: { titleKey: 'body_stomach_title', watchKey: 'body_stomach_watch', selfTreatKey: 'body_stomach_self_treat', doctorKey: 'body_stomach_doctor' },
+        skin: { titleKey: 'body_skin_title', watchKey: 'body_skin_watch', selfTreatKey: 'body_skin_self_treat', doctorKey: 'body_skin_doctor' },
+        general: { titleKey: 'body_general_title', watchKey: 'body_general_watch', selfTreatKey: 'body_general_self_treat', doctorKey: 'body_general_doctor' }
+    };
+
+    function computeRisk(values) {
+        var normalized = {};
+        Object.keys(values).forEach(function (key) { normalized[key] = values[key]; });
+        if (normalized.district && districtGroups[normalized.district]) normalized.district = districtGroups[normalized.district];
+        return Object.keys(riskMatrix).map(function (key) {
+            var condition = riskMatrix[key];
+            var score = 0;
+            Object.keys(normalized).forEach(function (field) {
+                var weights = condition.weights[field];
+                var value = normalized[field];
+                score += weights && weights[value] ? weights[value] : 0;
+            });
+            return { key: key, score: score, titleKey: condition.titleKey, summaryKey: condition.summaryKey, tips: condition.tips };
+        }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3);
+    }
+
+    function renderRisk(values, risks) {
+        var fields = ['ageGroup', 'district', 'season', 'chronic', 'lifestyle'];
+        var tags = fields.map(function (field) { return '<span>' + tr(riskLabels[field][values[field]]) + '</span>'; }).join('');
+        var items = risks.map(function (risk, index) {
+            return '<article class="risk-result-item"><div class="risk-rank">0' + (index + 1) + '</div><div class="risk-result-copy"><h5>' + tr(risk.titleKey) + '</h5><p>' + tr(risk.summaryKey) + '</p><ul><li>' + tr(risk.tips[0]) + '</li><li>' + tr(risk.tips[1]) + '</li><li>' + tr(risk.tips[2]) + '</li></ul></div></article>';
+        }).join('');
+        riskCard.className = 'risk-profile-card';
+        riskCard.innerHTML = '<div class="risk-profile-header"><div><span class="risk-profile-label">' + tr('personalized_risk_card') + '</span><h5>' + tr('top_conditions_title') + '</h5></div><span class="risk-profile-status">' + tr('saved_label') + '</span></div><div class="risk-profile-tags">' + tags + '</div><div class="risk-result-list">' + items + '</div>';
+    }
+
+    function resetRisk() {
+        riskCard.className = 'risk-profile-card empty';
+        riskCard.innerHTML = '<div class="risk-profile-placeholder"><strong>' + tr('risk_placeholder_title') + '</strong><span>' + tr('risk_placeholder_desc') + '</span></div>';
+    }
+
+    function renderSeasonal() {
+        var now = new Date();
+        var month = now.getMonth();
+        var locale = currentLang === 'bn' ? 'bn-BD' : currentLang === 'hi' ? 'hi-IN' : 'en-US';
+        var monthName = now.toLocaleString(locale, { month: 'long' });
+        var selected = seasonalAlerts[0];
+        seasonalAlerts.forEach(function (entry) { if (entry.months.indexOf(month) !== -1) selected = entry; });
+        seasonMonth.textContent = monthName + ' ' + tr('seasonal_in_west_bengal_suffix');
+        seasonGrid.innerHTML = selected.items.map(function (item, index) {
+            return '<article class="seasonal-alert-card"><span class="seasonal-alert-index">0' + (index + 1) + '</span><h5>' + tr(item.titleKey) + '</h5><p>' + tr(item.tipKey) + '</p><span class="seasonal-alert-window">' + tr(selected.labelKey) + '</span></article>';
+        }).join('');
+    }
+
+    function renderBody(area) {
+        var content = bodyGuideContent[area];
+        bodyCard.innerHTML = '<span class="body-guide-eyebrow">' + tr(content.titleKey) + '</span><h5>' + tr(content.watchKey) + '</h5><div class="body-guide-rule"><strong>' + tr('self_treat_when') + '</strong><p>' + tr(content.selfTreatKey) + '</p></div><div class="body-guide-rule alert"><strong>' + tr('see_doctor_when') + '</strong><p>' + tr(content.doctorKey) + '</p></div>';
+    }
+
+    if (riskForm) {
+        var saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                var parsed = JSON.parse(saved);
+                Object.keys(parsed.values || {}).forEach(function (key) {
+                    if (riskForm.elements[key]) riskForm.elements[key].value = parsed.values[key];
+                });
+                if (parsed.values && parsed.risks) renderRisk(parsed.values, parsed.risks);
+            } catch (e) {
+                resetRisk();
+            }
+        } else {
+            resetRisk();
+        }
+
+        riskForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var formData = new FormData(riskForm);
+            var values = {};
+            formData.forEach(function (value, key) { values[key] = value; });
+            var risks = computeRisk(values);
+            renderRisk(values, risks);
+            localStorage.setItem(storageKey, JSON.stringify({ values: values, risks: risks }));
+        });
+    }
+
+    if (riskReset) {
+        riskReset.addEventListener('click', function () {
+            localStorage.removeItem(storageKey);
+            riskForm.reset();
+            resetRisk();
+        });
+    }
+
+    document.querySelectorAll('.body-area-node').forEach(function (node) {
+        node.addEventListener('click', function () {
+            document.querySelectorAll('.body-area-node').forEach(function (item) { item.classList.remove('active'); });
+            node.classList.add('active');
+            renderBody(node.getAttribute('data-area'));
+        });
+    });
+
+    renderSeasonal();
+    renderBody('head');
+
+    function appendBubble(text, sender) {
+        var bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ' + sender + '-bubble';
+        bubble.textContent = text;
+        chatMessages.insertBefore(bubble, chatTyping);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage(text) {
+        if (!text) return;
+        appendBubble(text, 'user');
+        chatHistory.push({ role: 'user', content: text });
+        chatInput.value = '';
+        chatTyping.style.display = 'flex';
+        try {
+            var response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, language: currentLang, history: chatHistory })
+            });
+            chatTyping.style.display = 'none';
+            if (!response.ok) {
+                appendBubble(tr('couldnt_connect_try_again'), 'asst');
+                return;
+            }
+            var data = await response.json();
+            if (data.reply) {
+                appendBubble(data.reply, 'asst');
+                chatHistory.push({ role: 'assistant', content: data.reply });
+            }
+        } catch (error) {
+            chatTyping.style.display = 'none';
+            appendBubble(tr('couldnt_connect_try_again'), 'asst');
+        }
+    }
+
+    appendBubble(tr('swa_assistant_welcome'), 'asst');
+    chatSend.addEventListener('click', function () { sendMessage(chatInput.value.trim()); });
+    chatInput.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(chatInput.value.trim());
+        }
+    });
+});
+</script>
+{% endblock %}

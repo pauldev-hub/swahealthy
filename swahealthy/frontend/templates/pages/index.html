@@ -38,12 +38,12 @@
                 {% set labels = {'head': 'Head & Face', 'eyes': 'Eyes', 'ears': 'Ears', 'chest': 'Chest & Respiratory', 'stomach': 'Stomach & Abdomen', 'joints': 'Bones & Joints', 'urinary': 'Urinary', 'women': 'Women\'s Health', 'skin': 'Skin', 'general': 'General Body', 'mental': 'Mental Health'} %}
 
                 {% for area in ['head', 'eyes', 'ears', 'chest', 'stomach', 'joints', 'urinary', 'women', 'skin', 'general', 'mental'] %}
-                <div class="group-card home-group-card">
+                <div class="group-card home-group-card" data-area="{{ area }}">
                     <button type="button" class="group-header" onclick="toggleGroup('{{ area }}')" aria-expanded="false">
                         <div class="group-title">
                             <span class="group-icon">{{ icons[area] }}</span>
                             <div class="group-copy">
-                                <h2 data-i18n="{{ area }}_label">{{ labels[area] }}</h2>
+                                <h2 class="group-label" data-i18n="{{ area }}_label">{{ labels[area] }}</h2>
                                 <span class="group-meta">{{ symptoms_group[area]|length }} <span data-i18n="symptoms_count_label">symptoms</span></span>
                             </div>
                         </div>

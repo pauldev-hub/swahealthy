@@ -472,6 +472,11 @@ def ai_analysis():
     return render_template('pages/ai_analysis.html', lang=g.lang)
 
 
+@main_bp.route('/assistant')
+def assistant():
+    return render_template('pages/assistant.html', lang=g.lang)
+
+
 @main_bp.route('/history', methods=['GET', 'POST', 'DELETE'])
 @login_required
 def history():

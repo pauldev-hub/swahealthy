@@ -1,9 +1,10 @@
-const CACHE_NAME = 'swahealthy-v5';
+const CACHE_NAME = 'swahealthy-v8';
 const ASSETS = [
     '/',
-    '/static/css/style.css',
-    '/static/js/app.js',
-    '/static/pwa/manifest.json',
+    '/static/css/style.css?v=8',
+    '/static/js/app.js?v=8',
+    '/static/js/translations.js?v=8',
+    '/static/pwa/manifest.json?v=8',
     '/appointments'
 ];
 
@@ -20,6 +21,8 @@ self.addEventListener('activate', event => {
         caches.keys().then(keys =>
             Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
         ).then(() => self.clients.claim())
+         .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+         .then(clients => clients.forEach(client => client.postMessage({ type: 'SWAHEALTHY_APP_READY' })))
     );
 });
 
