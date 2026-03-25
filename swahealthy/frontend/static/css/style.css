@@ -1431,66 +1431,68 @@ a:hover {
    ============================================================ */
 .sos-fab {
   position: fixed;
-  bottom: 5.5rem;
+  bottom: 5.65rem;
   right: 1rem;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #EF4444, #DC2626);
+  width: 64px;
+  height: 64px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.2), transparent 45%),
+    linear-gradient(160deg, #fb7185, #ef4444 58%, #dc2626);
   color: #fff;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.55);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  box-shadow: var(--sh-lg);
+  gap: 0.12rem;
+  box-shadow: 0 18px 36px rgba(239, 68, 68, 0.26);
   z-index: 200;
-  transition: all var(--ease);
+  transition: transform var(--ease), box-shadow var(--ease), filter var(--ease);
   font-family: var(--font);
   text-decoration: none;
+  backdrop-filter: blur(14px);
 }
 
 .sos-fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 36px rgba(220, 38, 38, .4);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 42px rgba(239, 68, 68, 0.3);
+  filter: saturate(1.05);
 }
 
 .brain-fab {
   position: fixed;
-  bottom: 9.5rem;
-  right: 1.25rem;
+  bottom: 10.2rem;
+  right: 1rem;
   z-index: 210;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  min-width: 56px;
-  height: 56px;
-  padding: 0.55rem 0.8rem 0.55rem 0.7rem;
+  justify-content: center;
+  min-width: 142px;
+  height: 52px;
+  padding: 0.45rem 1rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 14px 30px rgba(139, 92, 246, .28);
-  transition: transform var(--ease), box-shadow var(--ease);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.22), transparent 48%),
+    linear-gradient(135deg, #9b6bff, #d946ef 62%, #ec4899);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 18px 36px rgba(168, 85, 247, 0.24);
+  transition: transform var(--ease), box-shadow var(--ease), filter var(--ease);
+  font-size: 0;
+  backdrop-filter: blur(14px);
 }
 
 .brain-fab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 34px rgba(139, 92, 246, .34);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 42px rgba(168, 85, 247, 0.28);
+  filter: saturate(1.05);
 }
 
-.brain-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  font-size: 1.3rem;
-  line-height: 1;
-  filter: none;
+.brain-fab::before {
+  content: none !important;
+  display: none !important;
 }
 
 .brain-label {
@@ -1504,10 +1506,11 @@ a:hover {
 
 .brain-fab::after {
   content: 'MindCare';
+  display: block;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -1519,32 +1522,38 @@ a:hover {
 
 @media (max-width: 640px) {
   .brain-fab {
-    bottom: 9.25rem;
+    bottom: 9.95rem;
     right: 1rem;
-    height: 52px;
-    padding: 0.5rem 0.72rem 0.5rem 0.64rem;
+    min-width: 132px;
+    height: 48px;
+    padding: 0.44rem 0.88rem;
   }
 
-  .brain-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 1.15rem;
+  .brain-fab::before {
+    content: none !important;
+    display: none !important;
   }
 
   .brain-label {
     font-size: 0.62rem;
   }
+
+  .brain-fab::after {
+    font-size: 0.7rem;
+    letter-spacing: 0.11em;
+  }
 }
 
 .sos-icon {
-  font-size: 1.2rem;
+  font-size: 1.18rem;
   line-height: 1;
 }
 
 .sos-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* AI Photo FAB (sits above SOS) */

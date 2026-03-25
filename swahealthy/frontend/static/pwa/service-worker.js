@@ -1,10 +1,10 @@
-const CACHE_NAME = 'swahealthy-v8';
+const CACHE_NAME = 'swahealthy-v9';
 const ASSETS = [
     '/',
-    '/static/css/style.css?v=8',
-    '/static/js/app.js?v=8',
-    '/static/js/translations.js?v=8',
-    '/static/pwa/manifest.json?v=8',
+    '/static/css/style.css?v=9',
+    '/static/js/app.js?v=9',
+    '/static/js/translations.js?v=9',
+    '/static/pwa/manifest.json?v=9',
     '/appointments'
 ];
 
