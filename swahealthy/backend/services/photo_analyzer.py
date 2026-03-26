@@ -117,15 +117,18 @@ def analyze_photo(base64_data, media_type, language="en"):
         print(f"DEBUG: Using OpenRouter free router for vision analysis")
         print(f"DEBUG: Analyzing photo (Type: {media_type}, Base64 length: {len(base64_data)})")
 
-        instruction_prompt = f"""You are a medical triage assistant helping users analyze photos of their physical symptoms (e.g., rashes, swelling, wounds, eye redness).
+        instruction_prompt = f"""You are a medical triage assistant helping users analyze photos of physical symptoms such as rashes, swelling, wounds, redness, irritation, nail changes, and eye findings.
 You must visually analyze the image and return ONLY a valid JSON object with these exact keys: observed, possible_conditions, urgency, recommendation.
 Rules:
-1. Emphasize that you are an AI and this is NOT a definitive diagnosis.
+1. Emphasize in recommendation that you are an AI and this is NOT a definitive diagnosis.
 2. {pack["instruction_unclear"]}
-3. possible_conditions must be a list of strings.
+3. possible_conditions must be a list of 2 to 5 short strings when something is visible.
 4. urgency must be one of: low, moderate, high, very high.
 5. {pack["instruction_language"]}
-6. Respond ONLY with the JSON object, no markdown, no explanations."""
+6. Make "observed" detailed: 2 to 4 sentences describing visible color, shape, texture, spread, discharge, swelling, borders, and anything that makes the image unclear.
+7. Make "recommendation" more useful: 3 to 5 sentences covering simple care steps, what to monitor over the next 24 to 48 hours, and when to seek in-person care.
+8. If you are unsure, say what is visible and state uncertainty clearly instead of pretending confidence.
+9. Respond ONLY with the JSON object, no markdown, no explanations."""
 
         max_retries = 5
         delay = 2
@@ -165,7 +168,7 @@ Rules:
                         }
                     ],
                     "temperature": 0.0,
-                    "max_tokens": 256
+                    "max_tokens": 450
                 }
                 
                 # Make API call to OpenRouter

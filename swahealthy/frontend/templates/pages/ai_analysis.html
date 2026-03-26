@@ -27,7 +27,7 @@
 
     <div id="ai-upload-card" class="card photo-card ai-upload-card">
         <div class="upload-area" id="ai-drop-zone" onclick="document.getElementById('ai-photo-input').click()">
-            <input type="file" id="ai-photo-input" accept="image/jpeg, image/png" style="display: none;" onchange="handleStandalonePhotoSelect(event)">
+            <input type="file" id="ai-photo-input" accept="image/*" capture="environment" style="display: none;" onchange="handleStandalonePhotoSelect(event)">
 
             <div id="ai-upload-prompt">
                 <span class="upload-icon">Photo</span>
