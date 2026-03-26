@@ -281,6 +281,7 @@ def chat():
     if not data:
         return jsonify({"error": "Invalid payload format"}), 400
 
+    message = (data.get('message') or '').strip()
     history = data.get('history', [])
 
     from flask import current_app
@@ -298,7 +299,16 @@ def chat():
 
         messages = [{"role": "system", "content": system_prompt}]
         if isinstance(history, list):
-            messages.extend(history)
+            for item in history[-6:]:
+                role = item.get('role') if isinstance(item, dict) else None
+                content = item.get('content') if isinstance(item, dict) else None
+                if role in ('user', 'assistant') and isinstance(content, str) and content.strip():
+                    messages.append({"role": role, "content": content.strip()})
+        if message and (not messages or messages[-1].get('content') != message):
+            messages.append({"role": "user", "content": message})
+
+        if len(messages) == 1:
+            return jsonify({"error": "Message is required"}), 400
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",

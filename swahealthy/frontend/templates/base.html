@@ -1388,6 +1388,7 @@
             if (!text) return;
             appendBubble(text, 'user');
             if (chatInput.value === text) chatInput.value = '';
+            const requestHistory = chatHistory.slice(-6);
             chatHistory.push({ role: 'user', content: text });
             
             typingIndicator.style.display = 'flex';
@@ -1399,7 +1400,7 @@
                 const resp = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text, language: lang, history: chatHistory })
+                    body: JSON.stringify({ message: text, language: lang, history: requestHistory })
                 });
 
                 typingIndicator.style.display = 'none';
