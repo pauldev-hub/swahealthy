@@ -215,6 +215,9 @@ body.chat-open .sos-fab{opacity:0;pointer-events:none}
 .tl-date{font-size:0.72rem;color:var(--text-muted);margin-bottom:0.2rem}
 .tl-name{font-size:0.88rem;font-weight:600;color:var(--text)}
 .reflection-quote{border-left:4px solid var(--accent);padding:0.75rem 1rem;background:var(--bg);border-radius:0 var(--r-md) var(--r-md) 0;font-style:italic;font-size:0.88rem;color:var(--text-light);line-height:1.6;margin-bottom:0.5rem}
+.reflection-history-list{display:flex;flex-direction:column;gap:0.45rem;margin-top:0.65rem}
+.reflection-history-item{font-size:0.8rem;color:var(--text-light);padding:0.45rem 0.65rem;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.65);line-height:1.45}
+.reflection-history-date{font-size:0.7rem;color:var(--text-muted);margin-left:0.35rem}
 .encouragement{background:linear-gradient(135deg,var(--primary-light),#E0F2FE);border-radius:var(--r-lg);padding:1rem 1.25rem;text-align:center;font-size:0.9rem;font-weight:600;color:var(--primary-dark);line-height:1.5;margin-bottom:1rem}
 .share-btn{border-color:var(--border-mid);color:var(--text-light)}
 
@@ -856,10 +859,14 @@ body.chat-open .sos-fab{opacity:0;pointer-events:none}
       </div>
 
       <div class="card">
-        <div class="section-label" data-i18n="summary_reflections">Reflection Highlight ✨</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span data-i18n="summary_reflections">Reflection Highlight ✨</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearReflections()" style="padding:0.2rem 0.5rem;font-size:0.65rem" data-i18n="btn_clear">Clear</button>
+        </div>
         <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.6rem">4 reflections written this week</div>
         <div class="reflection-quote">"My morning chai and the sunlight coming through the window made me smile today."</div>
         <div style="font-size:0.72rem;color:var(--text-muted)">Friday, Mar 21</div>
+        <div class="reflection-history-list"></div>
       </div>
 
       <div class="encouragement">
@@ -1560,21 +1567,43 @@ function renderSummary() {
   }
   document.querySelector('.timeline').innerHTML = tlHtml || '<div style="color:var(--text-muted);font-size:0.85rem">No assessments taken recently.</div>';
   
-  // Render reflections
-  let refCount = 0; let lastRef = null;
+  // Render reflections (latest 4)
+  const reflections = [];
   for(let i=0; i<localStorage.length; i++) {
-    if(localStorage.key(i).includes(STORAGE_PREFIX + 'reflection_')) {
-      refCount++; lastRef = JSON.parse(localStorage.getItem(localStorage.key(i)));
-    }
+    const key = localStorage.key(i);
+    if(!key || !key.startsWith(STORAGE_PREFIX + 'reflection_')) continue;
+    try {
+      const row = JSON.parse(localStorage.getItem(key));
+      if(row && row.text && row.timestamp) reflections.push(row);
+    } catch(e) {}
   }
-  if(lastRef) {
-    document.querySelector('.reflection-quote').textContent = `"${lastRef.text}"`;
-    document.querySelector('.reflection-quote').nextElementSibling.textContent = new Date(lastRef.timestamp).toLocaleDateString();
-    document.querySelector('.reflection-quote').previousElementSibling.textContent = `${refCount} reflections written recently.`;
+  reflections.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  const quoteEl = document.querySelector('.reflection-quote');
+  const quoteDateEl = quoteEl ? quoteEl.nextElementSibling : null;
+  const quoteCountEl = quoteEl ? quoteEl.previousElementSibling : null;
+  const historyListEl = document.querySelector('.reflection-history-list');
+
+  if(reflections.length) {
+    const latest = reflections[0];
+    quoteEl.textContent = `"${latest.text}"`;
+    quoteDateEl.textContent = new Date(latest.timestamp).toLocaleDateString();
+    quoteCountEl.textContent = `${reflections.length} reflections written recently.`;
+
+    if(historyListEl) {
+      const latestFour = reflections.slice(0, 4);
+      historyListEl.innerHTML = latestFour.map(ref => {
+        const shortText = (ref.text || '').trim();
+        const clipped = shortText.length > 85 ? `${shortText.slice(0, 85)}...` : shortText;
+        const dateText = new Date(ref.timestamp).toLocaleDateString();
+        return `<div class="reflection-history-item">"${clipped}" <span class="reflection-history-date">${dateText}</span></div>`;
+      }).join('');
+    }
   } else {
-    document.querySelector('.reflection-quote').textContent = "No reflections yet. Start with today's Check-in.";
-    document.querySelector('.reflection-quote').nextElementSibling.textContent = "";
-    document.querySelector('.reflection-quote').previousElementSibling.textContent = "0 reflections written this week";
+    quoteEl.textContent = "No reflections yet. Start with today's Check-in.";
+    quoteDateEl.textContent = "";
+    quoteCountEl.textContent = "0 reflections written this week";
+    if(historyListEl) historyListEl.innerHTML = '';
   }
 }
 
@@ -1584,6 +1613,17 @@ window.clearAssessments = function() {
   for(let i=0; i<localStorage.length; i++) {
     let key = localStorage.key(i);
     if(key.includes(STORAGE_PREFIX + 'assessment_')) keysToRemove.push(key);
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  renderSummary();
+}
+
+window.clearReflections = function() {
+  if(!confirm("Are you sure you want to clear your reflection history?")) return;
+  const keysToRemove = [];
+  for(let i=0; i<localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if(key && key.startsWith(STORAGE_PREFIX + 'reflection_')) keysToRemove.push(key);
   }
   keysToRemove.forEach(k => localStorage.removeItem(k));
   renderSummary();
