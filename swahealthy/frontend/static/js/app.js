@@ -215,10 +215,6 @@ function releaseAppSplash() {
 function initAppSplash() {
     const splash = document.getElementById('app-splash');
     if (!splash) return;
-    if (!window.__showSwahealthySplash) {
-        splash.hidden = true;
-        return;
-    }
 
     document.body.classList.add('splash-active');
 
@@ -228,11 +224,6 @@ function initAppSplash() {
 
     const attemptRelease = () => {
         if (minimumElapsed && (shellReady || workerReady)) {
-            try {
-                sessionStorage.setItem('swahealthy_boot_splash_seen', '1');
-            } catch (err) {
-                // Ignore storage failures and still release the splash.
-            }
             releaseAppSplash();
         }
     };
@@ -240,7 +231,7 @@ function initAppSplash() {
     window.setTimeout(() => {
         minimumElapsed = true;
         attemptRelease();
-    }, 1800);
+    }, 1400);
 
     window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => {
