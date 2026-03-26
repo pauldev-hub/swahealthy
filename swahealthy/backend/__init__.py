@@ -39,15 +39,20 @@ def create_app():
     # Ensure OAUTHLIB allows HTTP on localhost
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = Config.OAUTHLIB_INSECURE_TRANSPORT
 
-    # Debug prints (remove in production)
+    # Debug prints (safe even when env vars are missing)
+    def _mask(value, visible=5):
+        if not value:
+            return 'None'
+        return f"{value[:visible]}..."
+
     _cid = Config.GOOGLE_CLIENT_ID
     _csec = Config.GOOGLE_CLIENT_SECRET
-    print(f"[DEBUG] GOOGLE_CLIENT_ID loaded: '{_cid[:30]}...' (ends with .apps.googleusercontent.com: {_cid.endswith('.apps.googleusercontent.com')})")
-    print(f"[DEBUG] GOOGLE_CLIENT_SECRET loaded: '{_csec[:10]}...' (present: {bool(_csec)})")
+    print(f"[DEBUG] GOOGLE_CLIENT_ID loaded: '{_mask(_cid, 30)}' (ends with .apps.googleusercontent.com: {_cid.endswith('.apps.googleusercontent.com')})")
+    print(f"[DEBUG] GOOGLE_CLIENT_SECRET loaded: '{_mask(_csec, 10)}' (present: {bool(_csec)})")
     _gkey = Config.GEMINI_API_KEY
-    print(f"[DEBUG] GEMINI_API_KEY loaded: '{_gkey[:5]}...' (present: {bool(_gkey)}), (placeholder: {bool(_gkey == 'your_gemini_api_key_here')})")
+    print(f"[DEBUG] GEMINI_API_KEY loaded: '{_mask(_gkey)}' (present: {bool(_gkey)}), (placeholder: {bool(_gkey == 'your_gemini_api_key_here')})")
     _groqkey = Config.GROQ_API_KEY
-    print(f"[DEBUG] GROQ_API_KEY loaded: '{_groqkey[:5] if _groqkey else 'None'}...' (present: {bool(_groqkey)})")
+    print(f"[DEBUG] GROQ_API_KEY loaded: '{_mask(_groqkey)}' (present: {bool(_groqkey)})")
 
     # ----- OAuth -----
     oauth.init_app(app)
