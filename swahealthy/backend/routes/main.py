@@ -844,14 +844,19 @@ def wellness_chat():
         "built into SwaHealthy, a rural health app for users in West Bengal, India.",
         "",
         "Rules you must always follow:",
+        "- A warm, non-judgmental friend who understands mental health deeply.",
         "- You are NOT a therapist. Never diagnose. Never prescribe.",
         "- Respond ONLY in the same language the user writes in (Bengali, Hindi, or English).",
         "- Keep responses warm, non-clinical, and under 120 words.",
+        "- End with either a follow-up question or a gentle encouragement — never a cold stop.",
         "- If the user seems emotionally distressed or very low, shift your response to include:",
         "  one immediate coping tip + a gentle mention of iCall (9152987821).",
         "- You may discuss: anxiety, depression, stress, sleep, relationships, loneliness,",
         "  motivation, self-care, breathing techniques, and general mental wellbeing.",
         "- If asked something unrelated to mental health, gently redirect back.",
+        "- For mild stress → warm, practical, slightly upbeat",
+        "- For moderate sadness → gentle, slow, validating — no rushed advice",
+        "- For crisis signals → calm, grounding, human — never alarmed or robotic",
         "- Never use jargon. Write as a caring friend who happens to know about mental health.",
     ]
     if is_distressed:
@@ -920,6 +925,8 @@ def wellness_reflection():
         f"Write one mindful observation or question for a daily journal. The person feels '{mood}'. Respond in {language}. Max 18 words.",
         f"Create a short, thought-provoking journal starter sentence in {language} for someone who feels '{mood}' today. Max 18 words. No quotes.",
         f"The user's mood today is '{mood}'. Write a gentle, introspective journal prompt in {language} to help them reflect. Max 18 words. No quotes."
+        f"Given the mood '{mood}', suggest a single, simple journaling question in {language} to encourage self-reflection. Max 18 words. No quotes."
+        f"Write a concise, empathetic journal prompt in {language} for someone experiencing the mood '{mood}'. Max 18 words. No quotes."
     ]
     prompt = random.choice(prompt_styles)
 
@@ -968,6 +975,7 @@ User's responses:
 Write a warm, non-clinical, personalised 3-4 sentence analysis based on these specific 
 answers — not just the score. Reference specific patterns you notice in the answers.
 Do not diagnose. Do not use clinical jargon.
+If needed suggest or advice on general wellbeing, coping tips, or when to seek help. Always respond in the specified language.
 Then on a new line write exactly "ACTIONS:" followed by exactly 3 specific actionable 
 steps as a numbered list. Steps should be tailored to the answers, not generic.
 Respond entirely in {language}."""
