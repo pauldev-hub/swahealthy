@@ -293,6 +293,11 @@ def chat():
         return jsonify({"error": "Server configuration error: GROQ_API_KEY is missing."}), 500
 
     try:
+        fallback_models = [
+            "llama-3.3-70b-versatile",
+            "llama3-70b-8192",
+            "llama-3.1-8b-instant",
+        ]
         system_prompt = "You are SwaHealthy Assistant, a friendly rural health AI for West Bengal, India. Help users with health questions, medicine info, general wellness, and emotional support. Always reply in the user's language: 'en' = English, 'bn' = Bengali, 'hi' = Hindi. Keep responses concise (3-5 sentences max). Never diagnose — always recommend seeing a doctor for serious issues. Add a warm, caring tone. If the user seems sad or unwell emotionally, respond with empathy first."
 
         messages = [{"role": "system", "content": system_prompt}]
@@ -308,31 +313,41 @@ def chat():
         if len(messages) == 1:
             return jsonify({"error": "Message is required"}), 400
 
-        resp = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "messages": messages,
-                "temperature": 0.7,
-                "max_tokens": 512
-            },
-            timeout=15
-        )
-        resp.raise_for_status()
-        payload = resp.json()
-        choices = payload.get('choices') or []
-        if not choices:
-            raise ValueError(f"Groq response missing choices: {payload}")
+        last_error = None
+        for model_name in fallback_models:
+            try:
+                resp = requests.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": model_name,
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 512
+                    },
+                    timeout=15
+                )
+                resp.raise_for_status()
+                payload = resp.json()
+                choices = payload.get('choices') or []
+                if not choices:
+                    raise ValueError(f"Groq response missing choices: {payload}")
 
-        response_message = choices[0].get('message') or {}
-        reply = (response_message.get('content') or "").strip()
-        if not reply:
-            raise ValueError(f"Groq response missing assistant content: {payload}")
-        return jsonify({"reply": reply})
+                response_message = choices[0].get('message') or {}
+                reply = (response_message.get('content') or "").strip()
+                if not reply:
+                    raise ValueError(f"Groq response missing assistant content: {payload}")
+
+                print(f"[DEBUG] Assistant chat succeeded with model: {model_name}")
+                return jsonify({"reply": reply, "model_used": model_name})
+            except Exception as model_error:
+                last_error = model_error
+                print(f"[DEBUG] Assistant chat fallback failed for model {model_name}: {model_error}")
+
+        raise last_error or RuntimeError("All assistant chat fallback models failed")
 
     except Exception as e:
         import traceback

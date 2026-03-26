@@ -130,139 +130,143 @@ Rules:
 8. If you are unsure, say what is visible and state uncertainty clearly instead of pretending confidence.
 9. Respond ONLY with the JSON object, no markdown, no explanations."""
 
+        fallback_models = [
+            "openrouter/free",
+            "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "qwen/qwen-2-vl-7b-instruct:free",
+        ]
         max_retries = 5
         delay = 2
         response = None
 
-        for attempt in range(max_retries):
-            try:
-                mime_type = media_type or 'image/jpeg'
-                
-                # OpenRouter API endpoint
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "HTTP-Referer": "http://localhost:5000",
-                    "X-Title": "SwahealthyApp"
-                }
-                
-                image_url = f"data:{mime_type};base64,{base64_data}"
+        mime_type = media_type or 'image/jpeg'
+        
+        # OpenRouter API endpoint
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "http://localhost:5000",
+            "X-Title": "SwahealthyApp"
+        }
+        
+        image_url = f"data:{mime_type};base64,{base64_data}"
+        last_error = None
 
-                # OpenRouter chat completions expects images as image_url content.
-                payload = {
-                    "model": "openrouter/free",
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": f"{instruction_prompt}\n\nAnalyze this symptom image. Return only JSON."
-                                },
-                                {
-                                    "type": "image_url",
-                                    "image_url": {
-                                        "url": image_url
+        for model_name in fallback_models:
+            current_delay = delay
+            for attempt in range(max_retries):
+                try:
+                    payload = {
+                        "model": model_name,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": f"{instruction_prompt}\n\nAnalyze this symptom image. Return only JSON."
+                                    },
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": image_url
+                                        }
                                     }
-                                }
-                            ]
-                        }
-                    ],
-                    "temperature": 0.0,
-                    "max_tokens": 450
-                }
-                
-                # Make API call to OpenRouter
-                print(f"DEBUG: Sending to OpenRouter API")
-                print(f"DEBUG: Payload has image_url: {'image_url' in str(payload)}")
-                print(f"DEBUG: Image URL prefix: {image_url[:32]}")
-                
-                response = requests.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers=headers,
-                    json=payload,
-                    timeout=30
-                )
-                
-                if response.status_code == 200:
-                    response_data = response.json()
-                    result_text = response_data.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
+                                ]
+                            }
+                        ],
+                        "temperature": 0.0,
+                        "max_tokens": 450
+                    }
                     
-                    if result_text:
-                        print(f"DEBUG: AI raw response: {result_text}")
-                        
-                        # Clean up markdown formatting if present
-                        if "```json" in result_text:
-                            result_text = result_text.split("```json")[-1].split("```")[0].strip()
-                        elif "```" in result_text:
-                            result_text = result_text.split("```")[0].strip()
-                        
-                        result = json.loads(result_text)
-                        
-                        # Normalize keys
-                        required_keys = ["observed", "possible_conditions", "urgency", "recommendation"]
-                        for key in required_keys:
-                            if key not in result:
-                                result[key] = [] if key == 'possible_conditions' else "N/A"
-                        
-                        return result
+                    print(f"DEBUG: Sending to OpenRouter API with model {model_name}")
+                    print(f"DEBUG: Payload has image_url: {'image_url' in str(payload)}")
+                    print(f"DEBUG: Image URL prefix: {image_url[:32]}")
                     
-                    break
-                elif response.status_code == 429:
-                    # Rate limit - retry
-                    if attempt < max_retries - 1:
-                        sleep_time = delay + random.uniform(0.0, 1.0)
-                        print(f"DEBUG: Rate limit detected, retrying in {sleep_time:.2f}s (attempt {attempt+1}/{max_retries})")
-                        time.sleep(sleep_time)
-                        delay *= 2
-                        continue
-                    else:
+                    response = requests.post(
+                        "https://openrouter.ai/api/v1/chat/completions",
+                        headers=headers,
+                        json=payload,
+                        timeout=30
+                    )
+                
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        result_text = response_data.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
+                    
+                        if result_text:
+                            print(f"DEBUG: AI raw response from {model_name}: {result_text}")
+                        
+                            # Clean up markdown formatting if present
+                            if "```json" in result_text:
+                                result_text = result_text.split("```json")[-1].split("```")[0].strip()
+                            elif "```" in result_text:
+                                result_text = result_text.split("```")[0].strip()
+                        
+                            result = json.loads(result_text)
+                        
+                            # Normalize keys
+                            required_keys = ["observed", "possible_conditions", "urgency", "recommendation"]
+                            for key in required_keys:
+                                if key not in result:
+                                    result[key] = [] if key == 'possible_conditions' else "N/A"
+                        
+                            print(f"DEBUG: Photo analysis succeeded with model {model_name}")
+                            return result
+                    
+                        break
+                    elif response.status_code == 429:
+                        if attempt < max_retries - 1:
+                            sleep_time = current_delay + random.uniform(0.0, 1.0)
+                            print(f"DEBUG: Rate limit detected for {model_name}, retrying in {sleep_time:.2f}s (attempt {attempt+1}/{max_retries})")
+                            time.sleep(sleep_time)
+                            current_delay *= 2
+                            continue
+                        last_error = Exception(f"Rate limit exceeded for model {model_name}")
+                        break
+                    elif response.status_code in [401, 403]:
                         return {
-                            "error": "Rate limit exceeded.",
-                            "observed": pack["rate_limit_observed"],
+                            "error": "Authentication failed for OpenRouter API key.",
+                            "observed": pack["auth_observed"],
                             "possible_conditions": [],
                             "urgency": "low",
-                            "recommendation": pack["rate_limit_recommendation"]
+                            "recommendation": pack["auth_recommendation"]
                         }
-                elif response.status_code in [401, 403]:
-                    return {
-                        "error": "Authentication failed for OpenRouter API key.",
-                        "observed": pack["auth_observed"],
-                        "possible_conditions": [],
-                        "urgency": "low",
-                        "recommendation": pack["auth_recommendation"]
-                    }
-                elif response.status_code in [400, 402]:
-                    print(f"DEBUG: Falling back to demo analysis for status {response.status_code}")
-                    return _demo_analysis(f"OpenRouter returned HTTP {response.status_code}", language=language)
-                else:
-                    error_msg = response.text
-                    print(f"DEBUG: OpenRouter error {response.status_code}: {error_msg}")
-                    if attempt < max_retries - 1:
-                        time.sleep(delay)
-                        delay *= 2
-                        continue
-                    raise Exception(f"OpenRouter API error {response.status_code}: {error_msg}")
+                    elif response.status_code in [400, 402]:
+                        last_error = Exception(f"OpenRouter returned HTTP {response.status_code} for model {model_name}")
+                        print(f"DEBUG: Model {model_name} failed with status {response.status_code}, trying fallback")
+                        break
+                    else:
+                        error_msg = response.text
+                        print(f"DEBUG: OpenRouter error {response.status_code} for {model_name}: {error_msg}")
+                        if attempt < max_retries - 1:
+                            time.sleep(current_delay)
+                            current_delay *= 2
+                            continue
+                        last_error = Exception(f"OpenRouter API error {response.status_code} for {model_name}: {error_msg}")
+                        break
                     
-            except requests.exceptions.Timeout:
-                if attempt < max_retries - 1:
-                    print(f"DEBUG: Request timeout, retrying (attempt {attempt+1}/{max_retries})")
-                    time.sleep(delay)
-                    delay *= 2
-                    continue
-                raise Exception("Request timeout - please try again")
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    time.sleep(delay)
-                    delay *= 2
-                    continue
-                raise
+                except requests.exceptions.Timeout:
+                    if attempt < max_retries - 1:
+                        print(f"DEBUG: Request timeout for {model_name}, retrying (attempt {attempt+1}/{max_retries})")
+                        time.sleep(current_delay)
+                        current_delay *= 2
+                        continue
+                    last_error = Exception(f"Request timeout for model {model_name}")
+                    break
+                except Exception as e:
+                    last_error = e
+                    if attempt < max_retries - 1:
+                        time.sleep(current_delay)
+                        current_delay *= 2
+                        continue
+                    break
 
         return {
             "error": "Failed to connect to AI service.",
             "observed": pack["service_observed"],
             "possible_conditions": [],
             "urgency": "low",
-            "recommendation": pack["service_recommendation"]
+            "recommendation": f'{pack["service_recommendation"]} (Tried {len(fallback_models)} fallback models.)'
         }
 
     except Exception as e:
