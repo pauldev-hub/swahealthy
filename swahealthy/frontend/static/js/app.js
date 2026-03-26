@@ -235,7 +235,7 @@ function initAppSplash() {
     window.setTimeout(() => {
         minimumElapsed = true;
         attemptRelease();
-    }, 1400);
+    }, 2200);
 
     window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => {
