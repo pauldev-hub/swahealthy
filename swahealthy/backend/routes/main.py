@@ -286,15 +286,13 @@ def chat():
 
     from flask import current_app
     import os
+    import requests
 
     api_key = current_app.config.get('GROQ_API_KEY') or os.environ.get('GROQ_API_KEY')
     if not api_key:
         return jsonify({"error": "Server configuration error: GROQ_API_KEY is missing."}), 500
 
     try:
-        from groq import Groq
-        client = Groq(api_key=api_key)
-
         system_prompt = "You are SwaHealthy Assistant, a friendly rural health AI for West Bengal, India. Help users with health questions, medicine info, general wellness, and emotional support. Always reply in the user's language: 'en' = English, 'bn' = Bengali, 'hi' = Hindi. Keep responses concise (3-5 sentences max). Never diagnose — always recommend seeing a doctor for serious issues. Add a warm, caring tone. If the user seems sad or unwell emotionally, respond with empathy first."
 
         messages = [{"role": "system", "content": system_prompt}]
@@ -310,18 +308,35 @@ def chat():
         if len(messages) == 1:
             return jsonify({"error": "Message is required"}), 400
 
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=512,
+        resp = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 512
+            },
+            timeout=15
         )
+        resp.raise_for_status()
+        payload = resp.json()
+        choices = payload.get('choices') or []
+        if not choices:
+            raise ValueError(f"Groq response missing choices: {payload}")
 
-        reply = response.choices[0].message.content.strip()
+        response_message = choices[0].get('message') or {}
+        reply = (response_message.get('content') or "").strip()
+        if not reply:
+            raise ValueError(f"Groq response missing assistant content: {payload}")
         return jsonify({"reply": reply})
 
     except Exception as e:
         import traceback
+        traceback.print_exc()
         print(f"Error in chat route: {e}")
         return jsonify({"error": "Sorry, couldn't connect. Try again."}), 500
 
