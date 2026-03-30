@@ -29,6 +29,9 @@ static/uploads/
 !static/icon-192.png
 !static/icon-512.png
 !static/favicon.ico
+# Allow images folder for README gallery
+!images/
+!images/*.jpeg
 
 # Temp/scratch files
 tmp/
