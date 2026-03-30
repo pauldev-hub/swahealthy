@@ -115,7 +115,7 @@ Here's a visual walkthrough of SwaHealthy on mobile:
 ---
 
 ### 🤖 **AI Health Assistant (MindCare)**
-![AI Assistant](./swahealthy/images/MindCare%20AI%20Assisstant.jpeg)
+![AI Assistant](./swahealthy/images/MindCare%20AI%20Assiatant.jpeg)
 
 ---
 
