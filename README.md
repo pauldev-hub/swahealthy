@@ -80,57 +80,57 @@ An independent project designed and built by **Pratyush**.
 Here's a visual walkthrough of SwaHealthy on mobile:
 
 ### 📱 **Splash & Loading**
-![Loading Screen](./images/splash.jpeg)
+![Loading Screen](./swahealthy/images/splash.jpeg)
 
 ---
 
 ### 📱 **Home & Symptom Selection**
-![Home Screen](./images/Home.jpeg)
+![Home Screen](./swahealthy/images/Home.jpeg)
 
 ---
 
 ### 📱 **Diagnosis Results**
-![Diagnosis Results](./images/Result.jpeg)
+![Diagnosis Results](./swahealthy/images/Result.jpeg)
 
 ---
 
 ### 📱 **Duration Counter**
-![Duration Counter](./images/Duration%20counter.jpeg)
+![Duration Counter](./swahealthy/images/Duration%20counter.jpeg)
 
 ---
 
 ### 📱 **Emergency Contacts (SOS)**
-![Emergency Modal](./images/emergency.jpeg)
+![Emergency Modal](./swahealthy/images/emergency.jpeg)
 
 ---
 
 ### 📱 **Facility Finder**
-![Facility Finder](./images/Facility%20Finder.jpeg)
+![Facility Finder](./swahealthy/images/Facility%20Finder.jpeg)
 
 ---
 
 ### 📱 **Mental Wellness & Mood Tracking**
-![Mental Wellness](./images/Mental%20Wellness%20page.jpeg)
+![Mental Wellness](./swahealthy/images/Mental%20Wellness%20page.jpeg)
 
 ---
 
 ### 🤖 **AI Health Assistant (MindCare)**
-![AI Assistant](./images/MindCare%20AI%20Assisstant.jpeg)
+![AI Assistant](./swahealthy/images/MindCare%20AI%20Assisstant.jpeg)
 
 ---
 
 ### 💬 **SwaHealthy AI Chat**
-![AI Chat](./images/Swahealthy%20AI%20Chat%20Assisstant.jpeg)
+![AI Chat](./swahealthy/images/Swahealthy%20AI%20Chat%20Assisstant.jpeg)
 
 ---
 
 ### 🧠 **SwaHealthy Assistant Page**
-![Assistant Page](./images/SwaHealthy%20Assitant%20Page.jpeg)
+![Assistant Page](./swahealthy/images/SwaHealthy%20Assitant%20Page.jpeg)
 
 ---
 
 ### 📅 **Doctor Appointments**
-![Appointments](./images/Appointments.jpeg)
+![Appointments](./swahealthy/images/Appointments.jpeg)
 
 ---
 
